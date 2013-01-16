@@ -3,7 +3,7 @@ class HaDope
     include SharedMethods
 
     def initialize(options = {})
-      store [:name, :key, :function], options
+      store [:name, :key, :other_vars, :function], options
     end
   end
 end

@@ -43,6 +43,16 @@ class HaDope
       @data = { size: data.size, values: data }
     end
 
+    def store_other_vars(vars)
+      @vars = {}
+      vars.to_a.each do |var|
+        raise "Each additional variable must be defined as a tuple of [type,name]" unless var.is_a?(Array) && var.size == 2
+        type, name = var
+        raise "Variable #{name} already defined" if @vars[name]
+        @vars[name] = type
+      end
+    end
+
     def store(names, options)
       names.each { |name| self.send("store_#{name.to_s}", options[name]) }
     end
