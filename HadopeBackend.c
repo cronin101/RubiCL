@@ -5,7 +5,7 @@ static VALUE method_derp(VALUE self) {
   return self;
 }
 
-void Init_hadopebackend() {
+void Init_hadope_backend() {
   printf("wat\n");
   VALUE HadopeBackend = rb_define_module("HadopeBackend");
   rb_define_method(HadopeBackend, "derp", method_derp, 0);
