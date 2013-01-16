@@ -8,24 +8,26 @@ HaDope::DataSet.create({
 })
 
 # Creating a Map function
+function =<<C_CODE
+i += 1;
+C_CODE
+
 HaDope::Map.create({
   name: :add_one,
   key: [:int, :i],
-  function:
-<<kernel
-  i += 1;
-kernel
+  function: function
 })
 
 # Creating a Filter function
+function =<<C_CODE
+i = i * 2;
+C_CODE
+
 HaDope::Filter.create({
   name: :doubled_is_even?,
   key: [:int, :i],
   test: 'i % 2 == 0',
-  function:
-<<kernel
-  i = i * 2;
-kernel
+  function: function
 })
 
 #Idea of how to execute a series of actions
