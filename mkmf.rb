@@ -1,4 +1,4 @@
-#!/usr/local/bin/ruby -w
+#!/usr/bin/env ruby
 require 'mkmf'
 
 extension_name = 'hadope_backend'
