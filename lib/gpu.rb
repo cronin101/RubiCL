@@ -1,7 +1,9 @@
 class HaDope
   class GPU
+    include HadopeBackend
 
     def load(dataset)
+      init_OpenCL_environment
       self
     end
 
