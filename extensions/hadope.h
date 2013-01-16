@@ -1,7 +1,3 @@
-/* Library for quick OpenCL hax
- * s0925570
- * */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <CL/cl.h>
