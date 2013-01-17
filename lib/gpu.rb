@@ -4,7 +4,7 @@ class HaDope
 
     def load(dataset_name)
       dataset = HaDope::DataSet[dataset_name]
-      init_OpenCL_environment(dataset.required_memory)
+      puts "Init Time: " << Benchmark.realtime{ init_OpenCL_environment(dataset.required_memory) }.to_s
       self
     end
 
