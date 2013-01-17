@@ -30,7 +30,6 @@ static VALUE method_init_OpenCL_environment(VALUE self){
 
 static VALUE method_create_memory_buffer(VALUE self, VALUE required_memory_object){
   memory_buffer = createMemoryBuffer(env, FIX2INT(required_memory_object));
-  printf("Memory buffer created.\n");
 
   return self;
 }
