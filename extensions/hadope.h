@@ -5,9 +5,14 @@
 #define MEM_SIZE (128)
 #define MAX_SOURCE_SIZE (0x100000)
 
-void readKernelSource(const char* filename, char* *source_string, int *size);
+typedef struct {
+  cl_device_id device_id;
+  cl_context context;
+  cl_command_queue queue;
+} HadopeEnvironment;
 
-void createContextWithQueue(cl_context *context, cl_command_queue *queue);
+HadopeEnvironment createHadopeEnvironment();
 
-void createMemoryBuffer(cl_context *context, cl_command_queue *queue,
-                        cl_mem *memory_buffer, int required_memory);
+cl_mem createMemoryBuffer(const HadopeEnvironment env, const int required_memory);
+
+void buildKernelFromSource(const cl_context *context, const char* kernel_source, const size_t source_size);

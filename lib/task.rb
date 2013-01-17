@@ -12,7 +12,9 @@ class HaDope
     end
 
     def kernel
-      HaDope::CodeGenerator.new(self).generate_kernel
+      result = nil
+      puts "#{@name.capitalize} kernel generation Time: " << Benchmark.realtime { result = HaDope::CodeGenerator.new(self).generate_kernel }.to_s
+      result
     end
 
   end

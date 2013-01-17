@@ -1,10 +1,8 @@
 #include "ruby.h"
 #include "./hadope.h"
 
-cl_context context;
-cl_command_queue queue;
 cl_mem memory_buffer;
-
+HadopeEnvironment env;
 
 static VALUE method_derp(VALUE self) {
   printf("oh god how did I get here what is going on\n");
@@ -23,13 +21,13 @@ static VALUE method_size_of(VALUE self, VALUE type_string_object) {
 }
 
 static VALUE method_init_OpenCL_environment(VALUE self) {
-  createContextWithQueue(&context, &queue);
+  env = createHadopeEnvironment();
   printf("OpenCL environment initialised.\n");
   return self;
 }
 
 static VALUE method_create_memory_buffer(VALUE self, VALUE required_memory_object) {
-  createMemoryBuffer(&context, &queue, &memory_buffer, FIX2INT(required_memory_object));
+  memory_buffer = createMemoryBuffer(env, FIX2INT(required_memory_object));
   printf("Memory buffer created.\n");
   return self;
 }
