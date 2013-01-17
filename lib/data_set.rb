@@ -1,5 +1,6 @@
 class HaDope
   class DataSet
+    attr_accessor :data
     include SharedMethods
 
     def initialize(options = {})

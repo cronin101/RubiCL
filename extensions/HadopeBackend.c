@@ -34,6 +34,21 @@ static VALUE method_create_memory_buffer(VALUE self, VALUE required_memory_objec
   return self;
 }
 
+static VALUE method_load_int_dataset(VALUE self, VALUE dataset_object){
+  int array_size;
+  int i;
+  int *dataset;
+
+  Check_Type(dataset_object, T_ARRAY);
+  array_size = RARRAY_LEN(dataset_object);
+  dataset = malloc(sizeof(int) * array_size);
+  for (i=0; i < array_size; i++) {
+    dataset[i] = rb_ary_entry(dataset_object, i);
+  }
+
+  return self;
+}
+
 static VALUE method_run_task(VALUE self, VALUE task_source_object, VALUE source_size_object, VALUE task_name_object){
   char* task_source;
   int source_size;
@@ -53,6 +68,7 @@ void Init_hadope_backend() {
   VALUE HadopeBackend = rb_define_module("HadopeBackend");
   rb_define_method(HadopeBackend, "init_OpenCL_environment", method_init_OpenCL_environment, 0);
   rb_define_method(HadopeBackend, "create_memory_buffer", method_create_memory_buffer, 1);
+  rb_define_method(HadopeBackend, "load_int_dataset", method_load_int_dataset, 1);
   rb_define_method(HadopeBackend, "run_task", method_run_task, 3);
   rb_define_method(HadopeBackend, "size_of", method_size_of, 1);
   rb_define_method(HadopeBackend, "derp", method_derp, 0);
