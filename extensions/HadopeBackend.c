@@ -43,7 +43,7 @@ static VALUE method_load_int_dataset(VALUE self, VALUE dataset_object){
   array_size = RARRAY_LEN(dataset_object);
   dataset = malloc(sizeof(int) * array_size);
   for (i=0; i < array_size; i++) {
-    dataset[i] = rb_ary_entry(dataset_object, i);
+    dataset[i] = FIX2INT(rb_ary_entry(dataset_object, i));
   }
 
   return self;
