@@ -7,7 +7,7 @@ class HaDope
     end
 
     def required_memory
-      HaDope::GPU.new.size_of(@type.to_s)*@data[:size]
+      HaDope::GPU.get.size_of(@type.to_s)*@data[:size]
     end
   end
 end

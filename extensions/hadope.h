@@ -7,5 +7,7 @@
 
 void readKernelSource(const char* filename, char* *source_string, int *size);
 
-void createContextWithQueueAndBuffer(cl_context *context, cl_command_queue *queue,
-                                      cl_mem *memory_buffer, int required_memory);
+void createContextWithQueue(cl_context *context, cl_command_queue *queue);
+
+void createMemoryBuffer(cl_context *context, cl_command_queue *queue,
+                        cl_mem *memory_buffer, int required_memory);

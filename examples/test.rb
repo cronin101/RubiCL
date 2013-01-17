@@ -49,4 +49,4 @@ HaDope::Filter.create({
 })
 
 #Idea of how to execute a series of actions
-results = HaDope::GPU.new.load(:one_to_onehundred).map(:add_one).map(:compute_factorial).filter(:doubled_is_even?).output
+results = HaDope::GPU.get.load(:one_to_onehundred).map(:add_one).map(:compute_factorial).filter(:doubled_is_even?).output

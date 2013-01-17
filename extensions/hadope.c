@@ -13,7 +13,7 @@ void readKernelSource(const char* filename, char* *source_string, int *size){
    }
 }
 
-void createContextWithQueueAndBuffer(cl_context *context, cl_command_queue *queue, cl_mem *memory_buffer, int required_memory){
+void createContextWithQueue(cl_context *context, cl_command_queue *queue){
   cl_platform_id platform_id = NULL;
   cl_device_id device_id = NULL;
   cl_uint ret_num_platforms;
@@ -25,6 +25,9 @@ void createContextWithQueueAndBuffer(cl_context *context, cl_command_queue *queu
                         1, &device_id, &ret_num_devices);
   *context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
   *queue = clCreateCommandQueue(*context, device_id, 0, &ret);
-  *memory_buffer = clCreateBuffer(*context, CL_MEM_READ_WRITE,
-                                    required_memory, NULL, &ret);
+}
+
+void createMemoryBuffer(cl_context *context, cl_command_queue *queue, cl_mem *memory_buffer, int required_memory){
+  cl_int ret;
+  *memory_buffer = clCreateBuffer(*context, CL_MEM_READ_WRITE, required_memory, NULL, &ret);
 }
