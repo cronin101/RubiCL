@@ -12,13 +12,23 @@ HadopeEnvironment createHadopeEnvironment(){
                         1, &env.device_id, &ret_num_devices);
   env.context = clCreateContext(NULL, 1, &env.device_id, NULL, NULL, &ret);
   env.queue = clCreateCommandQueue(env.context, env.device_id, 0, &ret);
+
   return env;
 }
 
 cl_mem createMemoryBuffer(const HadopeEnvironment env, const int required_memory){
   cl_int ret;
+
   return clCreateBuffer(env.context, CL_MEM_READ_WRITE, required_memory, NULL, &ret);
 }
 
-void buildKernelFromSource(const cl_context *context, const char* kernel_source, const size_t source_size){
+HadopeTask buildTaskFromSource(const HadopeEnvironment env, const char* kernel_source, const size_t source_size, char* name){
+  HadopeTask task;
+  cl_int ret;
+
+  task.name = name;
+  ret = clBuildProgram(task.program, 1, &env.device_id, NULL, NULL, NULL);
+  task.kernel = clCreateKernel(task.program, task.name, &ret);
+
+  return task;
 }

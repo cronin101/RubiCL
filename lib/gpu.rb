@@ -14,11 +14,14 @@ class HaDope
       self
     end
 
-    def map(definition)
+    def map(task_name)
+      map_task = HaDope::Map[task_name]
+      kernel = map_task.kernel
+      puts "#{task_name} Time: " <<  Benchmark.realtime{ run_task(kernel, kernel.length, map_task.name.to_s) }.to_s
       self
     end
 
-    def filter(definition)
+    def filter(task_name)
       self
     end
 

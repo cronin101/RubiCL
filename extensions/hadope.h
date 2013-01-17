@@ -11,8 +11,14 @@ typedef struct {
   cl_command_queue queue;
 } HadopeEnvironment;
 
+typedef struct {
+  cl_kernel kernel;
+  cl_program program;
+  char* name;
+} HadopeTask;
+
 HadopeEnvironment createHadopeEnvironment();
 
 cl_mem createMemoryBuffer(const HadopeEnvironment env, const int required_memory);
 
-void buildKernelFromSource(const cl_context *context, const char* kernel_source, const size_t source_size);
+HadopeTask buildTaskFromSource(const HadopeEnvironment env, const char* kernel_source, const size_t source_size, char* name);
