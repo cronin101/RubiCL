@@ -12,7 +12,6 @@ HaDope::DataSet.create({
 # Creating a Map function
 function =<<C_CODE
 i += 1;
-return i;
 C_CODE
 
 HaDope::Map.create({
@@ -26,7 +25,6 @@ function =<<C_CODE
 for( j = i-1; i > 0; j--){
   i = i*j;
 }
-return i;
 C_CODE
 
 HaDope::Map.create({
@@ -42,11 +40,15 @@ i = i * 2;
 C_CODE
 
 HaDope::Filter.create({
-  name: :doubled_is_even?,
+  name: :doubled_is_even,
   key: [:int, :i],
   test: 'i % 2 == 0',
   function: function
 })
 
 #Idea of how to execute a series of actions
-results = HaDope::GPU.get.load(:one_to_onehundred).map(:add_one).map(:compute_factorial).filter(:doubled_is_even?).output
+results = HaDope::GPU.get.load(:one_to_onehundred).map(:add_one).map(:compute_factorial).filter(:doubled_is_even).output
+
+puts HaDope::Map[:add_one].kernel
+puts HaDope::Filter[:doubled_is_even].kernel
+

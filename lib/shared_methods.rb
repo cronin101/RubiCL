@@ -30,6 +30,7 @@ class HaDope
     def store_test(test)
       raise "No test defined" unless test
       raise "Test must be provided as one OpenCL statement that can fit inside an if statement" unless test.is_a?(String)
+      @test = test
     end
 
     def store_type(type)
