@@ -52,14 +52,5 @@ class HaDope
     def store(names, options)
       names.each { |name| self.send("store_#{name.to_s}", options[name]) }
     end
-
-    def save
-      self.class.class_variable_get(:@@instances)[self.name] = self
-    end
-
-    def delete
-      self.class.class_variable_get(:@@instances).delete(self.name)
-    end
-
   end
 end

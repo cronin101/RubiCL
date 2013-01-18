@@ -5,6 +5,14 @@ class HaDope
       base.class_variable_set(:@@instances, {})
     end
 
+    def save
+      self.class.class_variable_get(:@@instances)[self.name] = self
+    end
+
+    def delete
+      self.class.class_variable_get(:@@instances).delete(self.name)
+    end
+
     module ClassMethods
       def create(*splat)
         self.new(*splat).save
