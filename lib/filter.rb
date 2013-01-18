@@ -1,6 +1,7 @@
 class HaDope
   class Filter
     include SharedMethods
+    include SmartClasses
     include Task
 
     attr_accessor :test

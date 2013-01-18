@@ -2,6 +2,7 @@ class HaDope
   class DataSet
     attr_accessor :data
     include SharedMethods
+    include SmartClasses
 
     def initialize(options = {})
       store [:name, :type, :data], options

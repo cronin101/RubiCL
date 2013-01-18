@@ -1,6 +1,7 @@
 class HaDope
   class Map
     include SharedMethods
+    include SmartClasses
     include Task
 
     def initialize(options = {})

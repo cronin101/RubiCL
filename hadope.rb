@@ -1,6 +1,7 @@
 require 'hadope_backend'
 require 'benchmark'
 require_relative './lib/shared_methods.rb'
+require_relative './lib/smart_classes.rb'
 require_relative './lib/gpu.rb'
 require_relative './lib/data_set.rb'
 require_relative './lib/task.rb'
