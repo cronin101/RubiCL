@@ -27,8 +27,9 @@ class HaDope
     end
 
     def output
-      puts "Dataset Output Time: #{Benchmark.realtime{ retrieve_int_dataset(@membuffer) }}"
-      []
+      dataset = []
+      puts "Dataset Output Time: #{Benchmark.realtime{ dataset = retrieve_int_dataset(@membuffer) }}"
+      dataset
     end
 
     def self.get
