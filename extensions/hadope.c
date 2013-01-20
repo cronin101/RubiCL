@@ -32,3 +32,11 @@ HadopeTask buildTaskFromSource(const HadopeEnvironment env, const char* kernel_s
 
   return task;
 }
+
+void loadIntArrayIntoDevice(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct, const int *dataset){
+  clEnqueueWriteBuffer(env.queue, mem_struct.buffer, CL_TRUE, 0, mem_struct.buffer_size * sizeof(int), dataset, 0, NULL, NULL);
+}
+
+void getIntArrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct, int *dataset){
+  clEnqueueReadBuffer(env.queue, mem_struct.buffer, CL_TRUE, 0, mem_struct.buffer_size * sizeof(int), dataset, 0, NULL, NULL);
+}

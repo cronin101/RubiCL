@@ -10,8 +10,8 @@ class HaDope
 
     def load(dataset_name)
       dataset = HaDope::DataSet[dataset_name]
-      puts "Buffer Time: #{Benchmark.realtime{ create_memory_buffer(dataset.required_memory) }}"
-      load_int_dataset(dataset.data[:values])
+      puts "Buffer Time: #{Benchmark.realtime{ @membuffer = create_memory_buffer(dataset.data[:size], dataset.required_memory) }}"
+      puts "Dataset Input Time: #{Benchmark.realtime{ load_int_dataset(dataset.data[:values], @membuffer) }}"
       self
     end
 
@@ -27,6 +27,7 @@ class HaDope
     end
 
     def output
+      puts "Dataset Output Time: #{Benchmark.realtime{ retrieve_int_dataset(@membuffer) }}"
       []
     end
 
