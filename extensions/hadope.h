@@ -23,10 +23,14 @@ HadopeEnvironment createHadopeEnvironment();
 
 cl_mem createMemoryBuffer(const HadopeEnvironment env, const int required_memory);
 
-HadopeTask buildTaskFromSource(const HadopeEnvironment env, const char* kernel_source, const size_t source_size, char* name);
+HadopeTask buildTaskFromSource(const HadopeEnvironment env, const char* kernel_source,
+                                                const size_t source_size, char* name);
 
-void loadIntArrayIntoDevice(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct, const int *dataset);
+void loadIntArrayIntoDevice(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct,
+                                                                        const int *dataset);
 
-void getIntArrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct, int *dataset);
+void getIntArrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct,
+                                                                              int *dataset);
 
-void runTaskOnCurrentDataset(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct, const HadopeTask task);
+void runTaskOnCurrentDataset(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct,
+                                                                       const HadopeTask task);
