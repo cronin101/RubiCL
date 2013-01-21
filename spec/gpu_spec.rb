@@ -15,7 +15,7 @@ describe HaDope::GPU do
     HaDope::GPU.get
   end
 
-  it "should allow to be loaded and retrieved without modifications if no kernel tasks are queued" do
+  it "should allow data to be loaded and retrieved without modifications if no kernel tasks are queued" do
     output_array = HaDope::GPU.get.load(:test_dataset).output
     output_array.should eql @input_array
   end
