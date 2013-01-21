@@ -5,6 +5,7 @@
 #else
   #include <CL/cl.h>
 #endif
+#include "oclerrorexplain.h"
 
 typedef struct {
   cl_device_id device_id;
