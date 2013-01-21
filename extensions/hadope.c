@@ -142,8 +142,8 @@ void runTaskOnCurrentDataset(const HadopeEnvironment env, const HadopeMemoryBuff
 
   ret = clSetKernelArg(task.kernel, 0, sizeof(cl_mem) , &mem_struct.buffer);
   printf("clSetKernelArg %s\n", oclErrorString(ret));
-  ret = clEnqueueTask(env.queue, task.kernel, 0, NULL, NULL);
-  printf("clEnqueueTask %s\n", oclErrorString(ret));
+  //ret = clEnqueueTask(env.queue, task.kernel, 0, NULL, NULL);
+  //printf("clEnqueueTask %s\n", oclErrorString(ret));
   ret = clEnqueueNDRangeKernel(env.queue, task.kernel, 1, NULL, g_work_size, l_work_size, 0, NULL, NULL);
   printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 

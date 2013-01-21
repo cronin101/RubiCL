@@ -2,9 +2,6 @@
 #include <stdlib.h>
 #include <CL/cl.h>
 
-#define MEM_SIZE (128)
-#define MAX_SOURCE_SIZE (0x100000)
-
 typedef struct {
   cl_device_id device_id;
   cl_context context;
