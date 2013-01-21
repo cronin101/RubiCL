@@ -27,19 +27,22 @@ static VALUE method_init_OpenCL_environment(VALUE self){
   return self;
 }
 
-static VALUE method_create_memory_buffer(VALUE self, VALUE num_entries_object, VALUE required_memory_object){
+static VALUE method_create_memory_buffer(VALUE self, VALUE num_entries_object,
+                                                VALUE required_memory_object){
   HadopeMemoryBuffer *mem_struct;
   VALUE memory_struct_object;
 
   mem_struct = malloc(sizeof(HadopeMemoryBuffer));
   mem_struct->buffer_size = FIX2INT(num_entries_object);
   mem_struct->buffer = createMemoryBuffer(env, FIX2INT(required_memory_object));
-  memory_struct_object = Data_Wrap_Struct(memory_struct_object, NULL, NULL, mem_struct);
+  memory_struct_object = Data_Wrap_Struct(memory_struct_object, NULL, NULL,
+                                                               mem_struct);
 
   return memory_struct_object;
 }
 
-static VALUE method_load_int_dataset(VALUE self, VALUE dataset_object, VALUE memory_struct_object){
+static VALUE method_load_int_dataset(VALUE self, VALUE dataset_object,
+                                          VALUE memory_struct_object){
   int array_size;
   int i;
   int *dataset;
@@ -76,7 +79,8 @@ static VALUE method_retrieve_int_dataset(VALUE self, VALUE memory_struct_object)
   return output_array;
 }
 
-static VALUE method_run_task(VALUE self, VALUE task_source_object, VALUE source_size_object, VALUE task_name_object, VALUE mem_struct_object){
+static VALUE method_run_task(VALUE self, VALUE task_source_object, VALUE source_size_object,
+                                            VALUE task_name_object, VALUE mem_struct_object){
   char* task_source;
   int source_size;
   char* task_name;
