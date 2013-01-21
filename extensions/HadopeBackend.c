@@ -3,11 +3,6 @@
 
 HadopeEnvironment env;
 
-static VALUE method_derp(VALUE self){
-  printf("oh god how did I get here what is going on\n");
-  return self;
-}
-
 static VALUE method_size_of(VALUE self, VALUE type_string_object){
   char* type_string;
 
@@ -117,5 +112,4 @@ void Init_hadope_backend() {
   rb_define_method(HadopeBackend, "run_task", method_run_task, 4);
   rb_define_method(HadopeBackend, "clean_used_resources", method_clean_used_resources, 1);
   rb_define_method(HadopeBackend, "size_of", method_size_of, 1);
-  rb_define_method(HadopeBackend, "derp", method_derp, 0);
 }
