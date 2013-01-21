@@ -18,7 +18,7 @@ class HaDope
     def map(task_name)
       map_task = HaDope::Map[task_name]
       kernel = map_task.kernel
-      puts "#{task_name} Time: #{Benchmark.realtime{ run_task(kernel, kernel.length, map_task.name.to_s) }}"
+      puts "#{task_name} Time: #{Benchmark.realtime{ run_task(kernel, kernel.length, map_task.name.to_s, @membuffer) }}"
       self
     end
 
@@ -30,6 +30,10 @@ class HaDope
       dataset = []
       puts "Dataset Output Time: #{Benchmark.realtime{ dataset = retrieve_int_dataset(@membuffer) }}"
       dataset
+    end
+
+    def clean
+      clean_used_resources(@membuffer)
     end
 
     def self.get

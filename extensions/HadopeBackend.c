@@ -76,18 +76,29 @@ static VALUE method_retrieve_int_dataset(VALUE self, VALUE memory_struct_object)
   return output_array;
 }
 
-static VALUE method_run_task(VALUE self, VALUE task_source_object, VALUE source_size_object, VALUE task_name_object){
+static VALUE method_run_task(VALUE self, VALUE task_source_object, VALUE source_size_object, VALUE task_name_object, VALUE mem_struct_object){
   char* task_source;
   int source_size;
   char* task_name;
   HadopeTask task;
+  HadopeMemoryBuffer *mem_struct;
 
+  Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
   task_source = StringValuePtr(task_source_object);
   source_size = FIX2INT(source_size_object);
   task_name = StringValuePtr(task_name_object);
   task = buildTaskFromSource(env, task_source, source_size, task_name);
+  runTaskOnCurrentDataset(env, *mem_struct, task);
 
   return self;
+}
+
+static VALUE method_clean_used_resources(VALUE self, VALUE mem_struct_object){
+  HadopeMemoryBuffer *mem_struct;
+  Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
+  clFlush(env.queue);
+  clFinish(env.queue);
+  clReleaseMemObject(mem_struct->buffer);
 }
 
 void Init_hadope_backend() {
@@ -97,7 +108,8 @@ void Init_hadope_backend() {
   rb_define_method(HadopeBackend, "create_memory_buffer", method_create_memory_buffer, 2);
   rb_define_method(HadopeBackend, "load_int_dataset", method_load_int_dataset, 2);
   rb_define_method(HadopeBackend, "retrieve_int_dataset", method_retrieve_int_dataset, 1);
-  rb_define_method(HadopeBackend, "run_task", method_run_task, 3);
+  rb_define_method(HadopeBackend, "run_task", method_run_task, 4);
+  rb_define_method(HadopeBackend, "clean_used_resources", method_clean_used_resources, 1);
   rb_define_method(HadopeBackend, "size_of", method_size_of, 1);
   rb_define_method(HadopeBackend, "derp", method_derp, 0);
 }
