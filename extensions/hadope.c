@@ -138,11 +138,10 @@ void getIntArrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer
 void runTaskOnCurrentDataset(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct, const HadopeTask task){
   cl_int ret;
   size_t g_work_size[3] = {mem_struct.buffer_size, 0, 0};
-  size_t l_work_size[3] = {mem_struct.buffer_size, 0, 0};
 
   ret = clSetKernelArg(task.kernel, 0, sizeof(cl_mem) , &mem_struct.buffer);
   printf("clSetKernelArg %s\n", oclErrorString(ret));
-  ret = clEnqueueNDRangeKernel(env.queue, task.kernel, 1, NULL, g_work_size, l_work_size, 0, NULL, NULL);
+  ret = clEnqueueNDRangeKernel(env.queue, task.kernel, 1, NULL, g_work_size, NULL, 0, NULL, NULL);
   printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 
 }

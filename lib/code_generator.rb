@@ -8,11 +8,11 @@ class HaDope
       if @task.is_a? HaDope::Map
 kernel=<<CL_KERNEL
 __kernel void #{@task.name}(__global #{@task.c_key_type} *data_array){
-int global_id = get_local_id(0);
+int global_id = get_global_id(0);
 #{@task.c_key_type} #{@task.key[:name]};
 
 #{@task.key[:name]} = data_array[global_id];
-#{@task.function};
+#{@task.function.chomp};
 data_array[global_id] = #{@task.key[:name]};
 }
 CL_KERNEL
