@@ -12,7 +12,7 @@ describe HaDope::GPU do
     HaDope::Map.create({  name: :inverse_test_task, key: [:int, :i],
                           function: 'i--;'  })
 
-   HaDope::GPU.get
+    HaDope::GPU.get
   end
 
   it "should allow to be loaded and retrieved without modifications if no kernel tasks are queued" do
