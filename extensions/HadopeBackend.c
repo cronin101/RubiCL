@@ -23,13 +23,24 @@ static VALUE method_init_OpenCL_environment(VALUE self){
 }
 
 static VALUE method_create_memory_buffer(VALUE self, VALUE num_entries_object,
-                                                VALUE required_memory_object){
+                                                VALUE type_string_object){
   HadopeMemoryBuffer *mem_struct;
   VALUE memory_struct_object;
+  char* type_string;
+  int unit_size;
+  int num_entries;
+
+  type_string = StringValuePtr(type_string_object);
+  if (!strcmp(type_string, "int")){
+    unit_size = INT2FIX(sizeof(int));
+  } else {
+    rb_raise(rb_eTypeError, "Provided type not understood by size_of");
+  }
 
   mem_struct = malloc(sizeof(HadopeMemoryBuffer));
-  mem_struct->buffer_size = FIX2INT(num_entries_object);
-  mem_struct->buffer = createMemoryBuffer(env, FIX2INT(required_memory_object));
+  num_entries = FIX2INT(num_entries_object);
+  mem_struct->buffer_entries = num_entries;
+  mem_struct->buffer = createMemoryBuffer(env, num_entries * unit_size);
   memory_struct_object = Data_Wrap_Struct(memory_struct_object, NULL, NULL,
                                                                mem_struct);
 
@@ -63,7 +74,7 @@ static VALUE method_retrieve_int_dataset(VALUE self, VALUE memory_struct_object)
   VALUE output_array;
 
   Data_Get_Struct(memory_struct_object, HadopeMemoryBuffer, mem_struct);
-  array_size = mem_struct->buffer_size;
+  array_size = mem_struct->buffer_entries;
   dataset = malloc(array_size * sizeof(int));
   getIntArrayFromDevice(env, *mem_struct, dataset);
   output_array = rb_ary_new2(array_size);

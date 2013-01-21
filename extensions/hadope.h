@@ -20,7 +20,7 @@ typedef struct {
 } HadopeTask;
 
 typedef struct{
-  int buffer_size;
+  int buffer_entries;
   cl_mem buffer;
 } HadopeMemoryBuffer;
 

@@ -1,6 +1,6 @@
 class HaDope
   class DataSet
-    attr_accessor :data
+    attr_accessor :data, :type
     include SharedMethods
     include SmartClasses
 

@@ -49,7 +49,7 @@ void loadIntArrayIntoDevice(const HadopeEnvironment env, const HadopeMemoryBuffe
                                                                         const int *dataset){
   cl_int ret;
   ret = clEnqueueWriteBuffer(env.queue, mem_struct.buffer, CL_TRUE, 0,
-        mem_struct.buffer_size * sizeof(int), dataset, 0, NULL, NULL);
+        mem_struct.buffer_entries * sizeof(int), dataset, 0, NULL, NULL);
   printf("clEnqueueWriteBuffer %s\n", oclErrorString(ret));
 }
 
@@ -58,14 +58,14 @@ void getIntArrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer
   cl_int ret;
   int i;
   clEnqueueReadBuffer(env.queue, mem_struct.buffer, CL_TRUE, 0,
-        mem_struct.buffer_size * sizeof(int), dataset, 0, NULL, NULL);
+        mem_struct.buffer_entries * sizeof(int), dataset, 0, NULL, NULL);
   printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 }
 
 void runTaskOnCurrentDataset(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct,
                                                                        const HadopeTask task){
   cl_int ret;
-  size_t g_work_size[3] = {mem_struct.buffer_size, 0, 0};
+  size_t g_work_size[3] = {mem_struct.buffer_entries, 0, 0};
 
   ret = clSetKernelArg(task.kernel, 0, sizeof(cl_mem) , &mem_struct.buffer);
   printf("clSetKernelArg %s\n", oclErrorString(ret));
