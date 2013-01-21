@@ -103,6 +103,8 @@ static VALUE method_clean_used_resources(VALUE self, VALUE mem_struct_object){
   clFlush(env.queue);
   clFinish(env.queue);
   clReleaseMemObject(mem_struct->buffer);
+
+  return self;
 }
 
 void Init_hadope_backend() {
