@@ -15,7 +15,7 @@ describe HaDope::GPU do
    HaDope::GPU.get
   end
 
-  it "allows data to be loaded and retrieved without modifications if no kernel tasks are queued" do
+  it "should allow to be loaded and retrieved without modifications if no kernel tasks are queued" do
     output_array = HaDope::GPU.get.load(:test_dataset).output
     output_array.should eql @input_array
   end
@@ -26,13 +26,13 @@ describe HaDope::GPU do
     output_array.should eql @input_array
   end
 
-  it "allows a map function to be executed on all data correctly" do
+  it "should allow a map function to be executed on all data correctly" do
     output_array = HaDope::GPU.get.load(:test_dataset).map(:test_task).output
     ruby_map = @input_array.map { |i| i + 1 }
     output_array.should eql ruby_map
   end
 
-  it "allows multiple map functions to be chained correctly" do
+  it "should allow multiple map functions to be chained correctly" do
     output_array = HaDope::GPU.get.load(:test_dataset).map(:test_task).map(:inverse_test_task).output
     output_array.should eql @input_array
   end
