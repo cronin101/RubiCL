@@ -15,14 +15,19 @@ class HaDope
       self
     end
 
-    def map(task_name)
-      map_task = HaDope::Map[task_name]
+    def fp_map(*tasks)
+      tasks.each { |task| do_fp_map(task) }
+      self
+    end
+
+    def do_fp_map(task_name)
+      map_task = HaDope::Functional::Map[task_name]
       kernel = map_task.kernel
       puts "#{task_name} Time: #{Benchmark.realtime{ run_task(kernel, kernel.length, map_task.name.to_s, @membuffer) }}"
       self
     end
 
-    def filter(task_name)
+    def fp_filter(task_name)
       self
     end
 
