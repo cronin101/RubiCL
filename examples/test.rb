@@ -1,12 +1,13 @@
 #!/usr/bin/env ruby
 
 require_relative '../hadope.rb'
+FP = HaDope::Functional
 
 # Creating a DataSet
 HaDope::DataSet.create({
   name: :one_to_onehundred,
   type: :int,
-  data: (1..100).to_a
+  data: (1..10).to_a
 })
 
 # Creating a Map function
@@ -14,7 +15,7 @@ function =<<C_CODE
 i += 1;
 C_CODE
 
-HaDope::Map.create({
+FP::Map.create({
   name: :add_one,
   key: [:int, :i],
   function: function
@@ -22,15 +23,16 @@ HaDope::Map.create({
 
 # Creating a more complicated Map function
 function =<<C_CODE
-for( j = i-1; i > 0; j--){
+int j;
+for( j = i-1; j > 0; j--){
   i = i*j;
 }
 C_CODE
 
-HaDope::Map.create({
+FP::Map.create({
   name: :compute_factorial,
   key: [:int, :i],
-  other_vars: [[:int, :j]],
+#  other_vars: [[:int, :j]],
   function: function
 })
 
@@ -39,7 +41,7 @@ function =<<C_CODE
 i = i * 2;
 C_CODE
 
-HaDope::Filter.create({
+FP::Filter.create({
   name: :doubled_is_even,
   key: [:int, :i],
   test: 'i % 2 == 0',
@@ -47,8 +49,9 @@ HaDope::Filter.create({
 })
 
 #Idea of how to execute a series of actions
-results = HaDope::GPU.get.load(:one_to_onehundred).map(:add_one).map(:compute_factorial).filter(:doubled_is_even).output
+results = HaDope::GPU.get.load(:one_to_onehundred).fp_map(:add_one, :compute_factorial, :add_one).fp_filter(:doubled_is_even).output
 
-puts HaDope::Map[:add_one].kernel
-puts HaDope::Filter[:doubled_is_even].kernel
+puts FP::Map[:add_one].kernel
+puts FP::Filter[:doubled_is_even].kernel
 
+puts results
