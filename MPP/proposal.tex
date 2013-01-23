@@ -1,10 +1,9 @@
-\documentclass[12pt,a4paper] {scrartcl}   % list options between brackets
+\documentclass[11pt,a4paper] {scrartcl}   % list options between brackets
 \usepackage{datetime,acronym,url}              % list packages between braces
 \urlstyle{sf}
 \usepackage{DejaVuSerifCondensed}
 \usepackage[T1]{fontenc}
 \usepackage{titling}
-\setlength{\droptitle}{-5em}
 
 \input{titlepage.tex}
 
@@ -13,9 +12,12 @@
 \pagenumbering{arabic}
 
 \input{abstract.tex}
+\pagebreak{}
 \input{introduction.tex}
+\input{background.tex}
 \pagebreak{}
 
+\acrodef{CUDA}{\emph{Compute Unified Device Architecture}}
 \acrodef{OpenCL}{\emph{Open Computing Language}}
 \acrodef{CPU}{\emph{Central Processing Unit}}
 \acrodef{GPUs}{\emph{Graphics Processing Units}}
