@@ -1,5 +1,5 @@
 \section{Background}
-This section provides information concerning the components and concepts required to complete this project, as well as examples and brief evaluation of existing related work.
+This section provides background information concerning the components and concepts required to studied in order to complete this project, as well as examples and brief evaluation of existing related work.
 \subsection{OpenCL}
 OpenCL is an open framework for executing tasks described by a C99 kernel on heterogeneous devices such as multi-core CPUs and GPUs. Kernels are compiled for specific detected on-board platforms and abstract from underlying hardware implementations of operations in order to stay platform-independent across compute devices. Data-processing is distributed across the many cores of a device via the arrangement of kernel instances or \emph{work-items} into \emph{workgroups}.
 
@@ -11,21 +11,33 @@ In short, most modern systems are capable of executing OpenCL kernels on at leas
 
 Before release of the OpenCL 1.0 specification NVIDIA produced a platform named \ac{CUDA}, allowing compatible GPUs to utilise shader units to perform user-specified calculations. Since the CUDA platform is a proprietary API only designed to execute on NVIDIA hardware, this made optimisations easier to include in the implementation. In contrast to CUDA, OpenCL aims to solve the problem of varying frameworks for each hardware provider causing the portability of code to suffer. Studies have shown that with sufficiently optimised kernel code, OpenCL can perform comparably with CUDA despite it's greater flexibility of execution architecture\cite{perf}.
 \subsection{Functional Programming}
-As outlined in the introduction, Functional Programming is a paradigm involved with the composition of functions that map data from input to output values without external side-effects. When constructing a program functionally, the programmer is required to reason about the flow of data between each link in the composed chain of component methods. In addition to chaining functions to produce a non-trivial computation, many languages provide highly expressive primitives that describe methods of transforming data using a provided function that abstract from the act of iterating through a large vector of data. These primitives are called \emph{higher-order functions} as they take a function, requiring first-class function support, as an input. This abstraction is beneficial not only for readability and verifiability but as implementation is hidden any correct series of operations can be performed, in parallel or sequentially as long as the output value is correct, leaving scope for optimisations that do not adversely affect the usability of the language.
-\subsubsection{Map}
-Map is a higher-order function that applies a provided function to all elements in a provided dataset. It can be used to concisely describe a uniform alteration. Map is trivial to parallelise since no shared state of threads is required. If other variables are required they can be provided and since no side-effects are permitted, no synchronisation outside of providing read-access to memory dependencies is needed.
-\subsubsection{Filter}
-Filter is a higher-order function that uses a provided function that evaluates as either \emph{True} or \emph{False}.
-\subsubsection{Fold}
-\subsubsection{Scan}
+As outlined in the introduction, Functional Programming is a paradigm involved with the composition of functions that map data from input to output values without external side-effects. When constructing a program functionally, the programmer is required to reason about the flow of data between each link in the composed chain of component methods.
+In addition to chaining functions to produce a non-trivial computation, many languages provide highly expressive primitives that describe methods of transforming data using a provided function that abstract from the act of iterating through a large vector of data.
+These primitives are called \emph{higher-order functions} as they take a function, requiring first-class function support, as an input.
+This abstraction is beneficial not only for readability and verifiability but as implementation is hidden any correct series of operations can be performed, in parallel or sequentially as long as the output value is correct, leaving scope for optimisations that do not adversely affect the usability of the language.
+\paragraph{Map}
+\emph{Map} is a higher-order function that applies a provided function to all elements in a provided dataset. It can be used to concisely describe a uniform alteration.
+Map is trivial to parallelise since no shared state of threads is required.
+If other variables are required they can be shared and since no side-effects are permitted, no synchronisation outside of providing read-access to memory dependencies is needed.
+\paragraph{Filter}
+\emph{Filter} is a higher-order function that applies a function that evaluates as either \emph{True} or \emph{False} on a dataset, returning the subset of the input vector for which the predicate is true. Once again, it is trivial to perform all predicate checking in parallel. It is slightly more involved to then return the subset efficiently as state will have to be shared in order to provide a compact output that does not require a full sequential scan to extract members.
+\paragraph{Fold}
+\emph{Fold} is a higher-order function that takes a dataset and an initial 'result' value (possibility an identity value) then repeatedly applies a combining function to produce an output. The output is equal to that obtained by repeatedly replacing the result with the output of itself and one dataset member input to the combiner, such that each member is consumed once and the result is cumulatively generated. An associative Fold function can be parallelised to increase throughput.
+\paragraph{Scan}
+\emph{Scan} is similar to \emph{Fold} in that it takes an input vector and a combining function. However, instead of returning the final result, Scan returns a vector that is equal to the intermediate values if the combining function was incrementally applied from one end of the dataset to the other. Scan can also exploit a highly-parallel architecture.
 \subsection{MapReduce}
-\subsubsection{Map}
-\subsubsection{Partition}
-\subsubsection{Compare}
-\subsubsection{Reduce}
+\emph{MapReduce} is a data-flow model and program specification for distributed processing of particularly large data-sets\cite{mapreduce}. It is designed to assist the programmer with automatic parallelisation and scheduling built into the implementation platform, requiring only specification of intermediary functions.
+\paragraph{Map}
+\paragraph{Partition}
+\paragraph{Compare}
+\paragraph{Reduce}
+The \emph{Reduce} function takes an input of 
+
+Positive aspects of the MapReduce model are mainly attributed to its convenient level of abstraction. No knowledge of underlying parallel programming techniques is required to specify functions for transforming data.
 \subsection{Previous Work}
 \subsubsection{MARS}
 \subsubsection{Phoenix}
 \subsubsection{Phoenix++}
+\subsubsection{StreamMR}
 \subsection{Ruby}
 \subsubsection{Extensibility}
