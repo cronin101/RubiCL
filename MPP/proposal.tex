@@ -1,16 +1,16 @@
-\documentclass[12pt,a4paper] {scrartcl}   % list options between brackets
+\documentclass[11pt,a4paper] {scrartcl}   % list options between brackets
 \usepackage{datetime,acronym,url}              % list packages between braces
 \urlstyle{sf}
 \usepackage{DejaVuSerifCondensed}
 \usepackage[T1]{fontenc}
 \usepackage{titling}
+\usepackage{abstract}
 
 \input{titlepage.tex}
 
 \begin{document}
 \maketitle
 \pagenumbering{arabic}
-
 \input{abstract.tex}
 \pagebreak{}
 \input{introduction.tex}
@@ -28,10 +28,21 @@
 
 \thispagestyle{empty}
 \pagestyle{empty}
+  \bibitem{khronos}
+    The Khronos Group OpenCL Standard
+    http://www.khronos.org/registry/cl/specs/opencl-1.2.pdf
 
-  \bibitem{osimodel}
-    The OSI Model: Understanding the Seven Layers of Computer Networks
-    Paul Simoneau, Global Knowledge Course Director, Network+ CCNA, CTP
+  \bibitem{perf}
+    A Comprehensive Performance Comparison of
+    CUDA and OpenCL
+
+    Jianbin Fang, Ana Lucia Varbanescu and Henk Sips
+
+    2011 International Conference on Parallel Processing
+
+  \bibitem{streammr}
+    StreamMR: An Optimized MapReduce Frameworkfor AMD GPUs
+    Marwa Elteiry, Heshan Liny, Wu-chun Fengy, and Tom Scoglandy
 
 \thispagestyle{empty}
 \pagestyle{empty}

@@ -1,10 +1,21 @@
 \section{Background}
 This section provides information concerning the components and concepts required to complete this project, as well as examples and brief evaluation of existing related work.
 \subsection{OpenCL}
-\subsubsection{2.0}
+OpenCL is an open framework for executing tasks described by a C99 kernel on heterogeneous devices such as multi-core CPUs and GPUs. Kernels are compiled for specific detected on-board platforms and abstract from underlying hardware implementations of operations in order to stay platform-independent across compute devices. Data-processing is distributed across the many cores of a device via the arrangement of kernel instances or \emph{work-items} into \emph{workgroups}.
+
+Work-groups are a matrix of related work-items spanning one, two or three dimensions. They serve to partition datasets into subsets and arrange instances of tasks into sectors that can pass state between each-other without requiring synchronisation outside of their scope. An important challenge when implementing high-performance algorithms in OpenCL is understanding the flow of data between threads so that work-units can be organised into an arrangement that allows efficient memory synchronisation by exploiting locality.
+
+The OpenCL standards are published by the \emph{Khronos Compute Working Group}\cite{khronos}.
+Programs utilising the framework can run on any OpenCL-conformant device including Intel \emph{Core} processors, Intel \emph{HD} Integrated Graphics chipsets, NVidia \emph{GeForce} Graphics Cards and AMD \emph{Radeon} Graphics Cards.
+In short, most modern systems are capable of executing OpenCL kernels on at least one contained device.
+
+Before release of the OpenCL 1.0 specification NVIDIA produced a platform named \ac{CUDA}, allowing compatible GPUs to utilise shader units to perform user-specified calculations. Since the CUDA platform is a proprietary API only designed to execute on NVIDIA hardware, this made optimisations easier to include in the implementation. In contrast to CUDA, OpenCL aims to solve the problem of varying frameworks for each hardware provider causing the portability of code to suffer. Studies have shown that with sufficiently optimised kernel code, OpenCL can perform comparably with CUDA despite it's greater flexibility of execution architecture\cite{perf}.
 \subsection{Functional Programming}
+As outlined in the introduction, Functional Programming is a paradigm involved with the composition of functions that map data from input to output values without external side-effects. When constructing a program functionally, the programmer is required to reason about the flow of data between each link in the composed chain of component methods. In addition to chaining functions to produce a non-trivial computation, many languages provide highly expressive primitives that describe methods of transforming data using a provided function that abstract from the act of iterating through a large vector of data. These primitives are called \emph{higher-order functions} as they take a function, requiring first-class function support, as an input. This abstraction is beneficial not only for readability and verifiability but as implementation is hidden any correct series of operations can be performed, in parallel or sequentially as long as the output value is correct, leaving scope for optimisations that do not adversely affect the usability of the language.
 \subsubsection{Map}
+Map is a higher-order function that applies a provided function to all elements in a provided dataset. It can be used to concisely describe a uniform alteration. Map is trivial to parallelise since no shared state of threads is required. If other variables are required they can be provided and since no side-effects are permitted, no synchronisation outside of providing read-access to memory dependencies is needed.
 \subsubsection{Filter}
+Filter is a higher-order function that uses a provided function that evaluates as either \emph{True} or \emph{False}.
 \subsubsection{Fold}
 \subsubsection{Scan}
 \subsection{MapReduce}
@@ -12,8 +23,9 @@ This section provides information concerning the components and concepts require
 \subsubsection{Partition}
 \subsubsection{Compare}
 \subsubsection{Reduce}
-\subsection{MARS}
-\subsection{Phoenix}
+\subsection{Previous Work}
+\subsubsection{MARS}
+\subsubsection{Phoenix}
 \subsubsection{Phoenix++}
 \subsection{Ruby}
 \subsubsection{Extensibility}
