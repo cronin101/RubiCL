@@ -1,0 +1,39 @@
+\documentclass[12pt,a4paper] {scrartcl}   % list options between brackets
+\usepackage{datetime,acronym,url}              % list packages between braces
+\urlstyle{sf}
+\usepackage{DejaVuSerifCondensed}
+\usepackage[T1]{fontenc}
+\usepackage{titling}
+\setlength{\droptitle}{-5em}
+
+\input{titlepage.tex}
+
+\begin{document}
+\maketitle
+\pagenumbering{arabic}
+
+\input{abstract.tex}
+\input{introduction.tex}
+\pagebreak{}
+
+\acrodef{OpenCL}{\emph{Open Computing Language}}
+\acrodef{CPU}{\emph{Central Processing Unit}}
+\acrodef{GPUs}{\emph{Graphics Processing Units}}
+\acrodef{IPS}{\emph{instructions per second}}
+\acrodef{SIMD}{\emph{Single-Instruction-Multiple-Data}}
+
+\begin{thebibliography}{9}
+
+\thispagestyle{empty}
+\pagestyle{empty}
+
+  \bibitem{osimodel}
+    The OSI Model: Understanding the Seven Layers of Computer Networks
+    Paul Simoneau, Global Knowledge Course Director, Network+ CCNA, CTP
+
+\thispagestyle{empty}
+\pagestyle{empty}
+  % type bibliography here
+\end{thebibliography}
+
+\end{document}
