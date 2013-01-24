@@ -7,14 +7,14 @@
 
  With the capability of user-defined code execution on each GPU core, devices traditionally purchased for recreational purposes gain theoretical data-processing capabilities that far exceed those of systems solely scheduling instructions on a multi-core \ac{CPU}.\cite{mars}
 
-Unfortunately simply adding more cores in order to increase the speed at which a system can perform computation provides gains that cannot be utilised fully by common sequential programming approaches.
+Unfortunately, simply adding more cores in order to increase the speed at which a system can perform computation provides gains that cannot be utilised fully by common sequential programming approaches.
 In order to exploit the full potential for multiple threads to be executed concurrently, the programmer needs to structure data as a collection of processable entities that share no dependencies.
-Any calculations within a thread that require knowledge of the state of other threads is unable to continue until the shared state can be synchronised.
+Any calculations within a thread that require knowledge of the state of other threads are unable to continue until the shared state can be synchronised.
 
-In addition to the locality-dependant penalty of memory synchronisation, due to the nature of \ac{SIMD} execution that runs in lockstep, code written for \ac{GPUs} becomes inefficient if the work kernels contain significant branching.
+In addition to the locality-dependant penalty of memory synchronisation, due to the nature of \ac{SIMD} execution that runs in lockstep, code written for \ac{GPUs} becomes inefficient if the work kernels contain significant branching.\cite{branching}
 These disadvantages, along with several others, force programmers exploring the boundaries of performance to adapt new paradigms and data-flow models when solving otherwise familiar problems.
 
-\emph{Functional Programming} language features and those inspired by them offer advantages for data-parallel execution due to abstraction hiding the concepts of \emph{state} and \emph{mutable data}.
+\emph{Functional Programming} language-features and those inspired by them often offer advantages when exploring parallel execution\cite{parallelfunction} due to abstraction hiding the concepts of \emph{state} and \emph{mutable data}.
 Pure functional programming provides \emph{referential transparency} as each function can be replaced by just its result without affecting the correctness of the program.
 The ability to simplify long chains of computation into a series of values being mapped to other values greatly increases the ease of verifying an algorithm, as well as highlighting computations that cannot affect the result of others and can therefore be run concurrently.
 

@@ -1,9 +1,9 @@
 \section{Background}
-This section provides background information concerning the components and concepts required to studied in order to complete this project, as well as examples and brief evaluation of existing related work.
+This section provides background information concerning the components and concepts requiring study in order to undertake this project, as well as examples and brief evaluation of existing related work.
 \subsection{OpenCL}
-OpenCL is an open framework for executing tasks described by a C99 kernel on heterogeneous devices such as multi-core CPUs and GPUs. Kernels are compiled for specific detected on-board platforms and abstracted from underlying hardware implementations of operations in order to stay platform-independent across compute devices. Data-processing is distributed across the many cores of a device via the arrangement of kernel instances or \emph{work-items} into \emph{workgroups}.
+OpenCL is an open framework for executing tasks described by a C99 kernel on heterogeneous devices such as multi-core CPUs and GPUs. Kernels are compiled for detected on-board platforms and abstracted from underlying hardware-specific operations in order to stay platform-independent across compute devices. Data-processing is distributed across the many cores of a device via the arrangement of kernel instances or \emph{work-items} into \emph{workgroups}.
 
-Work-groups are a matrix of related work-items spanning one, two or three dimensions. They serve to partition datasets into subsets and arrange instances of tasks into sectors that can pass state between each-other without requiring synchronisation outside of their scope. An important challenge when implementing high-performance algorithms in OpenCL is understanding the flow of data between threads so that work-units can be organised into an arrangement that allows efficient memory synchronisation by exploiting locality.
+Work-groups are a matrix of related work-items spanning one, two or three dimensions. They serve to partition datasets into subsets and arrange instances of tasks into sectors that can pass state between each-other without requiring synchronisation outside of their scope. An important challenge when implementing high-performance algorithms in OpenCL is understanding the flow of data between threads so that work-units can be organised into an arrangement that allows efficient memory synchronisation by exploiting locality.\cite{bestpractice}
 
 The OpenCL standards are published by the \emph{Khronos Compute Working Group}\cite{khronos}.
 Programs utilising the framework can run on any OpenCL-conformant device including Intel \emph{Core} processors, Intel \emph{HD} Integrated Graphics chipsets, NVidia \emph{GeForce} Graphics Cards and AMD \emph{Radeon} Graphics Cards.
@@ -11,10 +11,10 @@ In short, most modern systems are capable of executing OpenCL kernels on at leas
 
 Before release of the OpenCL 1.0 specification NVIDIA produced a platform named \ac{CUDA}, allowing compatible GPUs to utilise shader units to perform user-specified calculations. Since the CUDA platform is a proprietary API only designed to execute on NVIDIA hardware, this made optimisations easier to include in the implementation. In contrast to CUDA, OpenCL aims to solve the problem of varying frameworks for each hardware provider causing the portability of code to suffer. Studies have shown that with sufficiently optimised kernel code, OpenCL can perform comparably with CUDA despite it's greater flexibility of execution architecture\cite{perf}.
 \subsection{Functional Programming}
-As outlined in the introduction, Functional Programming is a paradigm involved with the composition of functions that map data from input to output values without external side-effects. When constructing a program functionally, the programmer is required to reason about the flow of data between each link in the composed chain of component methods.
-In addition to chaining functions to produce a non-trivial computation, many languages provide highly expressive primitives that describe methods of transforming data using a provided function that abstract from the act of iterating through a large vector of data.
-These primitives are called \emph{higher-order functions} as they take a function, requiring first-class function support, as an input.
-This abstraction is beneficial not only for readability and verifiability but as implementation is hidden any correct series of operations can be performed, in parallel or sequentially as long as the output value is correct, leaving scope for optimisations that do not adversely affect the usability of the language.
+As outlined in the introduction, Functional Programming is a paradigm based on the composition of functions that map data from input to output values without external side-effects. When constructing a program functionally, the programmer is required to reason about the flow of data between each link in the composed chain of component methods.
+In addition to chaining functions to produce a non-trivial computation, many languages provide highly expressive functions\cite{ghc} that describe methods of transforming data using a provided function that abstract from the act of iterating through a large vector of data.
+These entities are called \emph{higher-order functions} as they take a function, requiring first-class function support, as an input.
+This abstraction is beneficial not only for readability and verifiability but, as implementation is hidden; any correct series of operations can be performed, in parallel or sequentially as long as the output value is correct, leaving scope for optimisations that do not adversely affect the usability of the language.
 \paragraph{Map}
 \emph{Map} is a higher-order function that applies a provided function to all elements in a provided dataset. It can be used to concisely describe a uniform alteration.
 Map is trivial to parallelise since no shared state of threads is required.
@@ -22,24 +22,21 @@ If other variables are required they can be shared and since no side-effects are
 \paragraph{Filter}
 \emph{Filter} is a higher-order function that applies a function that evaluates as either \emph{True} or \emph{False} on a dataset, returning the subset of the input vector for which the predicate is true. Once again, it is trivial to perform all predicate checking in parallel. It is slightly more involved to then return the subset efficiently as state will have to be shared in order to provide a compact output that does not require a full sequential scan to extract members.
 \paragraph{Fold}
-\emph{Fold} is a higher-order function that takes a dataset and an initial 'result' value (possibility an identity value) then repeatedly applies a combining function to produce an output. The output is equal to that obtained by repeatedly replacing the result with the output of itself and one dataset member input to the combiner, such that each member is consumed once and the result is cumulatively generated. An associative Fold function can be parallelised to increase throughput.
+\emph{Fold} is a higher-order function that takes a dataset and an initial 'result' value (possibility an identity value) then repeatedly applies a combining function to produce an output. The output is equal to that obtained by repeatedly replacing the result with the output of itself and one dataset member using the combiner, such that each member is consumed once and the result is cumulatively generated. An associative Fold function can be parallelised to increase throughput.
 \paragraph{Scan}
 \emph{Scan} is similar to \emph{Fold} in that it takes an input vector and a combining function. However, instead of returning the final result, Scan returns a vector that is equal to the intermediate values if the combining function was incrementally applied from one end of the dataset to the other. Scan can also exploit a highly-parallel architecture.
 \subsection{MapReduce}
-\emph{MapReduce} is a data-flow model and program specification for distributed processing of particularly large data-sets\cite{mapreduce}. It is designed to assist the programmer with automatic parallelisation and scheduling built into the implementation platform, requiring only specification of intermediary functions.
+\emph{MapReduce} is a data-flow model and program specification for distributed processing of particularly large data-sets\cite{mapreduce}. It is designed to assist the programmer with automatic parallelisation and scheduling built into the implementation platform, requiring only the specification of intermediary functions.
 
-The use of MapReduce is heavily linked with datasets that are magnitudes higher in size than any one conventional system could process alone; Its execution model relies on building up and then combining streams of data using pipeline elements that have strict input/output type requirements.
+The use of MapReduce is heavily linked with datasets that are magnitudes higher in size than any one conventional system could process alone; its execution model relies on building up and then combining streams of data using pipeline elements that have strict input/output type requirements.
 \paragraph{Map}
-The \emph{Map} task (not to be confused with the Functional Programming primitive of the same name) takes a (key, value) tuple input and returns a list of (key, value) tuples resulting from its given function applied to that input. Output tuples can have any key and value, and are not required to match. When presented with a list of input tuples, MapReduce runs the Map task on each input in parallel.
+The \emph{Map} task (not to be confused with the Functional Programming function of the same name) takes a (key, value) tuple input and returns a list of (key, value) tuples resulting from its specified function applied to that input. Output tuples can have any key and value, and are not required to match each-other in any way. When presented with a list of input tuples, MapReduce runs the Map task on each input in parallel.
 
 After the Map task is complete, the \emph{Combiner} collects all tuples from all Map tasks that share the same key and emits a (key, list-of-values) tuple that contains all the values associated with that key.
 \paragraph{Reduce}
 The \emph{Reduce} task takes a (key, list-of-values) tuple and returns some number of values obtained by applying it's given function to the input. When multiple post-combiner tuples exist, MapReduce runs the Reduce task on each input in parallel.
 
 With a combination of Map and Reduce tasks, MapReduce can transform a number of inputs into a number of values over many machines and benefit greatly from task parallelism.
-
-\paragraph{Combiners}
-herp derp combiners.
 
 \paragraph{Ease of use}
 Some of the success of the MapReduce model is attributed to its convenient level of abstraction. No knowledge of underlying parallel programming techniques is required to specify functions for transforming data.
