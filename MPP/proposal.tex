@@ -1,4 +1,4 @@
-\documentclass[11pt,a4paper] {scrartcl}   % list options between brackets
+\documentclass[11pt,a4paper,twocolumn] {scrartcl}   % list options between brackets
 \usepackage{datetime,acronym,url}              % list packages between braces
 \urlstyle{sf}
 \usepackage{DejaVuSerifCondensed}
@@ -15,11 +15,13 @@
 \pagebreak{}
 \input{introduction.tex}
 \input{background.tex}
+\input{existing_work.tex}
 \pagebreak{}
 
 \acrodef{CUDA}{\emph{Compute Unified Device Architecture}}
 \acrodef{OpenCL}{\emph{Open Computing Language}}
 \acrodef{CPU}{\emph{Central Processing Unit}}
+\acrodef{GPGPU}{\emph{General Purpose GPU}}
 \acrodef{GPUs}{\emph{Graphics Processing Units}}
 \acrodef{IPS}{\emph{instructions per second}}
 \acrodef{SIMD}{\emph{Single-Instruction-Multiple-Data}}
@@ -45,6 +47,21 @@
     MapReduce: Simplified Data Processing on Large Clusters
 
     Jeffrey Dean and Sanjay Ghemawat
+
+  \bibitem{mars}
+  Mars: A MapReduce Framework on Graphics Processors
+
+  Bingsheng He Wenbin Fang Naga K. Govindaraju Qiong Luo Tuyong Wang
+
+  \bibitem{phoenix}
+  Evaluating MapReduce for Multi-core and Multiprocessor Systems
+
+  Colby Ranger, Ramanan Raghuraman, Arun Penmetsa, Gary Bradski, Christos Kozyrakis
+
+  \bibitem{phoenix++}
+    Phoenix++: Modular MapReduce for Shared-Memory Systems
+
+    Justin Talbot, Richard M. Yoo, and Christos Kozyrakis
 
   \bibitem{streammr}
     StreamMR: An Optimized MapReduce Frameworkfor AMD GPUs

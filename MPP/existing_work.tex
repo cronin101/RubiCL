@@ -1,0 +1,30 @@
+\section{Existing Work in this Field}
+\subsection{MARS}
+\emph{MARS}\cite{mars} is a project that implements the MapReduce run-time on \ac{GPUs}. It aims to take advantage of the potential computing power present on Graphics Cards using the \ac{CUDA} library.
+\paragraph{Relevant approaches}
+MARS attempts to solve key barriers that will be faced when trying to produce a MapReduce platform using \ac{GPGPU} frameworks.
+\begin{description}
+  \item[Keeping the GPU cores busy]
+
+    A GPU's impressive throughput resulting from its massively parallel structure is only maintained if you can avoid tasks idling and cores being underutilised. Balancing tasks and scheduling them effectively is important.
+
+  \item[Handling various data sources]
+    The canonical usage of a GPU does not involve tasks such as string processing or File I/O.
+    In order to make such tasks possible during MapReduce on MARS, efficient methods for providing the functionality from host to the device kernel must be developed.
+\end{description}
+\paragraph{Analysis}
+Whilst \emph{MARS} is very similar to some aspects of my proposed project, since it is implemented using \ac{CUDA} it is far more restricted as to which systems can benefit from its reported performance increases over non-GPU MapReduce. In my project I hope to attempt porting performance optimisations present in the \ac{CUDA}/MARS system and evaluate how well the benefits translate to the OpenCL framework. I am also interested in testing whether there is any benefit to implementing shared CPU/GPU MapReduce purely within the OpenCL runtime, with both types of devices using the same model of data-buffers and kernel dispatch.
+\subsection{Phoenix and Phoenix++}
+The original \emph{Phoenix}\cite{phoenix} project provided a shared-memory implementation of the MapReduce runtime, originally designed to distribute around a cluster. It demonstrated that for suitable data-processing tasks, MapReduce on multi-core shared-memory systems can obtain similar performance to PThreads despite being far less involved for the programmer to implement. Although demonstrating potential in some ways, Phoenix suffered from several downsides - such as inefficient implementations of 'housekeeping' aspects of the MapReduce platform including the \emph{Combiner}.
+
+\emph{Phoenix++}\cite{phoenix++}, a C++ re-implementation of the original Phoenix platform, aimed to rectify some disadvantages by presenting an easier-to-extend framework that allowed critical components to be tuned for greater efficiency. It resulted in a several-times performance increase over the original system via adaption to different usage patterns and a far more aggressive combiner that is triggered after every Map emmision.
+
+\paragraph{Analysis}
+The aim of my project's framework is to mitigate the need for substantial configuration by the end-user, yet without sacrificing too much performance. I aim to follow in the footsteps of \emph{MARS} by showing it is possible to provide greater performance than CPU implementations despite the expected optimisation difficulties caused by the usage of OpenCL instead of CUDA.
+It also demonstrates that it is important to make it possible to swap out key functions in the MapReduce pipeline in order to evaluate how some algorithms perform against others.
+
+\subsection{StreamMR}
+\emph{StreamMR}\cite{streammr} is an OpenCL MapReduce platform that takes advantage of the AMD Stream SDK to optimise performance on AMD \ac{GPUs}. This repeats the earlier theme of restricting hardware compatibility in order to make vendor-specific optimisations possible. It also promises improved performance, compared to MARS, when handling intermediate results by using hash tables instead of sorting by keys. StreamMR, like Phoenix++, uses Combiner functions - in this case to help reduce the overhead of moving datasets to and from the GPU device over a relatively costly PCI-e link.
+
+\paragraph{Analysis}
+Similar to MARS, I intend to see how much of the optimisations present in this project are AMD specific, as it would be against the goals of my implementation to rely on a particular vendor's optimisations. I intend to experiment further with the memory model presented as the hash-table approach may provide performance benefits to my system at the cost of a more complicated memory allocation routine.
