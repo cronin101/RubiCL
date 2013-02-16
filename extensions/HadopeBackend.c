@@ -3,18 +3,6 @@
 
 HadopeEnvironment env;
 
-static VALUE method_size_of(VALUE self, VALUE type_string_object){
-  char* type_string;
-
-  type_string = StringValuePtr(type_string_object);
-  if (!strcmp(type_string, "int")){
-    return INT2FIX(sizeof(int));
-  } else {
-    rb_raise(rb_eTypeError, "Provided type not understood by size_of");
-    return INT2FIX(0);
-  }
-}
-
 static VALUE method_init_OpenCL_environment(VALUE self){
   env = createHadopeEnvironment();
   printf("OpenCL environment initialised.\n");
@@ -122,5 +110,4 @@ void Init_hadope_backend() {
   rb_define_method(HadopeBackend, "retrieve_int_dataset", method_retrieve_int_dataset, 1);
   rb_define_method(HadopeBackend, "run_task", method_run_task, 4);
   rb_define_method(HadopeBackend, "clean_used_resources", method_clean_used_resources, 1);
-  rb_define_method(HadopeBackend, "size_of", method_size_of, 1);
 }

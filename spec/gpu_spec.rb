@@ -5,7 +5,7 @@ describe HaDope::GPU do
     before(:all) do
       FP = HaDope::Functional
 
-      @input_array = (1..10000000).to_a
+      @input_array = (1..100).to_a
       HaDope::DataSet.create({  name: :test_dataset, type: :int,
                                 data: @input_array  })
 
