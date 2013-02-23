@@ -17,8 +17,8 @@ static VALUE method_init_GPU_environment(VALUE self){
   return init_OpenCL_environment(CL_DEVICE_TYPE_GPU);
 }
 
-static VALUE method_create_memory_buffer(VALUE self,  VALUE num_entries_object,
-                                                      VALUE type_string_object){
+static VALUE method_create_memory_buffer(VALUE self, VALUE num_entries_object,
+                                                    VALUE type_string_object){
   HadopeEnvironment *environment;
   HadopeMemoryBuffer *mem_struct;
   VALUE environment_object;
@@ -52,6 +52,8 @@ static VALUE method_load_int_dataset(VALUE self, VALUE dataset_object,
   int i;
   int *dataset;
   HadopeMemoryBuffer *mem_struct;
+  HadopeEnvironment *environment;
+  VALUE environment_object;
 
   Check_Type(dataset_object, T_ARRAY);
   array_size = RARRAY_LEN(dataset_object);
@@ -60,7 +62,9 @@ static VALUE method_load_int_dataset(VALUE self, VALUE dataset_object,
     dataset[i] = FIX2INT(rb_ary_entry(dataset_object, i));
   }
   Data_Get_Struct(memory_struct_object, HadopeMemoryBuffer, mem_struct);
-  loadIntArrayIntoDevice(env, *mem_struct, dataset);
+  environment_object = rb_ivar_get(self, rb_intern("environment"));
+  Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+  loadIntArrayIntoDevice(*environment, *mem_struct, dataset);
 
   return self;
 }
@@ -116,7 +120,7 @@ void Init_hadope_backend() {
   printf("HadopeBackend native code included.\n");
   VALUE HadopeBackend = rb_define_module("HadopeBackend");
   rb_define_method(HadopeBackend, "init_GPU_environment", method_init_GPU_environment, 0);
-  rb_define_method(HadopeBackend, "create_memory_buffer", method_create_memory_buffer, 3);
+  rb_define_method(HadopeBackend, "create_memory_buffer", method_create_memory_buffer, 2);
   rb_define_method(HadopeBackend, "load_int_dataset", method_load_int_dataset, 2);
   rb_define_method(HadopeBackend, "retrieve_int_dataset", method_retrieve_int_dataset, 1);
   rb_define_method(HadopeBackend, "run_task", method_run_task, 4);
