@@ -17,10 +17,11 @@ static VALUE method_init_GPU_environment(VALUE self){
   return init_OpenCL_environment(CL_DEVICE_TYPE_GPU);
 }
 
-static VALUE method_create_memory_buffer(VALUE self, VALUE environment_object,
-                          VALUE num_entries_object, VALUE type_string_object){
+static VALUE method_create_memory_buffer(VALUE self,  VALUE num_entries_object,
+                                                      VALUE type_string_object){
   HadopeEnvironment *environment;
   HadopeMemoryBuffer *mem_struct;
+  VALUE environment_object;
   VALUE memory_struct_object;
   char* type_string;
   int unit_size;
@@ -36,6 +37,7 @@ static VALUE method_create_memory_buffer(VALUE self, VALUE environment_object,
   mem_struct = malloc(sizeof(HadopeMemoryBuffer));
   num_entries = FIX2INT(num_entries_object);
   mem_struct->buffer_entries = num_entries;
+  environment_object = rb_ivar_get(self, (rb_intern("environment")));
   Data_Get_Struct(environment_object, HadopeEnvironment, environment);
   mem_struct->buffer = createMemoryBuffer(*environment, num_entries * unit_size);
   memory_struct_object = Data_Wrap_Struct(memory_struct_object, NULL, NULL,
