@@ -1,8 +1,6 @@
 #include "ruby.h"
 #include "./hadope.h"
 
-HadopeEnvironment env;
-
 static VALUE init_OpenCL_environment(cl_device_type device_type){
   HadopeEnvironment *environment;
   VALUE environment_object;
@@ -74,11 +72,15 @@ static VALUE method_retrieve_int_dataset(VALUE self, VALUE memory_struct_object)
   int i;
   HadopeMemoryBuffer *mem_struct;
   VALUE output_array;
+  HadopeEnvironment *environment;
+  VALUE environment_object;
 
   Data_Get_Struct(memory_struct_object, HadopeMemoryBuffer, mem_struct);
   array_size = mem_struct->buffer_entries;
   dataset = malloc(array_size * sizeof(int));
-  getIntArrayFromDevice(env, *mem_struct, dataset);
+  environment_object = rb_iv_get(self, "@environment");
+  Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+  getIntArrayFromDevice(*environment, *mem_struct, dataset);
   output_array = rb_ary_new2(array_size);
   for (i = 0; i < array_size; i++){
     rb_ary_store(output_array, i, INT2FIX(dataset[i]));
@@ -94,22 +96,31 @@ static VALUE method_run_task(VALUE self, VALUE task_source_object, VALUE source_
   char* task_name;
   HadopeTask task;
   HadopeMemoryBuffer *mem_struct;
+  HadopeEnvironment *environment;
+  VALUE environment_object;
 
   Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
   task_source = StringValuePtr(task_source_object);
   source_size = FIX2INT(source_size_object);
   task_name = StringValuePtr(task_name_object);
-  task = buildTaskFromSource(env, task_source, source_size, task_name);
-  runTaskOnCurrentDataset(env, *mem_struct, task);
+  environment_object = rb_iv_get(self, "@environment");
+  Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+  task = buildTaskFromSource(*environment, task_source, source_size, task_name);
+  runTaskOnCurrentDataset(*environment, *mem_struct, task);
 
   return self;
 }
 
 static VALUE method_clean_used_resources(VALUE self, VALUE mem_struct_object){
   HadopeMemoryBuffer *mem_struct;
+  HadopeEnvironment *environment;
+  VALUE environment_object;
+
   Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
-  clFlush(env.queue);
-  clFinish(env.queue);
+  environment_object = rb_iv_get(self, "@environment");
+  Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+  clFlush(environment->queue);
+  clFinish(environment->queue);
   clReleaseMemObject(mem_struct->buffer);
 
   return self;
