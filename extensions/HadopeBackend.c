@@ -33,11 +33,10 @@ static VALUE method_create_memory_buffer(VALUE self, VALUE num_entries_object,
   } else {
     rb_raise(rb_eTypeError, "Provided type not understood by size_of");
   }
-
   mem_struct = malloc(sizeof(HadopeMemoryBuffer));
   num_entries = FIX2INT(num_entries_object);
   mem_struct->buffer_entries = num_entries;
-  environment_object = rb_ivar_get(self, (rb_intern("environment")));
+  environment_object = rb_iv_get(self, "@environment");
   Data_Get_Struct(environment_object, HadopeEnvironment, environment);
   mem_struct->buffer = createMemoryBuffer(*environment, num_entries * unit_size);
   memory_struct_object = Data_Wrap_Struct(memory_struct_object, NULL, NULL,
@@ -62,7 +61,7 @@ static VALUE method_load_int_dataset(VALUE self, VALUE dataset_object,
     dataset[i] = FIX2INT(rb_ary_entry(dataset_object, i));
   }
   Data_Get_Struct(memory_struct_object, HadopeMemoryBuffer, mem_struct);
-  environment_object = rb_ivar_get(self, rb_intern("environment"));
+  environment_object = rb_iv_get(self, "@environment");
   Data_Get_Struct(environment_object, HadopeEnvironment, environment);
   loadIntArrayIntoDevice(*environment, *mem_struct, dataset);
 
