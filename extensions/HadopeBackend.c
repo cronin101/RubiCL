@@ -4,11 +4,12 @@
 HadopeEnvironment env;
 
 static VALUE init_OpenCL_environment(cl_device_type device_type){
-  HadopeEnvironment environment;
+  HadopeEnvironment *environment;
   VALUE environment_object;
 
-  environment = createHadopeEnvironment(device_type);
-  environment_object = Data_Wrap_Struct(environment_object, NULL, NULL, &environment);
+  environment = malloc(sizeof(HadopeEnvironment));
+  *environment = createHadopeEnvironment(device_type);
+  environment_object = Data_Wrap_Struct(environment_object, NULL, NULL, environment);
   return environment_object;
 }
 
@@ -16,8 +17,9 @@ static VALUE method_init_GPU_environment(VALUE self){
   return init_OpenCL_environment(CL_DEVICE_TYPE_GPU);
 }
 
-static VALUE method_create_memory_buffer(VALUE self, VALUE num_entries_object,
-                                                VALUE type_string_object){
+static VALUE method_create_memory_buffer(VALUE self, VALUE environment_object,
+                          VALUE num_entries_object, VALUE type_string_object){
+  HadopeEnvironment *environment;
   HadopeMemoryBuffer *mem_struct;
   VALUE memory_struct_object;
   char* type_string;
@@ -34,7 +36,8 @@ static VALUE method_create_memory_buffer(VALUE self, VALUE num_entries_object,
   mem_struct = malloc(sizeof(HadopeMemoryBuffer));
   num_entries = FIX2INT(num_entries_object);
   mem_struct->buffer_entries = num_entries;
-  mem_struct->buffer = createMemoryBuffer(env, num_entries * unit_size);
+  Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+  mem_struct->buffer = createMemoryBuffer(*environment, num_entries * unit_size);
   memory_struct_object = Data_Wrap_Struct(memory_struct_object, NULL, NULL,
                                                                mem_struct);
 
@@ -111,7 +114,7 @@ void Init_hadope_backend() {
   printf("HadopeBackend native code included.\n");
   VALUE HadopeBackend = rb_define_module("HadopeBackend");
   rb_define_method(HadopeBackend, "init_GPU_environment", method_init_GPU_environment, 0);
-  rb_define_method(HadopeBackend, "create_memory_buffer", method_create_memory_buffer, 2);
+  rb_define_method(HadopeBackend, "create_memory_buffer", method_create_memory_buffer, 3);
   rb_define_method(HadopeBackend, "load_int_dataset", method_load_int_dataset, 2);
   rb_define_method(HadopeBackend, "retrieve_int_dataset", method_retrieve_int_dataset, 1);
   rb_define_method(HadopeBackend, "run_task", method_run_task, 4);

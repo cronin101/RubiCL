@@ -34,14 +34,14 @@ describe HaDope::GPU do
       output_array.should eql @input_array
     end
 
-    it "should allow a map function to be executed on all data correctly" do
+    it "allows a map function to be executed on all data correctly" do
       gpu = HaDope::GPU.get
       output_array = gpu.load(:test_dataset).fp_map(:test_task).output
       ruby_map = @input_array.map { |i| i + 1 }
       output_array.should eql ruby_map
     end
 
-    it "should allow multiple map functions to be chained correctly" do
+    it "allows multiple map functions to be chained correctly" do
       gpu = HaDope::GPU.get
       output_array = gpu.load(:test_dataset).fp_map(:test_task,:inverse_test_task).output
       output_array.should eql @input_array
