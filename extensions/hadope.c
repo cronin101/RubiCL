@@ -1,6 +1,6 @@
 #include "hadope.h"
 
-HadopeEnvironment createHadopeEnvironment(){
+HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type){
   HadopeEnvironment env;
   cl_platform_id platform_id = NULL;
   cl_uint ret_num_platforms;
@@ -8,8 +8,9 @@ HadopeEnvironment createHadopeEnvironment(){
   cl_int ret;
 
   ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
-  ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_DEFAULT,
+  ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_CPU,
                         1, &env.device_id, &ret_num_devices);
+  printf("clGetDeviceIDs %s\n", oclErrorString(ret));
   env.context = clCreateContext(NULL, 1, &env.device_id, NULL, NULL, &ret);
   printf("clCreateContext %s\n", oclErrorString(ret));
   env.queue = clCreateCommandQueue(env.context, env.device_id, 0, &ret);

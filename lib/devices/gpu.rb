@@ -5,7 +5,7 @@ class HaDope
     @@singleton = nil
 
     def initialize
-      puts "Init Time: #{Benchmark.realtime{ init_OpenCL_environment }}"
+      puts "Init Time: #{Benchmark.realtime{ @environment = init_GPU_environment }}"
     end
 
     def load(dataset_name)

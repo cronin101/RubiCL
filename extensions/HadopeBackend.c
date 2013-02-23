@@ -3,11 +3,17 @@
 
 HadopeEnvironment env;
 
-static VALUE method_init_OpenCL_environment(VALUE self){
-  env = createHadopeEnvironment();
-  printf("OpenCL environment initialised.\n");
+static VALUE init_OpenCL_environment(cl_device_type device_type){
+  HadopeEnvironment environment;
+  VALUE environment_object;
 
-  return self;
+  environment = createHadopeEnvironment(device_type);
+  environment_object = Data_Wrap_Struct(environment_object, NULL, NULL, &environment);
+  return environment_object;
+}
+
+static VALUE method_init_GPU_environment(VALUE self){
+  return init_OpenCL_environment(CL_DEVICE_TYPE_GPU);
 }
 
 static VALUE method_create_memory_buffer(VALUE self, VALUE num_entries_object,
@@ -104,7 +110,7 @@ static VALUE method_clean_used_resources(VALUE self, VALUE mem_struct_object){
 void Init_hadope_backend() {
   printf("HadopeBackend native code included.\n");
   VALUE HadopeBackend = rb_define_module("HadopeBackend");
-  rb_define_method(HadopeBackend, "init_OpenCL_environment", method_init_OpenCL_environment, 0);
+  rb_define_method(HadopeBackend, "init_GPU_environment", method_init_GPU_environment, 0);
   rb_define_method(HadopeBackend, "create_memory_buffer", method_create_memory_buffer, 2);
   rb_define_method(HadopeBackend, "load_int_dataset", method_load_int_dataset, 2);
   rb_define_method(HadopeBackend, "retrieve_int_dataset", method_retrieve_int_dataset, 1);
