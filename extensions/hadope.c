@@ -100,6 +100,7 @@ getPresencearrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer
 /* ~~ END Memory Management Methods ~~ */
 
 /* ~~ Task Compilation Methods ~~ */
+
 /* Takes the source code for a kernel and the name of the task to build and creates a
  * HadopeTask Struct containing the components needed to dispatch this task later.
  *
@@ -187,3 +188,5 @@ createPresenceArrayForCurrentDataset(const HadopeEnvironment env,
 
   return presence;
 }
+
+/* ~~ END Task Dispatching Methods ~~ */
