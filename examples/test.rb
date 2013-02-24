@@ -45,11 +45,10 @@ File.open(log_path, 'w') do |log|
 
   # Chaining actions on CPU
   results = HaDope::CPU.get.load(:one_to_ten).fp_map(:add_one, :compute_factorial, :add_one).output
-  log.puts ":one_to_ten :add_one :compute_factoral :add_one is: #{results}"
-
+  log.puts ":one_to_ten :add_one :compute_factoral :add_one is: #{results}\n\n"
   # Kernel generation
-  log.puts "Kernel for :add_one is: \n#{FP::Map[:add_one].kernel}"
-  log.puts "Kernel for :add_three_is_even is: \n#{FP::Filter[:add_three_is_even].kernel}"
+  log.puts "Kernel for :add_one is: \n#{FP::Map[:add_one].kernel}\n"
+  log.puts "Kernel for :add_three_is_even is: \n#{FP::Filter[:add_three_is_even].kernel}\n"
 
   # Filtering datasets
   filtered = HaDope::CPU.get.load(:one_to_ten).fp_filter(:add_three_is_even)

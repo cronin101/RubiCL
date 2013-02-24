@@ -1,4 +1,5 @@
 :one_to_ten :add_one :compute_factoral :add_one is: [3, 7, 25, 121, 721, 5041, 40321, 362881, 3628801, 39916801]
+
 Kernel for :add_one is: 
 __kernel void add_one(__global int *data_array){
 int global_id = get_global_id(0);
@@ -8,6 +9,7 @@ i = data_array[global_id];
 i += 1;;
 data_array[global_id] = i;
 }
+
 Kernel for :add_three_is_even is: 
 __kernel void add_three_is_even(__global int* data_array, __global int* presence_array){
 int global_id = get_global_id(0);
@@ -19,5 +21,6 @@ presence_array[global_id] = 1;
 presence_array[global_id] = 0;
 }
 }
+
 Dataset :one_to_ten is:                   [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 Presence Array for :add_three_is_even is: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
