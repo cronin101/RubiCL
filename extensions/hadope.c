@@ -178,8 +178,8 @@ createPresenceArrayForDataset(const HadopeEnvironment env,
                                                                   CL_MEM_READ_WRITE);
 
   /* Kernel's global presence_array set to be the newly created presence buffer */
-  ret = clSetKernelArg(task.kernel, 1, sizeof(cl_mem), presence.buffer);
-  printf("clSetKernelArg PA%s\n", oclErrorString(ret));
+  ret = clSetKernelArg(task.kernel, 1, sizeof(cl_mem), &presence.buffer);
+  printf("clSetKernelArg PA %s\n", oclErrorString(ret));
 
   /* Kernel enqueued to be executed on the enviornment's command queue */
   ret = clEnqueueNDRangeKernel(env.queue, task.kernel, 1, NULL, g_work_size, NULL, 0, NULL,
