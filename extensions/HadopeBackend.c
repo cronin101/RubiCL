@@ -40,7 +40,9 @@ static VALUE method_create_memory_buffer(VALUE self, VALUE num_entries_object,
   mem_struct->buffer_entries = num_entries;
   environment_object = rb_iv_get(self, "@environment");
   Data_Get_Struct(environment_object, HadopeEnvironment, environment);
-  mem_struct->buffer = createMemoryBuffer(*environment, num_entries * unit_size);
+  mem_struct->buffer = createMemoryBuffer(     *environment         ,
+                                            num_entries * unit_size ,
+                                              CL_MEM_READ_WRITE    );
   memory_struct_object = Data_Wrap_Struct(memory_struct_object, NULL, NULL,
                                                                mem_struct);
 

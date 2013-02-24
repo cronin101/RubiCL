@@ -19,11 +19,12 @@ HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type){
   return env;
 }
 
-cl_mem createMemoryBuffer(const HadopeEnvironment env, const int required_memory){
+cl_mem createMemoryBuffer(const HadopeEnvironment env, const int required_memory,
+                                                              cl_mem_flags type){
   cl_int ret;
   cl_mem buffer;
 
-  buffer = clCreateBuffer(env.context, CL_MEM_READ_WRITE, required_memory, NULL, &ret);
+  buffer = clCreateBuffer(env.context, type, required_memory, NULL, &ret);
   printf("clCreateBuffer %s\n", oclErrorString(ret));
 
   return buffer;
@@ -57,7 +58,6 @@ void loadIntArrayIntoDevice(const HadopeEnvironment env, const HadopeMemoryBuffe
 void getIntArrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct,
                                                                               int *dataset){
   cl_int ret;
-  int i;
   clEnqueueReadBuffer(env.queue, mem_struct.buffer, CL_TRUE, 0,
         mem_struct.buffer_entries * sizeof(int), dataset, 0, NULL, NULL);
   printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
@@ -68,10 +68,44 @@ void runTaskOnCurrentDataset(const HadopeEnvironment env, const HadopeMemoryBuff
   cl_int ret;
   size_t g_work_size[3] = {mem_struct.buffer_entries, 0, 0};
 
-  ret = clSetKernelArg(task.kernel, 0, sizeof(cl_mem) , &mem_struct.buffer);
+  ret = clSetKernelArg(task.kernel, 0, sizeof(cl_mem), &mem_struct.buffer);
   printf("clSetKernelArg %s\n", oclErrorString(ret));
+
+  ret = clEnqueueNDRangeKernel(env.queue, task.kernel, 1, NULL, g_work_size, NULL, 0, NULL,
+                                                                                     NULL);
+  printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
+}
+
+HadopeMemoryBuffer createPresenceArrayForCurrentDataset(const HadopeEnvironment env,
+                                          const HadopeMemoryBuffer mem_struct,
+                                                             const HadopeTask task){
+  cl_int ret;
+  size_t g_work_size[3] = {mem_struct.buffer_entries, 0, 0};
+  HadopeMemoryBuffer *presence;
+
+
+  ret = clSetKernelArg(task.kernel, 0, sizeof(cl_mem), &mem_struct.buffer);
+  printf("clSetKernelArg %s\n", oclErrorString(ret));
+
+  presence = malloc(sizeof(HadopeMemoryBuffer));
+  presence->buffer_entries = mem_struct.buffer_entries;
+  presence->buffer = createMemoryBuffer(env, (presence->buffer_entries * sizeof(char)),
+                                                                          CL_MEM_READ_WRITE);
+  ret = clSetKernelArg(task.kernel, 1, sizeof(cl_mem), presence->buffer);
+
+  printf("clSetKernelArg PA%s\n", oclErrorString(ret));
+
   ret = clEnqueueNDRangeKernel(env.queue, task.kernel, 1, NULL, g_work_size, NULL, 0, NULL,
                                                                                      NULL);
   printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 
+  return *presence;
+}
+
+void getPresencearrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer presence,
+                                                                      char *presence_array){
+  cl_int ret;
+  clEnqueueReadBuffer(env.queue, presence.buffer, CL_TRUE, 0,
+                    presence.buffer_entries * sizeof(char), presence_array, 0, NULL, NULL);
+  printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 }
