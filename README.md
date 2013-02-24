@@ -2,6 +2,14 @@
 ###### *Feel free to groan, blame [@wenkakes](http://github.com/wenkakes) for the name.
 # Cheatsheet
 
+#### Installation and running
+`
+$ cd extensions && ruby extconf.rb && make && sudo make install
+`
+```ruby
+require './hadope.rb'
+```
+
 #### Creating a DataSet
 ```ruby
 HaDope::DataSet.create(
