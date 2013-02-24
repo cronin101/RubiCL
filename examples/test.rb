@@ -49,7 +49,7 @@ FP::Filter.create({
 })
 
 #Idea of how to execute a series of actions
-results = HaDope::GPU.get.load(:one_to_onehundred).fp_map(:add_one, :compute_factorial, :add_one).fp_filter(:doubled_is_even).output
+results = HaDope::CPU.get.load(:one_to_onehundred).fp_map(:add_one, :compute_factorial, :add_one).fp_filter(:doubled_is_even).output
 
 puts FP::Map[:add_one].kernel
 puts FP::Filter[:doubled_is_even].kernel

@@ -19,15 +19,15 @@ CL_KERNEL
 
     when HaDope::Functional::Filter
 kernel=<<CL_KERNEL
-__kernel void #{@task.name}(__global #{@task.c_key_type}* data_array, __global char* presence_array){
+__kernel void #{@task.name}(__global #{@task.c_key_type}* data_array, __global int* presence_array){
 int global_id = get_global_id(0);
-int output;
 #{@task.c_key_type} #{@task.key[:name]} = data_array[global_id];
 #{@task.function.chomp}
 if (#{@task.test}){
 presence_array[global_id] = 1;
 } else {
 presence_array[global_id] = 0;
+}
 }
 CL_KERNEL
 

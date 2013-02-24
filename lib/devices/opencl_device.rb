@@ -13,14 +13,8 @@ class HaDope
       self
     end
 
-    def do_fp_map(task_name)
-      map_task = HaDope::Functional::Map[task_name]
-      kernel = map_task.kernel
-      puts "#{task_name} Time: #{Benchmark.realtime{ run_map_task(kernel, kernel.length, map_task.name.to_s, @membuffer) }}"
-      self
-    end
-
-    def fp_filter(task_name)
+    def fp_filter(*tasks)
+      tasks.each { |task| do_fp_filter(task) }
       self
     end
 
@@ -32,6 +26,20 @@ class HaDope
 
     def clean
       clean_used_resources(@membuffer)
+    end
+
+    private
+
+    def do_fp_map(task_name)
+      map_task = HaDope::Functional::Map[task_name]
+      kernel = map_task.kernel
+      puts "#{task_name} Time: #{Benchmark.realtime{ run_map_task(kernel, kernel.length, map_task.name.to_s, @membuffer) }}"
+    end
+
+    def do_fp_filter(task_name)
+      filter_task = HaDope::Functional::Filter[task_name]
+      kernel = filter_task.kernel
+      puts "#{task_name} Time: #{Benchmark.realtime{ run_filter_task(kernel, kernel.length, filter_task.name.to_s, @membuffer) }}"
     end
 
   end

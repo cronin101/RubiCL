@@ -178,6 +178,39 @@ method_run_map_task(VALUE self, VALUE task_source_object, VALUE source_size_obje
   return self;
 }
 
+/* Takes a code-generated Filter kernel and builds it for device then executes on dataset.
+ * FIXME: Refactor pasted code from above method that is present here.
+ *
+ * @task_source_object: Ruby object storing the kernel as a String.
+ * @source_size_object: Ruby object specifying the size of the kernel String.
+ * @task_name_object: Ruby object specifying the task within the source to enqueue.
+ * @memory_struct_object: Ruby object containing HadopeMemoryBuffer to process. */
+static VALUE
+method_run_filter_task(VALUE self, VALUE task_source_object, VALUE source_size_object,
+                                     VALUE task_name_object, VALUE mem_struct_object){
+  char* task_source;
+  int source_size;
+  char* task_name;
+  HadopeTask task;
+  HadopeMemoryBuffer *mem_struct;
+  HadopeEnvironment *environment;
+  VALUE environment_object;
+
+  /* Convert Objects into C types and builds Kernel using environment ivar */
+  task_source = StringValuePtr(task_source_object);
+  source_size = FIX2INT(source_size_object);
+  task_name = StringValuePtr(task_name_object);
+  environment_object = rb_iv_get(self, "@environment");
+  Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+  task = buildTaskFromSource(*environment, task_source, source_size, task_name);
+
+  /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
+  Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
+  createPresenceArrayForDataset(*environment, *mem_struct, task);
+
+  return self;
+}
+
 /* ~~ END Task Dispatching Methods ~~ */
 
 static VALUE
@@ -207,5 +240,6 @@ Init_hadope_backend(){
   rb_define_method(HadopeBackend, "load_int_dataset", method_load_int_dataset, 2);
   rb_define_method(HadopeBackend, "retrieve_int_dataset", method_retrieve_int_dataset, 1);
   rb_define_method(HadopeBackend, "run_map_task", method_run_map_task, 4);
+  rb_define_method(HadopeBackend, "run_filter_task", method_run_filter_task, 4);
   rb_define_method(HadopeBackend, "clean_used_resources", method_clean_used_resources, 1);
 }

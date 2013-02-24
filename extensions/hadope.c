@@ -40,7 +40,7 @@ createHadopeEnvironment(const cl_device_type device_type){
  * @req_memory: The size of the memory buffer to create.
  * @fs: Flags to set on memory buffer... CL_MEM_READ_WRITE/CL_MEM_READ. */
 cl_mem
-createMemoryBuffer(const HadopeEnvironment env, const int req_memory, cl_mem_flags fs){
+createMemoryBuffer(const HadopeEnvironment env, const int req_memory, const cl_mem_flags fs){
   cl_int ret;
   cl_mem buffer;
 
@@ -87,13 +87,13 @@ getIntArrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer mem_
  *
  * @env: Struct containing device/context/queue variables.
  * @presence: Struct containing device presence-buffer and its length.
- * @presence_array: Pointer to array of char flags to be copied from device buffer. */
+ * @presence_array: Pointer to array of int flags to be copied from device buffer. */
 void
 getPresencearrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer presence,
-                                                                      char *presence_array){
+                                                                      int *presence_array){
   cl_int ret;
-  ret = clEnqueueReadBuffer(env.queue, presence.buffer, CL_TRUE, 0, presence.buffer_entries * sizeof(char),
-                                                                            presence_array, 0, NULL, NULL);
+  ret = clEnqueueReadBuffer(env.queue, presence.buffer, CL_TRUE, 0, presence.buffer_entries * sizeof(int),
+                                                                           presence_array, 0, NULL, NULL);
   printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 }
 
@@ -161,7 +161,7 @@ runTaskOnDataset(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struc
  * @mem_struct: Struct containing the dataset/size of data to filter.
  * @task: HadopeTask containing the kernel to set flags if the predicate is satisfied. */
 HadopeMemoryBuffer
-createPresenceArrayForCurrentDataset(const HadopeEnvironment env,
+createPresenceArrayForDataset(const HadopeEnvironment env,
                                           const HadopeMemoryBuffer mem_struct,
                                                              const HadopeTask task){
   cl_int ret;
@@ -172,9 +172,9 @@ createPresenceArrayForCurrentDataset(const HadopeEnvironment env,
   ret = clSetKernelArg(task.kernel, 0, sizeof(cl_mem), &mem_struct.buffer);
   printf("clSetKernelArg %s\n", oclErrorString(ret));
 
-  /* Output buffer created to be a char flag for each element in input dataset. */
+  /* Output buffer created to be an int flag for each element in input dataset. */
   presence.buffer_entries = mem_struct.buffer_entries;
-  presence.buffer = createMemoryBuffer(env, (presence.buffer_entries * sizeof(char)),
+  presence.buffer = createMemoryBuffer(env, (presence.buffer_entries * sizeof(int)),
                                                                   CL_MEM_READ_WRITE);
 
   /* Kernel's global presence_array set to be the newly created presence buffer */
