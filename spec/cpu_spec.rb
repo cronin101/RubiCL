@@ -21,7 +21,7 @@ describe HaDope::CPU do
 
     it "allows data to be loaded and retrieved without modifications if no kernel tasks are queued" do
       device = HaDope::CPU.get
-      output_array = (device.load :test_dataset).output
+      output_array = device.load(:test_dataset).output
       output_array.should eql @input_array
     end
 
@@ -34,14 +34,14 @@ describe HaDope::CPU do
 
     it "allows a map function to be executed on all data correctly" do
       device = HaDope::CPU.get
-      output_array = ((device.load :test_dataset).fp_map :test_task).output
+      output_array = device.load(:test_dataset).fp_map(:test_task).output
       ruby_map = @input_array.map { |i| i + 1 }
       output_array.should eql ruby_map
     end
 
     it "allows multiple map functions to be chained correctly" do
       device = HaDope::CPU.get
-      output_array = ((device.load :test_dataset).fp_map :test_task, :inverse_test_task).output
+      output_array = device.load(:test_dataset).fp_map(:test_task, :inverse_test_task).output
       output_array.should eql @input_array
     end
   end
