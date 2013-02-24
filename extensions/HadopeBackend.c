@@ -15,7 +15,7 @@ init_OpenCL_environment(cl_device_type device_type){
   environment = malloc(sizeof(HadopeEnvironment));
   *environment = createHadopeEnvironment(device_type);
 
-  /* Struct is turned into a ruby object so that it can be stored as an ivar */
+  /* Struct is turned into a Ruby object so that it can be stored as an ivar */
   environment_object = Data_Wrap_Struct(environment_object, NULL, NULL, environment);
 
   return environment_object;
@@ -50,7 +50,7 @@ method_create_memory_buffer(VALUE self, VALUE num_entries_object, VALUE type_str
   int unit_size;
   int num_entries;
 
-  /* Pulling string out of ruby object and strcmp to set unit size of array
+  /* Pulling string out of Ruby object and strcmp to set unit size of array
    * FIXME Make this less hacky, it feels bad.*/
   type_string = StringValuePtr(type_string_object);
   if (!strcmp(type_string, "int")){
@@ -65,7 +65,7 @@ method_create_memory_buffer(VALUE self, VALUE num_entries_object, VALUE type_str
   environment_object = rb_iv_get(self, "@environment");
   Data_Get_Struct(environment_object, HadopeEnvironment, environment);
 
-  /* Memory buffer is created and then wrapped in a ruby object stored by device class */
+  /* Memory buffer is created and then wrapped in a Ruby object stored by device class */
   mem_struct->buffer = createMemoryBuffer(     *environment         ,
                                             num_entries * unit_size ,
                                               CL_MEM_READ_WRITE    );
@@ -75,7 +75,7 @@ method_create_memory_buffer(VALUE self, VALUE num_entries_object, VALUE type_str
   return memory_struct_object;
 }
 
-/* Loads an integer array from given ruby object into the cl_mem buffer previously created
+/* Loads an integer array from given Ruby object into the cl_mem buffer previously created
  *
  * @dataset_object: Ruby object containing an array of integers.
  * @memory_struct_object: Ruby object storing previously created HadopeMemoryBuffer. */
