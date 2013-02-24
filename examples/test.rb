@@ -39,15 +39,21 @@ FP::Filter.create name: :add_three_is_even,
                   function: function,
                   test: 'i % 2 == 0'
 
-# Chaining actions on CPU
-results = HaDope::CPU.get.load(:one_to_ten).fp_map(:add_one, :compute_factorial, :add_one).output
-puts ":one_to_ten :add_one :compute_factoral :add_one is: #{results}"
+log_path = File.expand_path("../log.txt", __FILE__)
 
-# Kernel generation
-puts "Kernel for :add_one is: \n#{FP::Map[:add_one].kernel}"
-puts "Kernel for :add_three_is_even is: \n#{FP::Filter[:add_three_is_even].kernel}"
+File.open(log_path, 'w') do |log|
 
-# Filtering datasets
-filtered = HaDope::CPU.get.load(:one_to_ten).fp_filter(:add_three_is_even)
-puts "Dataset :one_to_ten is:                   #{filtered.output}"
-puts "Presence Array for :add_three_is_even is: #{filtered.presence_array}"
+  # Chaining actions on CPU
+  results = HaDope::CPU.get.load(:one_to_ten).fp_map(:add_one, :compute_factorial, :add_one).output
+  log.puts ":one_to_ten :add_one :compute_factoral :add_one is: #{results}"
+
+  # Kernel generation
+  log.puts "Kernel for :add_one is: \n#{FP::Map[:add_one].kernel}"
+  log.puts "Kernel for :add_three_is_even is: \n#{FP::Filter[:add_three_is_even].kernel}"
+
+  # Filtering datasets
+  filtered = HaDope::CPU.get.load(:one_to_ten).fp_filter(:add_three_is_even)
+  log.puts "Dataset :one_to_ten is:                   #{filtered.output}"
+  log.puts "Presence Array for :add_three_is_even is: #{filtered.presence_array}"
+
+end
