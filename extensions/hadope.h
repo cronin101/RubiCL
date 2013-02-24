@@ -38,5 +38,5 @@ void loadIntArrayIntoDevice(const HadopeEnvironment env, const HadopeMemoryBuffe
 void getIntArrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct,
                                                                               int *dataset);
 
-void runTaskOnCurrentDataset(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct,
+void runTaskOnDataset(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct,
                                                                        const HadopeTask task);

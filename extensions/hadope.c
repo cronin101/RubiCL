@@ -63,7 +63,7 @@ void getIntArrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer
   printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 }
 
-void runTaskOnCurrentDataset(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct,
+void runTaskOnDataset(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct,
                                                                        const HadopeTask task){
   cl_int ret;
   size_t g_work_size[3] = {mem_struct.buffer_entries, 0, 0};
