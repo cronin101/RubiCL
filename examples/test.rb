@@ -4,7 +4,7 @@ require_relative '../hadope.rb'
 FP = HaDope::Functional
 
 # Creating a DataSet
-HaDope::DataSet.create  name: :one_to_onehundred,
+HaDope::DataSet.create  name: :one_to_ten,
                         type: :int,
                         data: (1..10).to_a
 
@@ -31,23 +31,23 @@ FP::Map.create  name: :compute_factorial,
 
 # Creating a Filter function
 function =<<C_CODE
-i = i * 2;
+i = i + 3;
 C_CODE
 
-FP::Filter.create name: :doubled_is_even,
+FP::Filter.create name: :add_three_is_even,
                   key: [:int, :i],
                   function: function,
                   test: 'i % 2 == 0'
 
 # Chaining actions on CPU
-results = HaDope::CPU.get.load(:one_to_onehundred).fp_map(:add_one, :compute_factorial, :add_one).output
-puts results
+results = HaDope::CPU.get.load(:one_to_ten).fp_map(:add_one, :compute_factorial, :add_one).output
+puts ":one_to_ten :add_one :compute_factoral :add_one is: #{results}"
 
 # Kernel generation
-puts FP::Map[:add_one].kernel
-puts FP::Filter[:doubled_is_even].kernel
+puts "Kernel for :add_one is: \n#{FP::Map[:add_one].kernel}"
+puts "Kernel for :add_three_is_even is: \n#{FP::Filter[:add_three_is_even].kernel}"
 
 # Filtering datasets
-filtered = HaDope::CPU.get.load(:one_to_onehundred).fp_filter(:doubled_is_even)
-puts filtered.presence_array
-puts filtered.output
+filtered = HaDope::CPU.get.load(:one_to_ten).fp_filter(:add_three_is_even)
+puts "Dataset :one_to_ten is:                   #{filtered.output}"
+puts "Presence Array for :add_three_is_even is: #{filtered.presence_array}"

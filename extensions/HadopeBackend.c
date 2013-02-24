@@ -193,6 +193,8 @@ method_run_filter_task(VALUE self, VALUE task_source_object, VALUE source_size_o
   char* task_name;
   HadopeTask task;
   HadopeMemoryBuffer *mem_struct;
+  HadopeMemoryBuffer *presence_struct;
+  VALUE presence_object;
   HadopeEnvironment *environment;
   VALUE environment_object;
 
@@ -206,9 +208,12 @@ method_run_filter_task(VALUE self, VALUE task_source_object, VALUE source_size_o
 
   /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
   Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
-  createPresenceArrayForDataset(*environment, *mem_struct, task);
+  presence_struct = malloc(sizeof(HadopeMemoryBuffer));
+  computePresenceArrayForDataset(*environment, *mem_struct, task, presence_struct);
 
-  return self;
+  /* DIRTY_HACK: Packages presence_strut to be returned to device class */
+  presence_object = Data_Wrap_Struct(presence_object, NULL, NULL, presence_struct);
+  return presence_object;
 }
 
 /* ~~ END Task Dispatching Methods ~~ */

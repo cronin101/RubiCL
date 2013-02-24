@@ -155,38 +155,35 @@ runTaskOnDataset(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struc
 }
 
 /* Enqueues a task to compute the presence array for a given dataset and filter kernel.
- * Returns the presence HadopeMemoryBuffer.
  *
  * @env: Struct containing device/context/queue variables.
  * @mem_struct: Struct containing the dataset/size of data to filter.
- * @task: HadopeTask containing the kernel to set flags if the predicate is satisfied. */
-HadopeMemoryBuffer
-createPresenceArrayForDataset(const HadopeEnvironment env,
+ * @task: HadopeTask containing the kernel to set flags if the predicate is satisfied.
+ * @presence: Pointer to HadopeMemoryBuffer struct, to be assigned the presence_array */
+void
+computePresenceArrayForDataset(const HadopeEnvironment env,
                                           const HadopeMemoryBuffer mem_struct,
-                                                             const HadopeTask task){
+            const HadopeTask task, HadopeMemoryBuffer *presence){
   cl_int ret;
   size_t g_work_size[3] = {mem_struct.buffer_entries, 0, 0};
-  HadopeMemoryBuffer presence;
 
   /* Kernel's global data_array set to be the given device memory buffer */
   ret = clSetKernelArg(task.kernel, 0, sizeof(cl_mem), &mem_struct.buffer);
   printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   /* Output buffer created to be an int flag for each element in input dataset. */
-  presence.buffer_entries = mem_struct.buffer_entries;
-  presence.buffer = createMemoryBuffer(env, (presence.buffer_entries * sizeof(int)),
+  presence->buffer_entries = mem_struct.buffer_entries;
+  presence->buffer = createMemoryBuffer(env, (presence->buffer_entries * sizeof(int)),
                                                                   CL_MEM_READ_WRITE);
 
   /* Kernel's global presence_array set to be the newly created presence buffer */
-  ret = clSetKernelArg(task.kernel, 1, sizeof(cl_mem), &presence.buffer);
+  ret = clSetKernelArg(task.kernel, 1, sizeof(cl_mem), &presence->buffer);
   printf("clSetKernelArg PA %s\n", oclErrorString(ret));
 
   /* Kernel enqueued to be executed on the enviornment's command queue */
   ret = clEnqueueNDRangeKernel(env.queue, task.kernel, 1, NULL, g_work_size, NULL, 0, NULL,
                                                                                      NULL);
   printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
-
-  return presence;
 }
 
 /* ~~ END Task Dispatching Methods ~~ */

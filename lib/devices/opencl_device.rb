@@ -18,6 +18,10 @@ class HaDope
       self
     end
 
+    def presence_array
+      retrieve_int_dataset(@presence_array)
+    end
+
     def output
       dataset = []
       puts "Dataset Output Time: #{Benchmark.realtime{ dataset = retrieve_int_dataset(@membuffer) }}"
@@ -39,7 +43,7 @@ class HaDope
     def do_fp_filter(task_name)
       filter_task = HaDope::Functional::Filter[task_name]
       kernel = filter_task.kernel
-      puts "#{task_name} Time: #{Benchmark.realtime{ run_filter_task(kernel, kernel.length, filter_task.name.to_s, @membuffer) }}"
+      puts "#{task_name} Time: #{Benchmark.realtime{ @presence_array = run_filter_task(kernel, kernel.length, filter_task.name.to_s, @membuffer) }}"
     end
 
   end
