@@ -7,9 +7,6 @@
 #endif
 #include "oclerrorexplain.h"
 
-#define GPU_DEVICE 0
-#define CPU_DEVICE 1
-
 typedef struct {
   cl_device_id device_id;
   cl_context context;
