@@ -4,7 +4,8 @@ class HaDope::CodeGenerator
   end
 
   def generate_kernel
-    if @task.is_a? HaDope::Functional::Map
+    case @task
+    when HaDope::Functional::Map
 kernel=<<CL_KERNEL
 __kernel void #{@task.name}(__global #{@task.c_key_type} *data_array){
 int global_id = get_global_id(0);
@@ -16,24 +17,22 @@ data_array[global_id] = #{@task.key[:name]};
 }
 CL_KERNEL
 
-    elsif @task.is_a? HaDope::Functional::Filter
+    when HaDope::Functional::Filter
 kernel=<<CL_KERNEL
-__kernel void #{@task.name}(__global #{@task.c_key_type}* data_array){
+__kernel void #{@task.name}(__global #{@task.c_key_type}* data_array, __global int* presence_array){
 int global_id = get_global_id(0);
-int output;
 #{@task.c_key_type} #{@task.key[:name]} = data_array[global_id];
 #{@task.function.chomp}
 if (#{@task.test}){
-output = #{@task.key[:name]};
+presence_array[global_id] = 1;
 } else {
-output = NULL;
+presence_array[global_id] = 0;
 }
-data_array[global_id] = output;
 }
 CL_KERNEL
 
     else
-      raise "Task type not implemented yet"
+      raise "Task type not implemented yet: #{@task.class}"
     end
   end
 

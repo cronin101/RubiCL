@@ -26,7 +26,8 @@ typedef struct{
 
 HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type);
 
-cl_mem createMemoryBuffer(const HadopeEnvironment env, const int required_memory);
+cl_mem createMemoryBuffer(const HadopeEnvironment env, const int required_memory,
+                                                              const cl_mem_flags type);
 
 HadopeTask buildTaskFromSource(const HadopeEnvironment env, const char* kernel_source,
                                                 const size_t source_size, char* name);
@@ -37,5 +38,5 @@ void loadIntArrayIntoDevice(const HadopeEnvironment env, const HadopeMemoryBuffe
 void getIntArrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct,
                                                                               int *dataset);
 
-void runTaskOnCurrentDataset(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct,
+void runTaskOnDataset(const HadopeEnvironment env, const HadopeMemoryBuffer mem_struct,
                                                                        const HadopeTask task);
