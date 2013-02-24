@@ -92,8 +92,8 @@ void
 getPresencearrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer presence,
                                                                       char *presence_array){
   cl_int ret;
-  clEnqueueReadBuffer(env.queue, presence.buffer, CL_TRUE, 0,
-                    presence.buffer_entries * sizeof(char), presence_array, 0, NULL, NULL);
+  ret = clEnqueueReadBuffer(env.queue, presence.buffer, CL_TRUE, 0, presence.buffer_entries * sizeof(char),
+                                                                            presence_array, 0, NULL, NULL);
   printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 }
 
