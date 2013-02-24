@@ -20,28 +20,28 @@ describe HaDope::CPU do
     end
 
     it "allows data to be loaded and retrieved without modifications if no kernel tasks are queued" do
-      gpu = HaDope::CPU.get
-      output_array = gpu.load(:test_dataset).output
+      device = HaDope::CPU.get
+      output_array = device.load(:test_dataset).output
       output_array.should eql @input_array
     end
 
     it "remembers a dataset without chaining" do
-      gpu = HaDope::CPU.get
-      gpu.load(:test_dataset)
-      output_array = gpu.output
+      device = HaDope::CPU.get
+      device.load(:test_dataset)
+      output_array = device.output
       output_array.should eql @input_array
     end
 
     it "allows a map function to be executed on all data correctly" do
-      gpu = HaDope::CPU.get
-      output_array = gpu.load(:test_dataset).fp_map(:test_task).output
+      device = HaDope::CPU.get
+      output_array = device.load(:test_dataset).fp_map(:test_task).output
       ruby_map = @input_array.map { |i| i + 1 }
       output_array.should eql ruby_map
     end
 
     it "allows multiple map functions to be chained correctly" do
-      gpu = HaDope::CPU.get
-      output_array = gpu.load(:test_dataset).fp_map(:test_task,:inverse_test_task).output
+      device = HaDope::CPU.get
+      output_array = device.load(:test_dataset).fp_map(:test_task,:inverse_test_task).output
       output_array.should eql @input_array
     end
   end
