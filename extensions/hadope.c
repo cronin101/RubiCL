@@ -75,8 +75,8 @@ getIntArrayFromDevice(const HadopeEnvironment env, const HadopeMemoryBuffer mem_
                                                                          int *dataset){
   cl_int ret;
 
-  clEnqueueReadBuffer(env.queue, mem_struct.buffer, CL_TRUE, 0,
-        mem_struct.buffer_entries * sizeof(int), dataset, 0, NULL, NULL);
+  ret = clEnqueueReadBuffer(env.queue, mem_struct.buffer, CL_TRUE, 0,
+    mem_struct.buffer_entries * sizeof(int), dataset, 0, NULL, NULL);
   printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 }
 
