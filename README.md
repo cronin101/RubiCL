@@ -26,3 +26,21 @@ FP::Filter.create(
   test: 'i % 2 == 0'
 )
 ```
+
+#### Dispatching tasks to OpenCL Compute Devices
+```ruby
+@device = HaDope::CPU.get
+
+@device.load(:one_to_ten)
+@device.fp_map(:add_one)
+@device.output
+#=> [2,3,4,5,6,7,8,9,10,11]
+
+# Tasks are chainable...
+@device.load(:one_to_ten).fp_map(:add_one).output
+#=> [2,3,4,5,6,7,8,9,10,11]
+
+# Map tasks are too...
+@device.load(:one_to_ten).fp_map(:add_one, :add_one, :add_one).output
+#=> [4,5,6,7,8,9,10,11,12,13]
+```
