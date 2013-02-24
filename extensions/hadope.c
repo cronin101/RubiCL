@@ -187,5 +187,3 @@ createPresenceArrayForCurrentDataset(const HadopeEnvironment env,
 
   return presence;
 }
-
-
