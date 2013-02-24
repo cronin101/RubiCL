@@ -13,6 +13,8 @@ HaDope::DataSet.create(
 
 #### Creating Map and Filter functions
 ```ruby
+FP = HaDope::Functional
+
 FP::Map.create(
   name: :add_one,
   key: [:int, :i],
