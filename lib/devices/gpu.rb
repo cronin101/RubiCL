@@ -1,12 +1,12 @@
 class HaDope
-  class CPU
+  class GPU
     include HadopeBackend
     include DeviceMethods
 
     @@singleton = nil
 
     def initialize
-      puts "Init Time: #{Benchmark.realtime{ @environment = init_CPU_environment }}"
+      puts "Init Time: #{Benchmark.realtime{ @environment = init_GPU_environment }}"
     end
 
     def self.get
