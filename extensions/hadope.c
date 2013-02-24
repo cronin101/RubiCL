@@ -8,7 +8,7 @@ HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type){
   cl_int ret;
 
   ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
-  ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_DEFAULT,
+  ret = clGetDeviceIDs(platform_id, device_type,
                         1, &env.device_id, &ret_num_devices);
   printf("clGetDeviceIDs %s\n", oclErrorString(ret));
   env.context = clCreateContext(NULL, 1, &env.device_id, NULL, NULL, &ret);

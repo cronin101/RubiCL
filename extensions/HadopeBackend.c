@@ -15,6 +15,10 @@ static VALUE method_init_GPU_environment(VALUE self){
   return init_OpenCL_environment(CL_DEVICE_TYPE_GPU);
 }
 
+static VALUE method_init_CPU_environment(VALUE self){
+  return init_OpenCL_environment(CL_DEVICE_TYPE_CPU);
+}
+
 static VALUE method_create_memory_buffer(VALUE self, VALUE num_entries_object,
                                                     VALUE type_string_object){
   HadopeEnvironment *environment;
@@ -130,6 +134,7 @@ void Init_hadope_backend() {
   printf("HadopeBackend native code included.\n");
   VALUE HadopeBackend = rb_define_module("HadopeBackend");
   rb_define_method(HadopeBackend, "init_GPU_environment", method_init_GPU_environment, 0);
+  rb_define_method(HadopeBackend, "init_CPU_environment", method_init_CPU_environment, 0);
   rb_define_method(HadopeBackend, "create_memory_buffer", method_create_memory_buffer, 2);
   rb_define_method(HadopeBackend, "load_int_dataset", method_load_int_dataset, 2);
   rb_define_method(HadopeBackend, "retrieve_int_dataset", method_retrieve_int_dataset, 1);
