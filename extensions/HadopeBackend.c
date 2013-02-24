@@ -197,7 +197,7 @@ method_clean_used_resources(VALUE self, VALUE mem_struct_object){
 
 /* Used to give extension methods defined above to device class when HadopeBackend module is included. */
 void
-Init_hadope_backend() {
+Init_hadope_backend(){
   printf("HadopeBackend native code included.\n");
   VALUE HadopeBackend = rb_define_module("HadopeBackend");
   rb_define_method(HadopeBackend, "init_GPU_environment", method_init_GPU_environment, 0);
