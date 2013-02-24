@@ -14,6 +14,7 @@ init_OpenCL_environment(cl_device_type device_type){
 
   environment = malloc(sizeof(HadopeEnvironment));
   *environment = createHadopeEnvironment(device_type);
+
   /* Struct is turned into a ruby object so that it can be stored as an ivar */
   environment_object = Data_Wrap_Struct(environment_object, NULL, NULL, environment);
 
