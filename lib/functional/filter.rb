@@ -6,6 +6,7 @@ class HaDope::Functional::Filter
   attr_accessor :test
 
   def initialize(options = {})
+    options[:function] ||= ''
     store [:name, :key, :other_vars, :function, :test], options
   end
 
