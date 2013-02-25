@@ -1,4 +1,4 @@
-# HaDope*: An OpenCL Accelerator for Parallel Calcluations.
+# HaDope*: An OpenCL Accelerator for Parallel Calculations.
 ###### *Feel free to groan, blame [@wenkakes](http://github.com/wenkakes) for the name.
 # Cheatsheet
 
