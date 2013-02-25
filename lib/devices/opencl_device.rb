@@ -29,6 +29,15 @@ class HaDope
       self
     end
 
+    def output
+      output_time = Benchmark.realtime do
+        @output ||= retrieve_int_dataset(@membuffer)
+      end
+      puts "Dataset Output Time: #{output_time}"
+
+      @output
+    end
+
     def presence_array
       output_time = Benchmark.realtime do
         @presence_array ||= retrieve_int_dataset(@presence_buffer)
@@ -38,13 +47,11 @@ class HaDope
       @presence_array
     end
 
-    def output
-      output_time = Benchmark.realtime do
-        @output ||= retrieve_int_dataset(@membuffer)
-      end
-      puts "Dataset Output Time: #{output_time}"
-
-      @output
+    def _output
+      prefix_sum = (prev = 0) && presence_array.map { |n| prev += n }
+      result = [nil]*prefix_sum.last
+      output.each_with_index { |value, i| result[prefix_sum[i] - 1] = value if presence_array[i] == 1 }
+      result
     end
 
     def clean

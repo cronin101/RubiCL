@@ -7,7 +7,7 @@ class HaDope
       attr_accessor :singleton
 
       def get
-        singleton ||= new
+        @singleton ||= new
       end
     end
 
