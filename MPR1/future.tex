@@ -1,1 +1,14 @@
 \section{Future Phase}
+Once previously mentioned work to improve the quality of the functional programming framework is complete, work will initially be focussed on collecting experimental data about the performance of the system against other options.
+
+
+After it is judged that enough improvement has been made, or that there is no longer any obvious optimisation possible, the focus will shift to completing the MapReduce aspect of the framework.
+
+
+With both paradigms supported and optimised, the final product should offer a wide variety of use-cases where data-processing can be accelerated.
+
+
+Figure \ref{named-tasks} shows an implementation of named tasks dispatch for functional primitives. A similar approach will be useful for MapReduce. However, the challenge is allowing expressive function declarations without overcomplicating the abstraction usage. Experimentation with a variety of styles is the best way forward here as it is foolish to prematurely commit to an abstraction style without understanding the strengths and weaknesses of it against the alternatives.
+
+The work-flow for producing the Domain-Specific Language of the MapReduce framework is as follows:
+First a possible syntax idea is produced such as in Figure \ref{mp-snippet}. If it appears to be sufficiently expressive, a simple sequential back-end solution that passes behavior tests for the functionality is written. Once it is shown that the functionality is present, each component of the back-end is rewritten to use OpenCL and parallel algorithms. The modified code is then retested against the original specifications to make sure that the behaviour has not changed.

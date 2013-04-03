@@ -1,4 +1,4 @@
-\documentclass[11pt,a4paper,twocolumn] {scrartcl}   % list options between brackets
+\documentclass[13pt,a4paper,twocolumn] {scrartcl}   % list options between brackets
 \usepackage{datetime,acronym,url}              % list packages between braces
 \urlstyle{sf}
 \usepackage{DejaVuSerifCondensed}
@@ -8,6 +8,7 @@
 \usepackage{graphicx}
 \usepackage{listings}
 \usepackage{color}
+\usepackage{microtype}
 
 \input{titlepage.tex}
 
@@ -19,6 +20,7 @@
 \input{introduction.tex}
 %\input{background.tex}
 %\input{existing_work.tex}
+\input{goals.tex}
 \input{progress.tex}
 \input{future.tex}
 \input{workplan.tex}
@@ -38,6 +40,10 @@
 
 \thispagestyle{empty}
 \pagestyle{empty}
+  \bibitem{rubygems}
+  RubyGems
+  Ruby community`s gem hosting service.
+  http://rubygems.org
   \bibitem{proposal}
     MInf Project Proposal
 
@@ -49,12 +55,14 @@
     NVIDIA GPU Gems
     Chapter 39. Parallel Prefix Sum (Scan) with CUDA
 
-    http://http.developer.nvidia.com/GPUGems3/gpugems\textunderscore3ch39.html
+    http://http.developer.nvidia.com/GPUGems3
+    /gpugems\textunderscore3ch39.html
 
   \bibitem{khronos}
     The Khronos Group OpenCL Standard
 
-    http://www.khronos.org/registry/cl/specs/opencl-1.2.pdf
+    http://www.khronos.org/registry/cl/specs
+    /opencl-1.2.pdf
 
   \bibitem{perf}
     A Comprehensive Performance Comparison of
@@ -80,7 +88,8 @@
   \bibitem{ghc}
     Glasgow Haskell Compiler Standard Library
 
-    http://www.haskell.org/ghc/docs/latest/html/libraries/index.html
+    http://www.haskell.org/ghc/docs/latest/html
+    /libraries/index.html
 
   \bibitem{mapreduce}
     MapReduce: Simplified Data Processing on Large Clusters
@@ -91,21 +100,6 @@
   Mars: A MapReduce Framework on Graphics Processors
 
   Bingsheng He Wenbin Fang Naga K. Govindaraju Qiong Luo Tuyong Wang
-
-  \bibitem{phoenix}
-  Evaluating MapReduce for Multi-core and Multiprocessor Systems
-
-  Colby Ranger, Ramanan Raghuraman, Arun Penmetsa, Gary Bradski, Christos Kozyrakis
-
-  \bibitem{phoenix++}
-    Phoenix++: Modular MapReduce for Shared-Memory Systems
-
-    Justin Talbot, Richard M. Yoo, and Christos Kozyrakis
-
-  \bibitem{streammr}
-    StreamMR: An Optimized MapReduce Frameworkfor AMD GPUs
-
-    Marwa Elteiry, Heshan Liny, Wu-chun Fengy, and Tom Scoglandy
 
 \thispagestyle{empty}
 \pagestyle{empty}

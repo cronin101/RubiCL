@@ -1,19 +1,19 @@
-\section{Output and Work Plan}
-\subsection{Immediate Focus - Spring 2013}
-The first stage of implementation is to produce an underlying library for higher-order functiontional programming tasks.
-By making it simpler to enqueue OpenCL kernels and get datasets to/from the device, this will enable easy evaluation of necessary scheduling techniques.
+\section{Work Plan}
 
-Once the library has implemented higher-order functions for basic data types, an initial comparison of its advantages against existing methods shall be produced.
+\subsection{Now - June 2013}
+  Since I will be pre-occupied with exams, I find it unlikely that any significant progress will be made on further implementation in this time-frame. It is possible that several spontaneous ideas that could shape the direction of the project may be recorded but no coding is planned.
 
-At this point a test-suite with high code-coverage shall be built in order to provide strong assertions that given substitutions to existing methods are correct.
-\subsection{Later Focus - Late Spring/Summer 2013}
-A series of implementation possibilities shall be considered after greater evaluation of existing relevant MapReduce frameworks. After shortlisting areas of interest and constructing novel methods to investigate, a modular system shall be constructed whereby combinations of concepts resultant from these decisions can be tested.
-\subsection{Prior to Release - Winter 2013}
-After functional completeness, the focus of the project is pareto-efficient optimisation of performance, usability and portability without degrading the correctness or capabilities of the system.
-\subsection{Final Output of Implementation - Early 2014}
-The framework will be released with features explained in this proposal alongside relevant documentation.
+\subsection{June 2013 - July 2013}
+In the first month of summer without revision taking up free time, I hope to finalize my work on the purely Functional Programming aspect of the framework that has been completed so far. This includes the time taken to gather metrics and optimise any discovered bottlenecks that are reducing the performance of the system. At this point I am to have the functional library in a state where I would be happy releasing it if it were the sole result of this project.
 
-The project's source should be released, with a suitably clean code-structure, to encourage further experimentation and allow investigation of techniques developed during the lifetime of this project.
+\subsection{July 2013 - September 2013}
+Over the later part of summer, significant progress should be made in the MapReduce aspect of the framework. Behavioural tests for the sequential work-flow examples should be completed early on and the underlying implementation details should be decided for the MapReduce engine.
 
-\subsection{Dissertation - Remaining Time}
-The research undertaken throughout this project will be presented in a report documenting the problems faced and solved by the choices made. Evaluations of the project's performance against competing platforms shall be presented in detail alongside conclusions drawn.
+The more work done in this period, the less busy the 5th year semesters will be so large amounts of work will be advantageous in reducing the work-pressure later on.
+
+\subsection{Semester 1}
+Depending on previous progress with the framework, missing features and loose ends should be tied up in this time-period. Time should be taken to profile and optimise the implementation and to provide report material about which back-end decisions were taken and why. By the end of this semester, all coding on the project should be completed so that the final semester can focus solely on report writing and gathering any missing data about performance without concentrating on rewriting the codebase.
+\subsection{Semester 2}
+Remaining time will be spend writing documentation and the final report for the dissertation. No code modification should be necessary during this period.
+
+If serious problems are encountered at any point during the previous semester's progress towards the framework, the first four weeks of semester 2 may be used as an emergency catch-up buffer. However this is not part of the plan and if work continues at the planned pace this will not be necessary.
