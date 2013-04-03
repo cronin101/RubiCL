@@ -113,8 +113,7 @@ __kernel void bar_task(
     presence_array[global_id] = 0;
   }
 }
-    \end{verbatim}
-
+\end{verbatim}
     The presence array for the vector
     \begin{tabular}{ | c | c | c | c |}
       \hline
@@ -126,16 +125,66 @@ __kernel void bar_task(
     \\
     'n: n \% 4 == 0' ("Keep n if n mod four is zero") is
     \\
-    \begin{tabular}{ | c | c | c | c |}
+   \begin{tabular}{ | c | c | c | c |}
       \hline
         0 & 1 & 1 & 1 \\
       \hline
     \end{tabular}
-
+ 
     \paragraph{Parallel prefix sum}
     Since the array returned by a useful filter function is shorter than the input array, it is necessary to calculate how much buffer space to be allocate and the offsets of the original elements within this output buffer.
 
-    A \emph{prefix sum} is an operation that applies a binary operator to elements of a vector. In an \emph{exclusive} prefix sum, each element is replaced by the result of applying the operator to all previous elements except itself.
+    A \emph{prefix sum} is an operation that applies a binary operator to elements of a vector. In an \emph{inclusive} prefix sum, each element is replaced by the result of applying the operator to all previous elements and itself.
 
-  Performing an exclusive prefix sum on the above presence array
+  Performing an inclusive prefix sum on the previously calculated presence array produces
+  \begin{tabular}{ | c | c | c | c |}
+    \hline
+      0 & 0+1 & 0+1+1 & 0+1+1+1 \\
+    \hline
+  \end{tabular}
+    \\ or \\
+  \begin{tabular}{ | c | c | c | c |}
+    \hline
+      0 & 1 & 2 & 3 \\
+    \hline
+  \end{tabular}
+\\
+The final element gives the size of the output buffer required, in this case there are $3$ elements kept.
 
+Each element of the presence array is one higher than the offset within the output array that the input element would be written to if it passes the predicate.
+
+    \paragraph{Producing the output vector}
+    The pseudo-code for producing the output is:
+    \begin{verbatim}
+Compute presence array for
+    input dataset and predicate.
+
+Parallel prefix sum the
+    presence array.
+
+Allocate output buffer of size one
+    larger than final sum element.
+
+For each element in the input:
+    Scattered write to
+    corresponding sum offset
+    in output array minus 1
+    if the presence element is 1.
+    \end{verbatim}
+
+  With a work efficient prefix sum algorithm, the Filter operation on a GPU can vastly outperform the equivalent operation performed sequentially.\cite{gpusum}
+
+  \subsubsection{Fold}
+    The result of a Fold operation is simply the last element of an inclusive prefix sum.
+
+\section{Scope for Improvements}
+    \subsection{Full GPU potential}
+    Due to previously unrealised incompatibility between the initial development platform and the Intel OpenCL library, there was a delay in tuning the code to perform on non-CPU OpenCL devices. This has now been fixed by the purchase of a new development system and the immediate future will consist of tuning the framework to operate on GPUs and collecting statistics of operation.
+    \subsection{Iterative Benchmarking and Tuning}
+    Improvements such as performing the data-type conversions in parallel may also be possible if benchmarks show that they are beneficial.
+
+    A benchmarking suite is almost complete and then it will be easy to alter the execution of the framework's internals and see the how it affects the runtime over a series of inputs.
+
+    \subsection{Intelligent Device Selection}
+ A GPU has much higher computational throughput than a CPU but the penalty for transferring datasets across the PCI link is much higher than the memory for a device such as the \emph{HD4000} graphics co-processor within a latest generation CPU.
+The framework may be aware of when it is beneficial to suffer the penalty of offloading to GPU or when it is better to process on a more local device and use this knowledge to choose which OpenCL device to perform functions with.
