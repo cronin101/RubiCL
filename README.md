@@ -54,6 +54,11 @@ FP::Filter.create(
 # Map tasks are too...
 @cpu_device.load(:one_to_ten).fp_map(:add_one, :add_one, :add_one).output
 #=> [4,5,6,7,8,9,10,11,12,13]
+
+# Rocking it old-school with anonymous functions...
+range = (1..10).to_a
+@cpu_device.load_ints(range).lambda_map_x('x + 3').lambda_filter_x('x > 11').output
+#=> [12,13]
 ```
 
 #### Cleaning up when you are done
