@@ -1,0 +1,141 @@
+\lstset{
+  language=Ruby,
+  frame=single,
+  showtabs=false,
+  showspaces=false,
+  showstringspaces=false,
+  identifierstyle=\ttfamily,
+  keywordstyle=\color[rgb]{0,0,1},
+  commentstyle=\color[rgb]{0.133,0.545,0.133},
+  stringstyle=\color[rgb]{0.627,0.126,0.941}
+}
+\begin{figure*}
+\begin{lstlisting}
+require 'hadope'
+
+GPU = HaDope::GPU.get
+ 
+nums = (1...1000000).to_a
+ 
+# Device is async loaded with ints at point of load_int
+# (This can't be optimised)
+GPU.load_ints(nums)
+# Futher method calls push tasks onto list.
+# When OpenclDevice#! is called, these are optimised
+# and async dispatched in one thread.
+GPU.lmap(x:'x + 1').lmap(y:'y + 10')
+GPU.lfilter(n:'n > 500000').lfilter(n:'n % 4 == 0')
+GPU.fold('+').!
+ 
+other_result = some_time_consuming_function(nums)
+ 
+# Output joins async dispatch thread and then outputs
+# result of reading device buffer.
+results = GPU.output
+\end{lstlisting}
+\caption{Co-processing integers in the background.}
+\label{snippet}
+\end{figure*}
+
+\section{Project Progress}
+  An extension for the \emph{Ruby} language has been produced that allows parallel co-processing of integer vectors. The extension provides the functional primitives \emph{Map}, \emph{Filter} and \emph{Fold} to the main application thread and supports asynchronous dispatch of commands and optimisation of chained tasks.
+
+  Example calling code for an operation to Map, Filter and Fold an array of $1,000,000$ integers using the GPU is provided in Figure \ref{snippet}.
+
+
+  In the example, the following steps are performed by the extension in order to complete the operations requested:
+
+  \begin{description}
+    \item[Conversion of data-types]
+      The integer vector input is converted into a vector of C ints or long ints depending on the load function used.
+    \item[Transfer of data onto device]
+      The converted data array is then loaded into a buffer on the OpenCL device. This is done in a background thread so the calling code does not block when this is requested.
+    \item[Collection of tasks to be performed]
+      As tasks are subsequently requested by the user, these are stored internally so that they can be optimised prior to dispatch.
+    \item[Optimisation of tasks]
+      The user signals that no more tasks are required by calling the instance method '!'. At this point the framework examines the list of tasks needed and reduces them into a more efficient yet equivalent set of operations. In the above example, the tasks would be reduced to three tasks: One task to add $11$ to all elements in the vector, one task to parallel filter the array (explained later in this document) of elements above $500,000$ and divisible by $4$, and one task to fold the array into a single value.
+    \item[Kernels built for optimised tasks]
+      OpenCL kernel code is generated for the optimised set of tasks to be performed. The kernel source strings are then compiled for the target device by the OpenCL environment.
+    \item[Tasks performed on dataset]
+      Once again in a background thread in order to avoid blocking in calling code. The set of built OpenCL kernels are enqueued on the device in order.
+
+    \item[Blocking until all tasks have completed]
+      When a user calls the 'output' instance method, the framework that has previously been performing commands asynchronously must block until all GPU tasks have been performed. This is simply where the dispatch thread joins the calling code.
+    \item[Transfer of data from device]
+      Now that the dataset has been processed, the result is transferred back to the host machine and subsequently the calling code.
+    \item[Conversion of data-types again]
+      Before the value is returned to the host code, it is converted back from C int(s) to a suitable data-type for the target language.
+    \item[Cleanup of required resources]
+      Once the value has been returned, the required kernels and the buffers used can be released by the OpenCL environment ready for the next set of tasks to be performed.
+  \end{description}
+
+  \subsection{Summary}
+
+  The succinct example code requires a large number of actions to be performed by the framework. Most of these are required by any non-trivial OpenCL operation. The remaining are a result of optimisations to improve the performance of the system.
+
+  These tasks would normally be boilerplate provided by the programmer. With the framework performing them automatically, the difficulty of utilising the co-processing capabilities of the GPU is significantly reduced.
+
+  \subsection{Implementation}
+  \subsubsection{Map}
+    Performing a Map task consists of generating boilerplate kernel code that replaces an element in the data array with a modification of it.
+
+    Generated code for the Map task to add 11 above is as follows:
+    \begin{verbatim}
+__kernel void foo_task(
+      __global int *data_array){
+  int global_id = get_global_id(0);
+  int i;
+
+  i = data_array[global_id];
+  data_array[global_id] = (i + 11);
+}
+    \end{verbatim}
+    This kernel is then executed data-parallel with the \emph{clEnqueueNDRangeKernel} OpenCL function.
+
+    The result is each element in the input buffer is mutated in a manner specified by the transfer function (In this case 'i: i + 11', or "i goes to i plus eleven").
+
+  \subsubsection{Filter}
+    Performing a Filter task is slightly more involved.
+
+    \paragraph{Computing the presence array}
+    First, a boilerplate kernel is produced that will Map all elements to 1 if they pass a predicate or 0 if they fail, storing the result in a 'presence array'.
+
+    \begin{verbatim}
+__kernel void bar_task(
+     __global int* data_array,
+     __global int* presence_array){
+  int global_id = get_global_id(0);
+  int i = data_array[global_id];
+
+  if ((i > 500000) && (i % 4 == 0)){
+    presence_array[global_id] = 1;
+  } else {
+    presence_array[global_id] = 0;
+  }
+}
+    \end{verbatim}
+
+    The presence array for the vector
+    \begin{tabular}{ | c | c | c | c |}
+      \hline
+        4 & 5 & 8 & 12 \\
+      \hline
+    \end{tabular}
+    \\
+    with the predicate
+    \\
+    'n: n \% 4 == 0' ("Keep n if n mod four is zero") is
+    \\
+    \begin{tabular}{ | c | c | c | c |}
+      \hline
+        0 & 1 & 1 & 1 \\
+      \hline
+    \end{tabular}
+
+    \paragraph{Parallel prefix sum}
+    Since the array returned by a useful filter function is shorter than the input array, it is necessary to calculate how much buffer space to be allocate and the offsets of the original elements within this output buffer.
+
+    A \emph{prefix sum} is an operation that applies a binary operator to elements of a vector. In an \emph{exclusive} prefix sum, each element is replaced by the result of applying the operator to all previous elements except itself.
+
+  Performing an exclusive prefix sum on the above presence array
+

@@ -1,4 +1,4 @@
-require 'hadope_backend'
+require './extensions/hadope_backend.so'
 require 'benchmark'
 
 class HaDope

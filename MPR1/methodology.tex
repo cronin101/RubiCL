@@ -1,0 +1,15 @@
+\section{Methodology}
+This project's purpose is to present users of the framework with increased performance when applying parallelisable operations to an input dataset.
+It has the secondary aim of being unobtrustive to the programmer who may not wish to be troubled by the theoretical issues involved when distributing work over many cores.
+
+Interfacing with the OpenCL API shall use C to perform the underlying function calls that are required for its feature-set.
+This contrasts \emph{Phoenix++}, written in C++, and most OpenCL code-samples online also use C++.
+It is felt that C is the wisest choice for this project's low-level implementation. This is due to the lack of some abstraction features benefitting code-clarity. It should not be significantly harder to port other projects' optimisations to it.
+
+Although a constructed library of C code shall provide the capabilities of this framework, this library should be bound to higher level languages such as \emph{Ruby} and potentially \emph{Python} via native extensions. The project framework should be presented as ease of use will be greatly improved by the "syntactic sugar" common in such interpreted languages. Such targets may greatly increase possibilities for rapid prototyping by concisely allowing changes to framework parameters to be specified.
+
+It is easy to produce descriptive assertion tests in the \emph{Ruby} language. Good test-coverage of the library's computations will provide greater confidence in the correctness of the code's output each time that changes are made. With a set of tests specifying correct outputs over sample computations; it is much easier to change the architecture when attempting optimisation, as you can assert that the resulting values are unchanged.
+
+Finally providing access to high-performance computation on data-sets via low-level extensions is advantageous to such languages as they often suffer compared to less syntactically-expressive languages when operating on basic types. By providing a simple method for performing low-level calculations, significant improvements to some use-cases could be provided.
+
+The testing of OpenCL interaction will be performed on a variety of devices throughout it's development, ranging from a laptop's \emph{HD4000} integrated GPU to a high-end GPU in a current generation desktop machine. This makes it possible to investigate how optimisations affect differing architectures and hints at which benefits can be shared throughout all devices.

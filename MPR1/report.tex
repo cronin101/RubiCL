@@ -1,0 +1,106 @@
+\documentclass[11pt,a4paper,twocolumn] {scrartcl}   % list options between brackets
+\usepackage{datetime,acronym,url}              % list packages between braces
+\urlstyle{sf}
+\usepackage{DejaVuSerifCondensed}
+\usepackage[T1]{fontenc}
+\usepackage{titling}
+\usepackage{abstract}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{color}
+
+\input{titlepage.tex}
+
+\begin{document}
+\maketitle
+\pagenumbering{arabic}
+\input{abstract.tex}
+\pagebreak{}
+\input{introduction.tex}
+%\input{background.tex}
+%\input{existing_work.tex}
+\input{progress.tex}
+\input{methodology.tex}
+\input{evaluation.tex}
+\input{workplan.tex}
+
+\acrodef{CUDA}{\emph{Compute Unified Device Architecture}}
+\acrodef{OpenCL}{\emph{Open Computing Language}}
+\acrodef{CPU}{\emph{Central Processing Unit}}
+\acrodef{GPGPU}{\emph{General Purpose GPU}}
+\acrodef{GPUs}{\emph{Graphics Processing Units}}
+\acrodef{IPS}{\emph{instructions per second}}
+\acrodef{SIMD}{\emph{Single-Instruction-Multiple-Data}}
+
+\begin{thebibliography}{9}
+
+\thispagestyle{empty}
+\pagestyle{empty}
+  \bibitem{proposal}
+    MInf Project Proposal
+
+    Practical Framework for Accelerating MapReduce and Higher-Order Functions via Efficient Utilisation of a System GPU.
+
+    Aaron Cronin
+  \bibitem{khronos}
+    The Khronos Group OpenCL Standard
+
+    http://www.khronos.org/registry/cl/specs/opencl-1.2.pdf
+
+  \bibitem{perf}
+    A Comprehensive Performance Comparison of
+    CUDA and OpenCL
+
+    Jianbin Fang, Ana Lucia Varbanescu and Henk Sips
+
+    2011 International Conference on Parallel Processing
+
+  \bibitem{branching}
+    Architecture-Aware Mapping and Optimization on Heterogeneous Computing Systems
+
+    Mayank Daga
+
+  \bibitem{parallelfunction}
+    Parallel programming using functional languages
+
+    Roe, Paul (1991
+
+  \bibitem{bestpractice}
+    NVIDIA OpenCL Best Practices Guide Version 1.0
+
+  \bibitem{ghc}
+    Glasgow Haskell Compiler Standard Library
+
+    http://www.haskell.org/ghc/docs/latest/html/libraries/index.html
+
+  \bibitem{mapreduce}
+    MapReduce: Simplified Data Processing on Large Clusters
+
+    Jeffrey Dean and Sanjay Ghemawat
+
+  \bibitem{mars}
+  Mars: A MapReduce Framework on Graphics Processors
+
+  Bingsheng He Wenbin Fang Naga K. Govindaraju Qiong Luo Tuyong Wang
+
+  \bibitem{phoenix}
+  Evaluating MapReduce for Multi-core and Multiprocessor Systems
+
+  Colby Ranger, Ramanan Raghuraman, Arun Penmetsa, Gary Bradski, Christos Kozyrakis
+
+  \bibitem{phoenix++}
+    Phoenix++: Modular MapReduce for Shared-Memory Systems
+
+    Justin Talbot, Richard M. Yoo, and Christos Kozyrakis
+
+  \bibitem{streammr}
+    StreamMR: An Optimized MapReduce Frameworkfor AMD GPUs
+
+    Marwa Elteiry, Heshan Liny, Wu-chun Fengy, and Tom Scoglandy
+
+\thispagestyle{empty}
+\pagestyle{empty}
+  % type bibliography here
+\end{thebibliography}
+
+\end{document}

@@ -1,5 +1,7 @@
 require 'spec_helper'
 
+$quiet = true
+
 describe HaDope::CPU do
   context "Functional features" do
     before :all do
