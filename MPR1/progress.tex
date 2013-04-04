@@ -21,7 +21,7 @@
       Once again in a background thread in order to avoid blocking in calling code. The set of built OpenCL kernels are enqueued on the device in order.
 
     \item[Blocking until all tasks have completed]
-      When a user calls the 'output' instance method, the framework that has previously been performing commands asynchronously must block until all GPU tasks have been performed. This is simply where the dispatch thread joins the calling code.
+      When a user calls the 'output' instance method, the framework that has previously been performing commands asynchronously must block until all GPU tasks have been performed. This is achieved by the dispatch thread joining the calling code.
     \item[Transfer of data from device]
       Now that the dataset has been processed, the result is transferred back to the host machine and subsequently the calling code.
     \item[Conversion of data-types again]
@@ -35,6 +35,8 @@
   The succinct example code requires a large number of actions to be performed by the framework. Most of these are required by any non-trivial OpenCL operation. The remaining are a result of optimisations to improve the performance of the system.
 
   These tasks would normally be boilerplate provided by the programmer. With the framework performing them automatically, the difficulty of utilising the co-processing capabilities of the GPU is significantly reduced.
+
+  As well as the demonstrated code that would be interpreted from a file on disk, the framework can be used within a \emph{REPL} (Read Evaluate Print Loop) environment in order to allow the programmer to inspect the responses of commands and choose what code should be evaluated next. This gives great power to inquisitive minds that can spot patterns from queries and use theories about the data to inspire future calculations.
 
   \subsection{Implementation}
   \subsubsection{Map}
@@ -88,7 +90,7 @@ __kernel void bar_task(
     \\
    \begin{tabular}{ | c | c | c | c |}
       \hline
-        0 & 1 & 1 & 1 \\
+        1 & 0 & 1 & 1 \\
       \hline
     \end{tabular}
  
@@ -100,13 +102,13 @@ __kernel void bar_task(
   Performing an inclusive prefix sum on the previously calculated presence array produces
   \begin{tabular}{ | c | c | c | c |}
     \hline
-      0 & 0+1 & 0+1+1 & 0+1+1+1 \\
+      1 & 1+0 & 1+0+1 & 1+0+1+1 \\
     \hline
   \end{tabular}
     \\ or \\
   \begin{tabular}{ | c | c | c | c |}
     \hline
-      0 & 1 & 2 & 3 \\
+      1 & 1 & 2 & 3 \\
     \hline
   \end{tabular}
 \\
