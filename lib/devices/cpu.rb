@@ -12,7 +12,10 @@ class HaDope
     end
 
     def initialize
-      puts "Init Time: #{Benchmark.realtime{ @environment = init_CPU_environment }}"
+      #puts "Init Time: #{Benchmark.realtime{ 
+      @environment = init_CPU_environment
+      #}}.inspect"
+      self
     end
   end
 end
