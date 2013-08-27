@@ -7,6 +7,10 @@ class Hadope::Device
     initialize_task_queue
   end
 
+  def [](command)
+    self.send command
+  end
+
   def load_integer_dataset(array)
     @buffer = create_memory_buffer(array.size, 'int')
 
@@ -14,7 +18,7 @@ class Hadope::Device
     self
   end
 
-  def retreive_integer_dataset
+  def retrieve_integer_dataset
     retrieve_integer_dataset_from_buffer @buffer
   end
 

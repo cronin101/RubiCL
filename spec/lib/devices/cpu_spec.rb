@@ -13,6 +13,11 @@ describe CPU do
 
   it "can succesfully retrieve an integer dataset" do
     CPU::get.load_integer_dataset [1,2,3]
-    CPU::get.retreive_integer_dataset.should == [1,2,3]
+    CPU::get.retrieve_integer_dataset.should == [1,2,3]
+  end
+
+  it "allows loading and retrieving via square-bracket syntax" do
+    Hadope::set_device Hadope::CPU
+    [1,2,3][Integers][Fixnums].should == [1,2,3]
   end
 end
