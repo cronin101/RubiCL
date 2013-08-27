@@ -1,7 +1,7 @@
-class HaDope
-  class CPU
-    include HadopeBackend
-    include DeviceMethods
+require_relative './device'
+
+module Hadope
+  class CPU < Device
 
     class << self
       attr_accessor :singleton
@@ -12,7 +12,9 @@ class HaDope
     end
 
     def initialize
-      puts "Init Time: #{Benchmark.realtime{ @environment = init_CPU_environment }}"
+      @environment = initialize_CPU_environment
+      super
     end
+
   end
 end

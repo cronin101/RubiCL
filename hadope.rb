@@ -1,21 +1,32 @@
 require './extensions/hadope_backend.so'
-require 'benchmark'
 
-class HaDope
-  require_relative './lib/code_generator.rb'
-  require_relative './lib/shared_methods.rb'
-  require_relative './lib/smart_classes.rb'
-  require_relative './lib/data_set.rb'
+require 'forwardable'
+
+class Array
+  alias :old_array_index_access :[]
+  def [](index)
+    case index
+    when Symbol
+      $OpenCLDevice::get.send(index, self)
+    else
+      old_array_index_access(index)
+    end
+  end
 end
 
-class HaDope::OpenCLDevice
-  require_relative './lib/devices/opencl_device.rb'
-  require_relative './lib/devices/gpu.rb'
-  require_relative './lib/devices/cpu.rb'
-end
+Integers = :load_integer_dataset
+Fixnums = :retrieve_integer_dataset
 
-class HaDope::Functional
-  require_relative './lib/functional/task.rb'
-  require_relative './lib/functional/map.rb'
-  require_relative './lib/functional/filter.rb'
+module Hadope
+
+  require_relative './lib/devices/cpu'
+
+  require_relative './lib/tasks/taskqueue'
+
+  require_relative './lib/tasks/map'
+
+  def self.set_device device
+    $OpenCLDevice = device
+  end
+
 end

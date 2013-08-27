@@ -11,6 +11,7 @@ static VALUE
 init_OpenCL_environment(cl_device_type device_type){
   HadopeEnvironment *environment;
   VALUE environment_object;
+  environment_object = rb_define_class("HadopeEnvironment", rb_cObject);
 
   environment = malloc(sizeof(HadopeEnvironment));
   *environment = createHadopeEnvironment(device_type);
@@ -28,7 +29,7 @@ method_init_GPU_environment(VALUE self){
 }
 
 static VALUE
-method_init_CPU_environment(VALUE self){
+methodInitCPUEnvironment(VALUE self){
   return init_OpenCL_environment(CL_DEVICE_TYPE_CPU);
 }
 
@@ -49,6 +50,8 @@ method_create_memory_buffer(VALUE self, VALUE num_entries_object, VALUE type_str
   char* type_string;
   int unit_size;
   int num_entries;
+
+  memory_struct_object = rb_define_class("HadopeMemoryBuffer", rb_cObject);
 
   /* Pulling string out of Ruby object and strcmp to set unit size of array
    * FIXME Make this less hacky, it feels bad.*/
@@ -80,7 +83,7 @@ method_create_memory_buffer(VALUE self, VALUE num_entries_object, VALUE type_str
  * @dataset_object: Ruby object containing an array of integers.
  * @memory_struct_object: Ruby object storing previously created HadopeMemoryBuffer. */
 static VALUE
-method_load_int_dataset(VALUE self, VALUE dataset_object, VALUE memory_struct_object){
+methodLoadIntDataset(VALUE self, VALUE dataset_object, VALUE memory_struct_object){
   int array_size;
   int i;
   int *dataset;
@@ -112,7 +115,7 @@ method_load_int_dataset(VALUE self, VALUE dataset_object, VALUE memory_struct_ob
  *
  * @memory_struct_object: Ruby object storing HadopeMemoryBuffer. */
 static VALUE
-method_retrieve_int_dataset(VALUE self, VALUE memory_struct_object){
+methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object){
   int array_size;
   int *dataset;
   int i;
@@ -212,6 +215,7 @@ method_run_filter_task(VALUE self, VALUE task_source_object, VALUE source_size_o
   computePresenceArrayForDataset(*environment, *mem_struct, task, presence_struct);
 
   /* DIRTY_HACK: Packages presence_strut to be returned to device class */
+  presence_object = rb_define_class("HadopePresenceArray", rb_cObject);
   presence_object = Data_Wrap_Struct(presence_object, NULL, NULL, presence_struct);
   return presence_object;
 }
@@ -237,13 +241,12 @@ method_clean_used_resources(VALUE self, VALUE mem_struct_object){
 /* Used to give extension methods defined above to device class when HadopeBackend module is included. */
 void
 Init_hadope_backend(){
-  printf("HadopeBackend native code included.\n");
   VALUE HadopeBackend = rb_define_module("HadopeBackend");
   rb_define_private_method(HadopeBackend, "init_GPU_environment", method_init_GPU_environment, 0);
-  rb_define_private_method(HadopeBackend, "init_CPU_environment", method_init_CPU_environment, 0);
+  rb_define_private_method(HadopeBackend, "initialize_CPU_environment", methodInitCPUEnvironment, 0);
   rb_define_private_method(HadopeBackend, "create_memory_buffer", method_create_memory_buffer, 2);
-  rb_define_private_method(HadopeBackend, "load_int_dataset", method_load_int_dataset, 2);
-  rb_define_private_method(HadopeBackend, "retrieve_int_dataset", method_retrieve_int_dataset, 1);
+  rb_define_private_method(HadopeBackend, "transfer_integer_dataset_to_buffer", methodLoadIntDataset, 2);
+  rb_define_private_method(HadopeBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
   rb_define_private_method(HadopeBackend, "run_map_task", method_run_map_task, 4);
   rb_define_private_method(HadopeBackend, "run_filter_task", method_run_filter_task, 4);
   rb_define_private_method(HadopeBackend, "clean_used_resources", method_clean_used_resources, 1);
