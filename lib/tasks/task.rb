@@ -10,10 +10,12 @@ class Hadope::Task
 
   def add_statement(statement)
     @statements.push statement
+    self
   end
 
-  def add_statments(statements)
+  def add_statements(statements)
     statements.each { |statement| add_statement statement }
+    self
   end
 
 end

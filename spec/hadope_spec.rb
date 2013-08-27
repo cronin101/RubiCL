@@ -1,6 +1,16 @@
 require 'spec_helper'
 
 describe Hadope do
+  context "Duck punching" do
+    it "extends Array's index-access syntax to shortcut device loading" do
+      Hadope.set_device Hadope::CPU
+      cpu = Hadope::CPU::get
+
+      [1,2,3][Integers].class.should == cpu.class
+      cpu.retrieve_integer_dataset.should == [1,2,3]
+    end
+  end
+
   context "Top level namespace" do
     it "is defined" do
       expect { Hadope }.to_not raise_error
