@@ -27,6 +27,8 @@ class Hadope::TaskQueue
 
           result = fixed_queue << previous_task.add_statements(conversion_steps + task.statements)
           result
+        else
+          fixed_queue << previous_task << task
         end
       end
     end
