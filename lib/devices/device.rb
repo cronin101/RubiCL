@@ -2,7 +2,7 @@ class Hadope::Device
   include HadopeBackend
 
   def initialize
-    raise "Override in subclass!" if self.class == Hadope::Device
+    raise "Must be a subclass!" if self.class == Hadope::Device
 
     initialize_task_queue
   end
