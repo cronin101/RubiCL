@@ -3,7 +3,6 @@ require 'spec_helper'
 Device = Hadope::Device
 
 describe Device do
-
   it "is abstract" do
     expect { Device.new }.to raise_error
   end
@@ -20,5 +19,4 @@ describe Device do
     class SomeDevice < Device; end;
     SomeDevice.new.instance_variable_get(:@task_queue).should_not be nil
   end
-
 end
