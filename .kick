@@ -1,0 +1,10 @@
+process do |files|
+  files.each do |file|
+    if file[/_spec\.rb\Z/]
+      execute "rspec #{file}"
+    elsif file[/\.rb\Z/]
+      execute "rspec spec/#{file.gsub('.rb', '_spec.rb')}"
+    end
+  end
+end
+

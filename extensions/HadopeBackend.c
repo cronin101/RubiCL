@@ -29,7 +29,7 @@ method_init_GPU_environment(VALUE self){
 }
 
 static VALUE
-method_init_CPU_environment(VALUE self){
+methodInitCPUEnvironment(VALUE self){
   return init_OpenCL_environment(CL_DEVICE_TYPE_CPU);
 }
 
@@ -83,7 +83,7 @@ method_create_memory_buffer(VALUE self, VALUE num_entries_object, VALUE type_str
  * @dataset_object: Ruby object containing an array of integers.
  * @memory_struct_object: Ruby object storing previously created HadopeMemoryBuffer. */
 static VALUE
-method_load_int_dataset(VALUE self, VALUE dataset_object, VALUE memory_struct_object){
+methodLoadIntDataset(VALUE self, VALUE dataset_object, VALUE memory_struct_object){
   int array_size;
   int i;
   int *dataset;
@@ -115,7 +115,7 @@ method_load_int_dataset(VALUE self, VALUE dataset_object, VALUE memory_struct_ob
  *
  * @memory_struct_object: Ruby object storing HadopeMemoryBuffer. */
 static VALUE
-method_retrieve_int_dataset(VALUE self, VALUE memory_struct_object){
+methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object){
   int array_size;
   int *dataset;
   int i;
@@ -243,10 +243,10 @@ void
 Init_hadope_backend(){
   VALUE HadopeBackend = rb_define_module("HadopeBackend");
   rb_define_private_method(HadopeBackend, "init_GPU_environment", method_init_GPU_environment, 0);
-  rb_define_private_method(HadopeBackend, "init_CPU_environment", method_init_CPU_environment, 0);
+  rb_define_private_method(HadopeBackend, "initialize_CPU_environment", methodInitCPUEnvironment, 0);
   rb_define_private_method(HadopeBackend, "create_memory_buffer", method_create_memory_buffer, 2);
-  rb_define_private_method(HadopeBackend, "load_int_dataset", method_load_int_dataset, 2);
-  rb_define_private_method(HadopeBackend, "retrieve_int_dataset", method_retrieve_int_dataset, 1);
+  rb_define_private_method(HadopeBackend, "transfer_integer_dataset_to_buffer", methodLoadIntDataset, 2);
+  rb_define_private_method(HadopeBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
   rb_define_private_method(HadopeBackend, "run_map_task", method_run_map_task, 4);
   rb_define_private_method(HadopeBackend, "run_filter_task", method_run_filter_task, 4);
   rb_define_private_method(HadopeBackend, "clean_used_resources", method_clean_used_resources, 1);

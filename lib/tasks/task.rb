@@ -1,0 +1,3 @@
+class Hadope::Task
+
+end
