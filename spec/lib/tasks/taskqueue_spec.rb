@@ -8,9 +8,9 @@ describe TaskQueue do
     queue.size.should == 0
   end
 
-  context "#simplify" do
+  context "#simplify!" do
     it "can be called when there are no tasks" do
-      expect { TaskQueue.new.simplify }.to_not raise_error
+      expect { TaskQueue.new.simplify! }.to_not raise_error
     end
 
     it "can be called when there is only one task" do
@@ -18,7 +18,7 @@ describe TaskQueue do
       queue = TaskQueue.new
       expect {
         queue.push map
-        queue.simplify
+        queue.simplify!
       }.to_not raise_error
     end
 
