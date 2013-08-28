@@ -12,6 +12,10 @@ describe Hadope do
     it "returns the correct result" do
       [1][Integers].map(i:'i + 10')[Fixnums].should == [11]
       [1,2,3][Integers].map(i:'i + 1')[Fixnums].should == [2,3,4]
+      [1,2,3][Integers]
+        .map(i:'i + 1')
+        .map(j:'j + 2')
+        .map(k:'k + 3')[Fixnums].should == [7,8,9]
     end
   end
 

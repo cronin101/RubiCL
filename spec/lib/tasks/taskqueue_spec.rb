@@ -36,8 +36,8 @@ describe TaskQueue do
         queue.size.should be 1
         task = queue.tasks.first
         task.statements.size.should == 3
-        task.input_name.should == :i
-        task.output_name.should == :j
+        task.input_variable.should == :i
+        task.output_variable.should == :j
       end
     end
   end
