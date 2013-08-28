@@ -18,6 +18,11 @@ class Hadope::Device
     self
   end
 
+  def map(opts)
+    key, value = opts.first
+    @task_queue.push Hadope::Map.new(key, "#{key} = #{value}")
+  end
+
   def retrieve_integer_dataset
     retrieve_integer_dataset_from_buffer @buffer
   end
