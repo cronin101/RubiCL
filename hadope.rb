@@ -1,5 +1,4 @@
 require './extensions/hadope_backend.so'
-
 require 'forwardable'
 
 class Array
@@ -7,6 +6,7 @@ class Array
   def [](index)
     case index
     when Symbol
+      raise "Must specify OpenCL device with Hadope::set_device" unless $OpenCLDevice
       $OpenCLDevice::get.send(index, self)
     else
       old_array_index_access(index)
@@ -18,11 +18,8 @@ Integers = :load_integer_dataset
 Fixnums = :retrieve_integer_dataset
 
 module Hadope
-
   require_relative './lib/devices/cpu'
-
   require_relative './lib/tasks/taskqueue'
-
   require_relative './lib/tasks/map'
 
   def self.set_device device

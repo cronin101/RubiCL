@@ -1,17 +1,17 @@
 require 'spec_helper'
 
 describe Hadope do
-
   context "Showcasing features" do
     it "all features fit together" do
       Hadope.set_device Hadope::CPU
       expect{
         [1,2,3][Integers].map(i:'i + 1')[Fixnums]
       }.to_not raise_error
+    end
 
-      pending "has working task dispatch" do
-        [1,2,3][Integers].map(i:'i + 1')[Fixnums].should == [2,3,4]
-      end
+    it "returns the correct result" do
+      [1][Integers].map(i:'i + 10')[Fixnums].should == [11]
+      [1,2,3][Integers].map(i:'i + 1')[Fixnums].should == [2,3,4]
     end
   end
 

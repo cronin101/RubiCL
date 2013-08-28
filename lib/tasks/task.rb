@@ -4,9 +4,8 @@ class Hadope::Task
   attr_reader :statements
 
   def initialize
-    @@count += 1
     raise "Must be a subclass!" if self.class == Hadope::Task
-
+    @@count += 1
     @statements = []
   end
 

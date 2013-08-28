@@ -3,7 +3,7 @@ class Hadope::TaskQueue
 
   attr_accessor :tasks
 
-  delegate [:clear, :push, :shift, :size] => :tasks
+  delegate [:clear, :empty?, :push, :shift, :size] => :tasks
 
   def initialize
     @tasks = []
@@ -30,8 +30,8 @@ class Hadope::TaskQueue
         else
           result = fixed_queue << previous_task << task
         end
-      end
 
+      end
       result
     end
 
