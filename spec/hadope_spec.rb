@@ -5,27 +5,17 @@ describe Hadope do
     it "all features fit together" do
       Hadope.set_device Hadope::CPU
       expect{
-        [1,2,3][Integer].map(i:'i + 1')[Fixnum]
+        [1,2,3][Int].map(i:'i + 1')[Fixnum]
       }.to_not raise_error
     end
 
     it "returns the correct result" do
-      [1][Integer].map(i:'i + 10')[Fixnum].should == [11]
-      [1,2,3][Integer].map(i:'i + 1')[Fixnum].should == [2,3,4]
-      [1,2,3][Integer]
+      [1][Int].map(i:'i + 10')[Fixnum].should == [11]
+      [1,2,3][Int].map(i:'i + 1')[Fixnum].should == [2,3,4]
+      [1,2,3][Int]
         .map(i:'i + 1')
         .map(j:'j + 2')
         .map(k:'k + 3')[Fixnum].should == [7,8,9]
-    end
-  end
-
-  context "Duck punching" do
-    it "extends Array's index-access syntax to shortcut device loading" do
-      Hadope.set_device Hadope::CPU
-      cpu = Hadope::CPU::get
-
-      [1,2,3][Integer].class.should == cpu.class
-      cpu.retrieve_integer_dataset.should == [1,2,3]
     end
   end
 

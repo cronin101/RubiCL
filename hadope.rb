@@ -4,7 +4,7 @@ require 'forwardable'
 module Hadope
   require_relative './lib/types/array.rb'
   require_relative './lib/types/fixnum.rb'
-  require_relative './lib/types/integer.rb'
+  require_relative './lib/types/int.rb'
 
   require_relative './lib/logging/logger'
 
