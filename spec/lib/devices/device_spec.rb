@@ -40,6 +40,6 @@ describe Device do
   it "allows the output to be retrieved by 'casting' to a Ruby type" do
     class StubDevice < Device; def retrieve_integer_dataset; [1]; end; end
 
-    StubDevice.new[Fixnums].should == [1]
+    StubDevice.new[Fixnum].should == [1]
   end
 end

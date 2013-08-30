@@ -23,13 +23,13 @@ ruby = Benchmark.realtime {
 }
 
 opencl = Benchmark.realtime {
-  last = input[Integers]
+  last = input[Integer]
     .map(i:'i + 1')
     .map(i:'i + 1')
     .map(i:'i * 2')
     .map(i:'i / 2')
     .map(i:'i - 1')
-    .map(i:'i - 1')[Fixnums].last
+    .map(i:'i - 1')[Fixnum].last
   puts "OpenCL says result is #{last}"
 }
 

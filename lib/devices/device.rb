@@ -6,8 +6,8 @@ class Hadope::Device
     initialize_task_queue
   end
 
-  def [](command)
-    self.send command
+  def [](type)
+    self.send type.hadope_conversion
   end
 
   def load_integer_dataset(array)

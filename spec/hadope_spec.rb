@@ -5,17 +5,17 @@ describe Hadope do
     it "all features fit together" do
       Hadope.set_device Hadope::CPU
       expect{
-        [1,2,3][Integers].map(i:'i + 1')[Fixnums]
+        [1,2,3][Integer].map(i:'i + 1')[Fixnum]
       }.to_not raise_error
     end
 
     it "returns the correct result" do
-      [1][Integers].map(i:'i + 10')[Fixnums].should == [11]
-      [1,2,3][Integers].map(i:'i + 1')[Fixnums].should == [2,3,4]
-      [1,2,3][Integers]
+      [1][Integer].map(i:'i + 10')[Fixnum].should == [11]
+      [1,2,3][Integer].map(i:'i + 1')[Fixnum].should == [2,3,4]
+      [1,2,3][Integer]
         .map(i:'i + 1')
         .map(j:'j + 2')
-        .map(k:'k + 3')[Fixnums].should == [7,8,9]
+        .map(k:'k + 3')[Fixnum].should == [7,8,9]
     end
   end
 
@@ -24,7 +24,7 @@ describe Hadope do
       Hadope.set_device Hadope::CPU
       cpu = Hadope::CPU::get
 
-      [1,2,3][Integers].class.should == cpu.class
+      [1,2,3][Integer].class.should == cpu.class
       cpu.retrieve_integer_dataset.should == [1,2,3]
     end
   end

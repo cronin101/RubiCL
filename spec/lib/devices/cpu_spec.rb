@@ -18,6 +18,6 @@ describe CPU do
 
   it "allows loading and retrieving via square-bracket syntax" do
     Hadope::set_device Hadope::CPU
-    [1,2,3][Integers][Fixnums].should == [1,2,3]
+    [1,2,3][Integer][Fixnum].should == [1,2,3]
   end
 end
