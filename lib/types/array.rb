@@ -1,5 +1,5 @@
 class Array
-  alias :old_array_index_access :[]
+  alias :__old_array_index_access :[]
   def [](index)
     case index
     when Class
@@ -7,7 +7,7 @@ class Array
       raise "#{index.inspect} is not defined as convertible." unless index.respond_to? :hadope_conversion
       $OpenCLDevice::get.send(index.hadope_conversion, self)
     else
-      old_array_index_access(index)
+      __old_array_index_access(index)
     end
   end
 end

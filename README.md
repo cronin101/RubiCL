@@ -79,11 +79,16 @@ Hadope::Device
 
 Hadope::Logger
   is a singleton if accessed using ::get
+  can be set to loud mode
+  can be set to quiet mode
 
 Hadope::Map
   can be created with no statements
   can be created with a single statement
   can be created with multiple statements
+  #fuse!
+    should create a pipelining variable when one is needed
+    should not create a pipelining variable when one is not needed
 
 Hadope::Task
   is abstract
@@ -94,6 +99,7 @@ Hadope::TaskQueue
   initializes with an empty queue of tasks
   #simplify!
     can be called when there are no tasks
+    should leave the queued tasks alone when they are not combinable
     can be called when there is only one task
     with consecutive map tasks
       will perform map fusion
@@ -109,23 +115,23 @@ Fixnum
 Int
   defines how to convert from the Ruby Fixnum type to C Ints
 
-Top 3 slowest examples (0.02839 seconds, 79.1% of total time):
+Top 3 slowest examples (0.02891 seconds, 68.7% of total time):
   Hadope Showcasing features all features fit together
-    0.01627 seconds ./spec/hadope_spec.rb:5
+    0.01423 seconds ./spec/hadope_spec.rb:5
   Hadope Showcasing features returns the correct result
-    0.0098 seconds ./spec/hadope_spec.rb:12
+    0.01226 seconds ./spec/hadope_spec.rb:12
   Hadope::TaskQueue#simplify! with consecutive map tasks will perform map fusion
-    0.00231 seconds ./spec/lib/tasks/taskqueue_spec.rb:26
+    0.00243 seconds ./spec/lib/tasks/taskqueue_spec.rb:42
 
 Top 3 slowest example groups:
   Hadope
-    0.00335 seconds average (0.0268 seconds / 8 examples) ./spec/hadope_spec.rb:3
+    0.00338 seconds average (0.02704 seconds / 8 examples) ./spec/hadope_spec.rb:3
   Hadope::TaskQueue
-    0.00088 seconds average (0.00353 seconds / 4 examples) ./spec/lib/tasks/taskqueue_spec.rb:5
+    0.00107 seconds average (0.00533 seconds / 5 examples) ./spec/lib/tasks/taskqueue_spec.rb:5
   Hadope::Map
-    0.0005 seconds average (0.00151 seconds / 3 examples) ./spec/lib/tasks/map_spec.rb:5
+    0.00102 seconds average (0.00512 seconds / 5 examples) ./spec/lib/tasks/map_spec.rb:5
 
-Finished in 0.03947 seconds
-35 examples, 0 failures
+Finished in 0.0462 seconds
+40 examples, 0 failures
+Coverage report generated for RSpec to /Users/cronin/Dev/Ruby/HaDope/coverage. 300 / 300 LOC (100.0%) covered.
 ```
-

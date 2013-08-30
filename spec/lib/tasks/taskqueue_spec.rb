@@ -13,6 +13,22 @@ describe TaskQueue do
       expect { TaskQueue.new.simplify! }.to_not raise_error
     end
 
+    it "should leave the queued tasks alone when they are not combinable" do
+      class SomeTask < Hadope::Task; end
+      not_map = SomeTask.new
+      map = Hadope::Map.new(:i, 'i + 1')
+
+      queue = TaskQueue.new
+      expect {
+        queue.push not_map
+        queue.push map
+        queue.push map
+        queue.simplify!
+      }.to_not raise_error
+
+      queue.size.should == 2
+    end
+
     it "can be called when there is only one task" do
       map = Hadope::Map.new(:i, 'i + 1')
       queue = TaskQueue.new
