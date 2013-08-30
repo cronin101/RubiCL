@@ -16,6 +16,18 @@ module Hadope
       @output_variable = variable
     end
 
+    def fuse!(next_map)
+      conversion =  if next_map.input_variable == output_variable
+                      [] # No variable pipelining required!
+                    else
+                      pipeline_variable = output_variable
+                      set_output_variable next_map.output_variable
+                      add_variables next_map.input_variable
+                      ["#{next_map.input_variable} = #{pipeline_variable}"]
+                    end
+      add_statements (conversion + next_map.statements)
+    end
+
     def to_kernel
 type = 'int'
 <<KERNEL

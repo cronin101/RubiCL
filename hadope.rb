@@ -18,6 +18,7 @@ Integers = :load_integer_dataset
 Fixnums = :retrieve_integer_dataset
 
 module Hadope
+  require_relative './lib/logging/logger'
   require_relative './lib/devices/cpu'
   require_relative './lib/tasks/taskqueue'
   require_relative './lib/tasks/map'

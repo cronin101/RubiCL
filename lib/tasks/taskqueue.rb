@@ -7,38 +7,29 @@ class Hadope::TaskQueue
 
   def initialize
     @tasks = []
+    @logger = Hadope::Logger.get
   end
 
   def simplify!
+    before = @tasks.map(&:statements)
     @tasks = @tasks.inject [] do |queue, task|
       if queue.empty?
-        result = [task]
+          result = [task]
       else
-        *fixed_queue, previous_task = queue
+        *fixed_queue, previous = queue
 
-        if previous_task.class == task.class
-          conversion =  case task
-                        when Hadope::Map
-                          if previous_task.output_variable == task.input_variable
-                            [] # No variable pipelining required!
-                          else
-                            pipeline_variable = previous_task.output_variable
-                            previous_task.set_output_variable task.output_variable
-                            previous_task.add_variables task.input_variable
-                            ["#{task.input_variable} = #{pipeline_variable} /* Pipeline */"]
-                          end
-                        else
-                          raise "Task type not current supported"
-                        end
-
-          result = fixed_queue << previous_task.add_statements(conversion + task.statements)
+        case [task.class, previous.class]
+        when [Hadope::Map]*2
+          result = fixed_queue << previous.fuse!(task)
         else
-          result = fixed_queue << previous_task << task
+          result = fixed_queue << previous << task
         end
-
       end
       result
     end
+    after = @tasks.map(&:statements)
+
+    @logger.log "Simplify!: Simplified from #{before.inspect}, to #{after.inspect}."
 
     self
   end
