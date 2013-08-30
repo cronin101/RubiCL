@@ -6,6 +6,7 @@ class Hadope::TaskKernelGenerator < Struct.new(:task)
 __kernel void #{task.name}(__global #{task.type} *data_array){
   #{task.variable_declarations}
   #{task.setup_statements}
+
   #{task.body}
 
   #{task.return_statements}

@@ -17,10 +17,7 @@ module Hadope
     end
 
     def setup_statements
-<<SETUP
-  int global_id = get_global_id(0);
-  #{@input_variable} = data_array[global_id];
-SETUP
+      "int global_id = get_global_id(0);\n  #{@input_variable} = data_array[global_id];"
     end
 
     def body
@@ -28,9 +25,7 @@ SETUP
     end
 
     def return_statements
-<<RETURN
-  data_array[global_id] = #{@output_variable};
-RETURN
+      "data_array[global_id] = #{@output_variable};"
     end
 
     def set_output_variable(variable)
