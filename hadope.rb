@@ -7,6 +7,7 @@ module Hadope
   require_relative './lib/types/int.rb'
 
   require_relative './lib/code_generation/task_kernel_generator.rb'
+  require_relative './lib/parsing/lambda_bytecode_parser.rb'
 
   require_relative './lib/logging/logger'
 
