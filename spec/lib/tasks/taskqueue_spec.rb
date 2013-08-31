@@ -16,7 +16,7 @@ describe TaskQueue do
     it "should leave the queued tasks alone when they are not combinable" do
       class SomeTask < Hadope::Task; end
       not_map = SomeTask.new
-      map = Hadope::Map.new(:i, 'i + 1')
+      map = Hadope::Map.new ->(i){i + 1}
 
       queue = TaskQueue.new
       expect {

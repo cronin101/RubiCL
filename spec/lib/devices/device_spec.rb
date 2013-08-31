@@ -24,11 +24,11 @@ describe Device do
       class SomeDevice < Device; end
       device = SomeDevice.new
 
-      expect { device.map(i:'i + 1') }.to_not raise_error
+      expect { device.map { |i| i + 1 } }.to_not raise_error
       device.instance_eval { @task_queue }.size.should be 1
 
       work_unit = device.instance_eval { @task_queue }.shift
-      work_unit.statements.should == ['i = i + 1']
+      work_unit.statements.should == ["x = (x) + (1)"]
     end
   end
 

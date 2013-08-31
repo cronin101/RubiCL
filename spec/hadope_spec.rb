@@ -5,17 +5,17 @@ describe Hadope do
     it "all features fit together" do
       Hadope.set_device Hadope::CPU
       expect{
-        [1,2,3][Int].map(i:'i + 1')[Fixnum]
+        [1,2,3][Int].map { |i| i + 1 }[Fixnum]
       }.to_not raise_error
     end
 
     it "returns the correct result" do
-      [1][Int].map(i:'i + 10')[Fixnum].should == [11]
-      [1,2,3][Int].map(i:'i + 1')[Fixnum].should == [2,3,4]
+      [1][Int].map { |i| i + 10 }[Fixnum].should == [11]
+      [1,2,3][Int].map { |i| i + 1 }[Fixnum].should == [2,3,4]
       [1,2,3][Int]
-        .map(i:'i + 1')
-        .map(j:'j + 2')
-        .map(k:'k + 3')[Fixnum].should == [7,8,9]
+        .map { |i| i + 1 }
+        .map { |j| j + 2 }
+        .map { |k| k + 3 }[Fixnum].should == [7,8,9]
     end
   end
 

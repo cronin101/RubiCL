@@ -14,7 +14,7 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
 
   def translate(operation)
     case operation
-    when /getlocal/ then 'i'
+    when /getlocal/ then 'x'
     when /putobject_OP_INT2FIX_O_1_C_/ then 1
     when /putobject\s+\d+/ then operation.split(' ').last.to_i
     when /opt_plus/ then '+'
@@ -34,7 +34,7 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
       case token
       when Fixnum then stack.push token
       when String
-        if token == 'i'
+        if token == 'x'
           stack.push token
         else
           b = stack.pop

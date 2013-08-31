@@ -4,6 +4,7 @@ class Hadope::Device
   def initialize
     raise "Must be a subclass!" if self.class == Hadope::Device
     initialize_task_queue
+    @logger = Hadope::Logger.get
   end
 
   def [](type)
@@ -16,9 +17,9 @@ class Hadope::Device
     self
   end
 
-  def map(opts)
-    key, value = opts.first
-    @task_queue.push Hadope::Map.new(key, "#{key} = #{value}")
+  def map(&block)
+    expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
+    @task_queue.push Hadope::Map.new(:x, "x = #{expression}")
     self
   end
 
@@ -35,6 +36,7 @@ class Hadope::Device
 
   def run_map(task)
     kernel = task.to_kernel
+    @logger.log "Executing kernel: #{kernel.inspect}"
     run_map_task(kernel, kernel.length, task.name, @buffer)
   end
 
