@@ -1,10 +1,13 @@
 class Hadope::Device
   include HadopeBackend
 
+  Cache = Struct.new(:dataset)
+
   def initialize
     raise "Must be a subclass!" if self.class == Hadope::Device
     initialize_task_queue
     @logger = Hadope::Logger.get
+    @cache = Cache.new(nil)
   end
 
   def [](type)
@@ -13,7 +16,7 @@ class Hadope::Device
 
   def load_integer_dataset(array)
     @buffer = create_memory_buffer(array.size, 'int')
-    transfer_integer_dataset_to_buffer(array, @buffer)
+    transfer_integer_dataset_to_buffer(@cache.dataset = array, @buffer)
     self
   end
 
@@ -24,8 +27,8 @@ class Hadope::Device
   end
 
   def retrieve_integer_dataset
-    run_tasks
-    retrieve_integer_dataset_from_buffer @buffer
+    run_tasks unless @task_queue.empty?
+    @cache.dataset ||= retrieve_integer_dataset_from_buffer @buffer
   end
 
   private
@@ -49,6 +52,7 @@ class Hadope::Device
   def run_tasks
     @task_queue.simplify!
     run_task @task_queue.shift until @task_queue.empty?
+    @cache.dataset = nil
   end
 
 end

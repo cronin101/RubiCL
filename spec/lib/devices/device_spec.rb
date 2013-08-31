@@ -39,7 +39,17 @@ describe Device do
 
   it "allows the output to be retrieved by 'casting' to a Ruby type" do
     class StubDevice < Device; def retrieve_integer_dataset; [1]; end; end
-
     StubDevice.new[Fixnum].should == [1]
+  end
+
+  it "caches the loaded dataset when no mutating changes are made" do
+    Hadope::CPU.get.should_receive(:retrieve_integer_dataset_from_buffer).never
+    Hadope::CPU::get.load_integer_dataset([1,2,3])[Fixnum].should == [1,2,3]
+  end
+
+  it "caches the retrieved dataset when no mutating changes are made" do
+    Hadope::CPU::get.should_receive(:retrieve_integer_dataset_from_buffer).once.and_return([2, 3, 4])
+    cpu = Hadope::CPU::get.load_integer_dataset([1,2,3]).map { |x| x + 1 }
+    2.times { cpu.retrieve_integer_dataset.should == [2,3,4] }
   end
 end
