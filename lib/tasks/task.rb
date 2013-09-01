@@ -20,6 +20,7 @@ class Hadope::Task
     @logger.log "Introduced variable(s): #{new_variables.inspect}." if new_variables.size > 0
     self
   end
+
   def add_statement(statement)
     @statements.push statement
     self
