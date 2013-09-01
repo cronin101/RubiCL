@@ -4,7 +4,7 @@
 ```ruby
 input = (1..10_000_000).to_a
 ```
-####This takes 4.93s:
+####This takes 4.94s:
 ```ruby
 ruby = Benchmark.realtime {
   last = input
@@ -17,7 +17,7 @@ ruby = Benchmark.realtime {
 }
 ```
 
-####This takes 0.36s:
+####This takes 0.26s:
 ```ruby
 require './hadope'
 Hadope::set_device Hadope::CPU
@@ -35,5 +35,5 @@ opencl = Benchmark.realtime {
 
 ```ruby
 "Ruby: #{ruby.inspect}, OpenCL: #{opencl.inspect}"
-# => Ruby: 4.937284, OpenCL: 0.368551
+# => Ruby: 4.937122, OpenCL: 0.262981
 ```
