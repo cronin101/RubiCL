@@ -18,7 +18,11 @@ describe LambdaBytecodeParser do
       LambdaBytecodeParser.new(->{ -1 }).parsed_operations.should == [-1]
     end
 
-    it "recognises when an operation is an object method call not currently defined" do
+    it "recognises when a bytecode operation is not currently defined" do
+      expect { LambdaBytecodeParser.new(->{}).send(:translate, 'A_NONEXISTENT_OPERATION') }.to raise_error
+    end
+
+    it "recognises when a bytecode operation is an object method call not currently defined" do
       expect { LambdaBytecodeParser.new(->(i){ i.even? }).to_infix }.to raise_error(RuntimeError, /not implemented for :even\?/)
     end
 
