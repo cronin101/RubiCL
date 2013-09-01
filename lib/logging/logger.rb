@@ -1,6 +1,6 @@
 class Hadope::Logger
 
-  VERBOSE_MODE_DEFAULT = true
+  VERBOSE_MODE_DEFAULT = false
   LOG_TO_FILE_DEFAULT = true
 
   class << self
