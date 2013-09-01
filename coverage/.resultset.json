@@ -129,6 +129,23 @@
         11,
         null,
         null,
+        1,
+        13,
+        null,
+        null,
+        1,
+        26,
+        13,
+        10,
+        null,
+        3,
+        null,
+        null,
+        null,
+        1,
+        26,
+        null,
+        null,
         null
       ],
       "/Users/cronin/Dev/Ruby/HaDope/lib/logging/logger.rb": [
@@ -713,6 +730,6 @@
         null
       ]
     },
-    "timestamp": 1377970493
+    "timestamp": 1378039583
   }
 }

@@ -14,7 +14,7 @@
       <img src="./assets/0.7.1/loading.gif" alt="loading"/>
     </div>
     <div id="wrapper" style="display:none;">
-      <div class="timestamp">Generated <abbr class="timeago" title="2013-08-31T18:34:53+01:00">2013-08-31T18:34:53+01:00</abbr></div>
+      <div class="timestamp">Generated <abbr class="timeago" title="2013-09-01T13:46:23+01:00">2013-09-01T13:46:23+01:00</abbr></div>
       <ul class="group_tabs"></ul>
 
       <div id="content">
@@ -25,15 +25,15 @@
      covered at
      <span class="covered_strength">
        <span class="green">
-         4.5
+         4.47
        </span>
     </span> hits/line)
   </h2>
   <a name="AllFiles"></a>
   <div>
     <b>23</b> files in total.
-    <b>391</b> relevant lines. 
-    <span class="green"><b>391</b> lines covered</span> and
+    <b>400</b> relevant lines. 
+    <span class="green"><b>400</b> lines covered</span> and
     <span class="red"><b>0</b> lines missed </span>
   </div>
   <table class="file_list">
@@ -103,11 +103,11 @@
       <tr>
         <td class="strong"><a href="#d470dfad0dddcd045d99c12cb23a038fc4951fce" class="src_link" title="lib/parsing/lambda_bytecode_parser.rb">lib/parsing/lambda_bytecode_parser.rb</a></td>
         <td class="green strong">100.0 %</td>
-        <td>51</td>
-        <td>31</td>
-        <td>31</td>
+        <td>68</td>
+        <td>40</td>
+        <td>40</td>
         <td>0</td>
-        <td>12.9</td>
+        <td>12.3</td>
       </tr>
       
       <tr>
@@ -1321,8 +1321,8 @@
     <h3>lib/parsing/lambda_bytecode_parser.rb</h3>
     <h4><span class="green">100.0 %</span> covered</h4>
     <div>
-      <b>31</b> relevant lines. 
-      <span class="green"><b>31</b> lines covered</span> and
+      <b>40</b> relevant lines. 
+      <span class="green"><b>40</b> lines covered</span> and
       <span class="red"><b>0</b> lines missed.</span>
     </div>
   </div>
@@ -1585,7 +1585,7 @@
         <li class="covered" data-hits="13" data-linenumber="43">
           <span class="hits">13</span>
           
-          <code class="ruby">          stack.push &quot;(#{a}) #{token} (#{b})&quot;</code>
+          <code class="ruby">          stack.push combine(token, a, b)</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="44">
@@ -1630,7 +1630,109 @@
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="51">
+        <li class="covered" data-hits="1" data-linenumber="51">
+          <span class="hits">1</span>
+          
+          <code class="ruby">  def combine(operator, arg1, arg2)</code>
+        </li>
+      
+        <li class="covered" data-hits="13" data-linenumber="52">
+          <span class="hits">13</span>
+          
+          <code class="ruby">   &quot;#{enclose arg1} #{operator} #{enclose arg2}&quot;</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="53">
+          
+          
+          <code class="ruby">  end</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="54">
+          
+          
+          <code class="ruby"></code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="55">
+          <span class="hits">1</span>
+          
+          <code class="ruby">  def is_value?(token)</code>
+        </li>
+      
+        <li class="covered" data-hits="26" data-linenumber="56">
+          <span class="hits">26</span>
+          
+          <code class="ruby">    case token</code>
+        </li>
+      
+        <li class="covered" data-hits="13" data-linenumber="57">
+          <span class="hits">13</span>
+          
+          <code class="ruby">    when Fixnum then true</code>
+        </li>
+      
+        <li class="covered" data-hits="10" data-linenumber="58">
+          <span class="hits">10</span>
+          
+          <code class="ruby">    when &#39;x&#39; then true</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="59">
+          
+          
+          <code class="ruby">    else</code>
+        </li>
+      
+        <li class="covered" data-hits="3" data-linenumber="60">
+          <span class="hits">3</span>
+          
+          <code class="ruby">      false</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="61">
+          
+          
+          <code class="ruby">    end</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="62">
+          
+          
+          <code class="ruby">  end</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="63">
+          
+          
+          <code class="ruby"></code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="64">
+          <span class="hits">1</span>
+          
+          <code class="ruby">  def enclose(token)</code>
+        </li>
+      
+        <li class="covered" data-hits="26" data-linenumber="65">
+          <span class="hits">26</span>
+          
+          <code class="ruby">    is_value?(token) ? token : &#39;(&#39; &lt;&lt; token &lt;&lt; &#39;)&#39;</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="66">
+          
+          
+          <code class="ruby">  end</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="67">
+          
+          
+          <code class="ruby"></code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="68">
           
           
           <code class="ruby">end</code>
@@ -3223,7 +3325,7 @@
         <li class="covered" data-hits="1" data-linenumber="31">
           <span class="hits">1</span>
           
-          <code class="ruby">      work_unit.statements.should == [&quot;x = (x) + (1)&quot;]</code>
+          <code class="ruby">      work_unit.statements.should == [&quot;x = x + 1&quot;]</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="32">
@@ -3619,13 +3721,13 @@
         <li class="covered" data-hits="1" data-linenumber="19">
           <span class="hits">1</span>
           
-          <code class="ruby">    LambdaBytecodeParser.new(-&gt;{ 1 + 2 - 3 }).to_infix.should == [&#39;((1) + (2)) - (3)&#39;]</code>
+          <code class="ruby">    LambdaBytecodeParser.new(-&gt;{ 1 + 2 - 3 }).to_infix.should == [&#39;(1 + 2) - 3&#39;]</code>
         </li>
       
         <li class="covered" data-hits="1" data-linenumber="20">
           <span class="hits">1</span>
           
-          <code class="ruby">    LambdaBytecodeParser.new(-&gt;(i){ i * (2 + i / 4) }).to_infix.should == [&#39;(x) * ((2) + ((x) / (4)))&#39;]</code>
+          <code class="ruby">    LambdaBytecodeParser.new(-&gt;(i){ i * (2 + i / 4) }).to_infix.should == [&#39;x * (2 + (x / 4))&#39;]</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="21">

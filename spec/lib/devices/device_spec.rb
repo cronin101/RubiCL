@@ -28,7 +28,7 @@ describe Device do
       device.instance_eval { @task_queue }.size.should be 1
 
       work_unit = device.instance_eval { @task_queue }.shift
-      work_unit.statements.should == ["x = (x) + (1)"]
+      work_unit.statements.should == ["x = x + 1"]
     end
   end
 

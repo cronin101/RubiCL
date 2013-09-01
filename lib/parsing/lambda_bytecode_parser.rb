@@ -40,12 +40,29 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
         else
           b = stack.pop
           a = stack.pop
-          stack.push "(#{a}) #{token} (#{b})"
+          stack.push combine(token, a, b)
         end
       end
     end
 
     stack
+  end
+
+  def combine(operator, arg1, arg2)
+   "#{enclose arg1} #{operator} #{enclose arg2}"
+  end
+
+  def is_value?(token)
+    case token
+    when Fixnum then true
+    when 'x' then true
+    else
+      false
+    end
+  end
+
+  def enclose(token)
+    is_value?(token) ? token : '(' << token << ')'
   end
 
 end

@@ -16,8 +16,8 @@ describe LambdaBytecodeParser do
 
   it "converts Reverse Polish Notation into Infix Notation" do
     LambdaBytecodeParser.new(->{ 0 }).to_infix.should == [0]
-    LambdaBytecodeParser.new(->{ 1 + 2 - 3 }).to_infix.should == ['((1) + (2)) - (3)']
-    LambdaBytecodeParser.new(->(i){ i * (2 + i / 4) }).to_infix.should == ['(x) * ((2) + ((x) / (4)))']
+    LambdaBytecodeParser.new(->{ 1 + 2 - 3 }).to_infix.should == ['(1 + 2) - 3']
+    LambdaBytecodeParser.new(->(i){ i * (2 + i / 4) }).to_infix.should == ['x * (2 + (x / 4))']
   end
 
 end
