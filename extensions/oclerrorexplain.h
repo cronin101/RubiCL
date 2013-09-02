@@ -1,3 +1,5 @@
+#ifndef OCLERROREXPLAIN_H
+#define OCLERROREXPLAIN_H
 #ifdef __APPLE__
   #include <OpenCL/opencl.h>
 #else
@@ -5,3 +7,4 @@
 #endif
 
 const char* oclErrorString(cl_int error);
+#endif

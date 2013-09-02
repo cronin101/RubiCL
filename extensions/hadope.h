@@ -1,3 +1,5 @@
+#ifndef HADOPE_H
+#define HADOPE_H
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef __APPLE__
@@ -54,3 +56,4 @@ void runTaskOnDataset(
   const HadopeMemoryBuffer mem_struct,
   const HadopeTask task
 );
+#endif
