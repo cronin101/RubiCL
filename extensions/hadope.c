@@ -1,6 +1,14 @@
 #include "hadope.h"
 #define DEBUG 1
 
+void releaseMemoryCallback(
+  cl_event event,
+  cl_int event_command_exec_status,
+  void* memory
+) {
+  free(memory);
+}
+
 void displayDeviceInfo(cl_device_type type) {
   cl_uint num_devices, i;
   clGetDeviceIDs(NULL, type, 0, NULL, &num_devices);
@@ -29,7 +37,7 @@ void displayDeviceInfo(cl_device_type type) {
 /* Selects target device then creates context and command queue, packages in HadopeEnvironment and returns.
  *
  * @device_type: CL_DEVICE_TYPE_GPU / CL_DEVICE_TYPE_CPU */
-HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type){
+HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type) {
   HadopeEnvironment env;
   cl_platform_id platform;
   cl_int ret;
@@ -153,7 +161,7 @@ cl_mem createMemoryBuffer(
   const HadopeEnvironment env,
   const size_t req_memory,
   const cl_mem_flags flags
-){
+) {
   cl_int ret;
   cl_mem buffer = clCreateBuffer(
     env.context, // Context to use
@@ -176,8 +184,9 @@ cl_mem createMemoryBuffer(
 void loadIntArrayIntoDevice(
   const HadopeEnvironment env,
   const HadopeMemoryBuffer mem_struct,
-  const int *dataset
-){
+  const int* dataset
+) {
+  cl_event write_event;
   cl_int ret = clEnqueueWriteBuffer(
     env.queue,                                 // Command queue
     mem_struct.buffer,                         // Memory buffer
@@ -187,10 +196,19 @@ void loadIntArrayIntoDevice(
     dataset,                                   // Input data
     NULL,                                      // List of preceding actions
     0,                                         // Number of preceding actions
-    NULL                                       // Event object destination
+    &write_event                               // Event object destination
   );
+
   if (ret != CL_SUCCESS)
     printf("clEnqueueWriteBuffer %s\n", oclErrorString(ret));
+
+  clSetEventCallback(
+    write_event,            // Event to monitor
+    CL_COMPLETE,            // Status to fire on
+    &releaseMemoryCallback, // Callback to trigger
+    dataset                 // Data to pass to callback
+  );
+
 }
 
 /* Reads the contents of device memory buffer into a given dataset array
@@ -202,7 +220,7 @@ void getIntArrayFromDevice(
   const HadopeEnvironment env,
   const HadopeMemoryBuffer mem_struct,
   int *dataset
-){
+) {
   /* Wait for pending actions to complete */
   clFinish(env.queue);
 
@@ -233,7 +251,7 @@ void getPresencearrayFromDevice(
   const HadopeEnvironment env,
   const HadopeMemoryBuffer presence,
   int *presence_array
-){
+) {
   cl_int ret = clEnqueueReadBuffer(
     env.queue,                               // Device's command queue
     presence.buffer,                         // Buffer to output data from
@@ -265,7 +283,7 @@ HadopeTask buildTaskFromSource(
   const char* kernel_source,
   const size_t source_size,
   char* name
-){
+) {
   HadopeTask task;
   cl_int ret;
 
@@ -317,7 +335,7 @@ void runTaskOnDataset(
   const HadopeEnvironment env,
   const HadopeMemoryBuffer mem_struct,
   const HadopeTask task
-){
+) {
   size_t g_work_size[1] = {mem_struct.buffer_entries};
 
   /* Kernel's global data_array set to be the given device memory buffer */
@@ -335,7 +353,7 @@ void runTaskOnDataset(
     env.queue,   // Device's command queue
     task.kernel, // Kernel to enqueue
     1,           // Dimensionality of work
-    0,        // Global offset of work index
+    0,           // Global offset of work index
     g_work_size, // Array of work sizes by dimension
     NULL,        // Local work size, omitted so will be automatically deduced
     NULL,        // Preceding events list
@@ -357,7 +375,7 @@ void computePresenceArrayForDataset(
   const HadopeMemoryBuffer mem_struct,
   const HadopeTask task,
   HadopeMemoryBuffer *presence
-){
+) {
   size_t g_work_size[1] = {mem_struct.buffer_entries};
 
   /* Kernel's global data_array set to be the given device memory buffer */
@@ -405,3 +423,4 @@ void computePresenceArrayForDataset(
 }
 
 /* ~~ END Task Dispatching Methods ~~ */
+
