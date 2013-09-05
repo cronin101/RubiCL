@@ -231,33 +231,6 @@ void getIntArrayFromDevice(
   if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 }
 
-/* Reads the contents of a calculated 'presence array' from device memory buffer
- * into given output array.
- * A presence array is an array of boolean flags denoting which elements of an
- * input dataset passed a given predicate.
- *
- * @env: Struct containing device/context/queue variables.
- * @presence: Struct containing device presence-buffer and its length.
- * @presence_array: Pointer to array of int flags to be copied from device buffer. */
-void getPresencearrayFromDevice(
-  const HadopeEnvironment env,
-  const HadopeMemoryBuffer presence,
-  int *presence_array
-) {
-  cl_int ret = clEnqueueReadBuffer(
-    env.queue,                               // Device's command queue
-    presence.buffer,                         // Buffer to output data from
-    CL_TRUE,                                 // Block? Makes no sense to be asynchronous here
-    0,                                       // Offset to read from
-    presence.buffer_entries * sizeof(int),   // Size of output data
-    presence_array,                          // Output destination
-    NULL,                                    // List of preceding actions
-    0,                                       // Number of preceding actions
-    NULL                                     // Event object destination
-  );
-  if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
-}
-
 /* ~~ END Memory Management Methods ~~ */
 
 /* ~~ Task Compilation Methods ~~ */

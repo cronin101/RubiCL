@@ -170,8 +170,13 @@ static VALUE methodRunMapTask(
  * @source_size_object: Ruby object specifying the size of the kernel String.
  * @task_name_object: Ruby object specifying the task within the source to enqueue.
  * @memory_struct_object: Ruby object containing HadopeMemoryBuffer to process. */
-static VALUE methodRunFilterTask(VALUE self, VALUE task_source_object, VALUE source_size_object,
-                                     VALUE task_name_object, VALUE mem_struct_object){
+static VALUE methodRunFilterTask(
+  VALUE self,
+  VALUE task_source_object,
+  VALUE source_size_object,
+  VALUE task_name_object,
+  VALUE mem_struct_object
+){
   HadopeMemoryBuffer *mem_struct;
   HadopeEnvironment *environment;
 
