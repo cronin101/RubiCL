@@ -3,7 +3,7 @@ require 'forwardable'
 
 module Hadope
   class << self
-    attr_accessor :opencl_device
+    attr_writer :opencl_device
   end
 
   require_relative './lib/types/array.rb'
@@ -19,5 +19,9 @@ module Hadope
 
   require_relative './lib/tasks/taskqueue'
   require_relative './lib/tasks/map'
+
+  def self.opencl_device
+    @opencl_device.get
+  end
 
 end

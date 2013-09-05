@@ -24,6 +24,10 @@
         1,
         1,
         null,
+        1,
+        13,
+        null,
+        null,
         null
       ],
       "/Users/cronin/Dev/Ruby/HaDope/lib/types/array.rb": [
@@ -208,7 +212,7 @@
         1,
         null,
         1,
-        18,
+        25,
         null,
         null,
         null,
@@ -776,6 +780,6 @@
         null
       ]
     },
-    "timestamp": 1378403406
+    "timestamp": 1378403886
   }
 }
