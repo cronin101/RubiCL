@@ -28,7 +28,7 @@ class Hadope::Logger
   def log(action)
     log_line = "[#{Time.now}] #{action}"
     puts log_line if @verbose_mode
-    File.open(@log_path, "a") { |f| f.puts log_line } if @log_to_file
+    File.open(@log_path, 'a') { |f| f.puts log_line } if @log_to_file
   end
 
 end

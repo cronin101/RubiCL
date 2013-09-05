@@ -7,7 +7,7 @@ module Hadope
 
     def initialize(input_variable, *statements)
       super()
-      set_output_variable(@input_variable = input_variable)
+      @output_variable = (@input_variable = input_variable)
       add_variables @input_variable
       add_statements statements.flatten
     end
@@ -28,20 +28,16 @@ module Hadope
       "data_array[global_id] = #{@output_variable};"
     end
 
-    def set_output_variable(variable)
-      @output_variable = variable
-    end
-
     def fuse!(next_map)
       conversion =  if next_map.input_variable == output_variable
                       [] # No variable pipelining required!
                     else
                       pipeline_variable = output_variable
-                      set_output_variable next_map.output_variable
+                      @output_variable = next_map.output_variable
                       add_variables next_map.input_variable
                       ["#{next_map.input_variable} = #{pipeline_variable}"]
                     end
-      add_statements (conversion + next_map.statements)
+      add_statements(conversion + next_map.statements)
     end
 
     def to_kernel

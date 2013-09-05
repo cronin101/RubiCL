@@ -18,7 +18,7 @@ static VALUE initOpenCLenvironment(cl_device_type device_type){
 }
 
 /* Following two methods do what they say on the tin. */
-static VALUE method_init_GPU_environment(VALUE self){
+static VALUE methodInitGPUEnvironment(VALUE self){
   return init_OpenCL_environment(CL_DEVICE_TYPE_GPU);
 }
 
@@ -88,8 +88,7 @@ static VALUE methodLoadIntDataset(
   /* Iteration over Ruby integer array converting Ruby FIXNUMs to C ints. */
   int array_size = RARRAY_LEN(dataset_object);
   int* dataset = calloc(array_size, sizeof(int));
-  for (i=0; i < array_size; i++)
-    dataset[i] = FIX2INT(rb_ary_entry(dataset_object, i));
+  for (i=0; i < array_size; i++) dataset[i] = FIX2INT(rb_ary_entry(dataset_object, i));
 
   Data_Get_Struct(memory_struct_object, HadopeMemoryBuffer, mem_struct);
   VALUE environment_object = rb_iv_get(self, "@environment");
@@ -122,8 +121,7 @@ static VALUE methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object){
 
   /* Create new Ruby array and fill with C ints converted to FIXNUMs */
   VALUE output_array = rb_ary_new2(mem_struct->buffer_entries);
-  for (i = 0; i < mem_struct->buffer_entries; i++)
-    rb_ary_store(output_array, i, INT2FIX(dataset[i]));
+  for (i = 0; i < mem_struct->buffer_entries; i++) rb_ary_store(output_array, i, INT2FIX(dataset[i]));
   free(dataset);
 
   return output_array;
@@ -140,7 +138,7 @@ static VALUE methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object){
  * @source_size_object: Ruby object specifying the size of the kernel String.
  * @task_name_object: Ruby object specifying the task within the source to enqueue.
  * @memory_struct_object: Ruby object containing HadopeMemoryBuffer to process. */
-static VALUE method_run_map_task(
+static VALUE methodRunMapTask(
   VALUE self,
   VALUE task_source_object,
   VALUE source_size_object,
@@ -172,7 +170,7 @@ static VALUE method_run_map_task(
  * @source_size_object: Ruby object specifying the size of the kernel String.
  * @task_name_object: Ruby object specifying the task within the source to enqueue.
  * @memory_struct_object: Ruby object containing HadopeMemoryBuffer to process. */
-static VALUE method_run_filter_task(VALUE self, VALUE task_source_object, VALUE source_size_object,
+static VALUE methodRunFilterTask(VALUE self, VALUE task_source_object, VALUE source_size_object,
                                      VALUE task_name_object, VALUE mem_struct_object){
   HadopeMemoryBuffer *mem_struct;
   HadopeEnvironment *environment;
@@ -197,7 +195,7 @@ static VALUE method_run_filter_task(VALUE self, VALUE task_source_object, VALUE 
 
 /* ~~ END Task Dispatching Methods ~~ */
 
-static VALUE method_clean_used_resources(VALUE self, VALUE mem_struct_object){
+static VALUE methodCleanUsedResources(VALUE self, VALUE mem_struct_object){
   HadopeMemoryBuffer *mem_struct;
   HadopeEnvironment *environment;
 
@@ -214,12 +212,12 @@ static VALUE method_clean_used_resources(VALUE self, VALUE mem_struct_object){
 /* Used to give extension methods defined above to device class when HadopeBackend module is included. */
 void Init_hadope_backend(){
   VALUE HadopeBackend = rb_define_module("HadopeBackend");
-  rb_define_private_method(HadopeBackend, "init_GPU_environment", method_init_GPU_environment, 0);
+  rb_define_private_method(HadopeBackend, "init_GPU_environment", methodInitGPUEnvironment, 0);
   rb_define_private_method(HadopeBackend, "initialize_CPU_environment", methodInitCPUEnvironment, 0);
   rb_define_private_method(HadopeBackend, "create_memory_buffer", methodCreateMemoryBuffer, 2);
   rb_define_private_method(HadopeBackend, "transfer_integer_dataset_to_buffer", methodLoadIntDataset, 2);
   rb_define_private_method(HadopeBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
-  rb_define_private_method(HadopeBackend, "run_map_task", method_run_map_task, 4);
-  rb_define_private_method(HadopeBackend, "run_filter_task", method_run_filter_task, 4);
-  rb_define_private_method(HadopeBackend, "clean_used_resources", method_clean_used_resources, 1);
+  rb_define_private_method(HadopeBackend, "run_map_task", methodRunMapTask, 4);
+  rb_define_private_method(HadopeBackend, "run_filter_task", methodRunFilterTask, 4);
+  rb_define_private_method(HadopeBackend, "clean_used_resources", methodCleanUsedResources, 1);
 }

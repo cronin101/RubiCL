@@ -55,8 +55,7 @@ HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type) {
     platforms,     // Value destination
     NULL           // Count destination
   );
-  if (ret != CL_SUCCESS)
-    printf("clGetPlatformIDs %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clGetPlatformIDs %s\n", oclErrorString(ret));
 
   if (DEBUG) {
     char buf [128];
@@ -90,8 +89,7 @@ HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type) {
     }
   }
 
-  if (DEBUG)
-    printf("Selecting Platform 1.\n");
+  if (DEBUG) printf("Selecting Platform 1.\n");
   platform = platforms[0];
   free(platforms);
 
@@ -113,8 +111,7 @@ HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type) {
     devices,     // Devices destination
     NULL         // Count destination
   );
-  if (ret != CL_SUCCESS)
-    printf("clGetDeviceIDs %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clGetDeviceIDs %s\n", oclErrorString(ret));
 
   if (DEBUG) {
     displayDeviceInfo(device_type);
@@ -132,8 +129,7 @@ HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type) {
     NULL,           // User data specified
     &ret            // Status destination
   );
-  if (ret != CL_SUCCESS)
-    printf("clCreateContext %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clCreateContext %s\n", oclErrorString(ret));
 
   /* Create command queue for context/target-device and store in environment */
   env.queue = clCreateCommandQueue(
@@ -142,8 +138,7 @@ HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type) {
     0,             // Queue properties bitfield, neither out_of_order nor profiling flags set.
     &ret           // Status destination
   );
-  if (ret != CL_SUCCESS)
-    printf("clCreateCommandQueue %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clCreateCommandQueue %s\n", oclErrorString(ret));
 
   return env;
 }
@@ -170,8 +165,7 @@ cl_mem createMemoryBuffer(
     NULL,        // Prexisting data
     &ret         // Status destination
   );
-  if (ret != CL_SUCCESS)
-    printf("clCreateBuffer %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clCreateBuffer %s\n", oclErrorString(ret));
 
   return buffer;
 }
@@ -192,15 +186,14 @@ void loadIntArrayIntoDevice(
     mem_struct.buffer,                         // Memory buffer
     CL_FALSE,                                  // Blocking write? (set to nonblocking)
     0,                                         // Offset in buffer to write to
-    (mem_struct.buffer_entries * sizeof(int)), // Input data size
+    mem_struct.buffer_entries * sizeof(int),   // Input data size
     dataset,                                   // Input data
     NULL,                                      // List of preceding actions
     0,                                         // Number of preceding actions
     &write_event                               // Event object destination
   );
 
-  if (ret != CL_SUCCESS)
-    printf("clEnqueueWriteBuffer %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clEnqueueWriteBuffer %s\n", oclErrorString(ret));
 
   clSetEventCallback(
     write_event,            // Event to monitor
@@ -235,8 +228,7 @@ void getIntArrayFromDevice(
     0,                                       // Number of preceding actions
     NULL                                     // Event object destination
   );
-  if (ret != CL_SUCCESS)
-    printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 }
 
 /* Reads the contents of a calculated 'presence array' from device memory buffer
@@ -263,8 +255,7 @@ void getPresencearrayFromDevice(
     0,                                       // Number of preceding actions
     NULL                                     // Event object destination
   );
-  if (ret != CL_SUCCESS)
-    printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 }
 
 /* ~~ END Memory Management Methods ~~ */
@@ -296,8 +287,7 @@ HadopeTask buildTaskFromSource(
     &source_size,                   // Total size of source
     &ret                            // Status destination
   );
-  if (ret != CL_SUCCESS)
-    printf("clCreateProgramWithSource %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clCreateProgramWithSource %s\n", oclErrorString(ret));
 
   /* Create kernel from cl_program to execute later on target-device */
   ret = clBuildProgram(
@@ -308,16 +298,14 @@ HadopeTask buildTaskFromSource(
     NULL,                    // Build complete callback, building is synchronous if omitted
     NULL                     // Callback user data
   );
-  if (ret != CL_SUCCESS)
-    printf("clBuildProgram %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clBuildProgram %s\n", oclErrorString(ret));
 
   task.kernel = clCreateKernel(
     task.program, // Built program
     task.name,    // Entry point to kernel
     &ret          // Status destination
   );
-  if (ret != CL_SUCCESS)
-    printf("clCreateKernel %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clCreateKernel %s\n", oclErrorString(ret));
 
   return task;
 }
@@ -345,8 +333,7 @@ void runTaskOnDataset(
     sizeof(cl_mem),    // Size of argument value
     &mem_struct.buffer // Argument value
   );
-  if (ret != CL_SUCCESS)
-    printf("clSetKernelArg %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(
@@ -360,8 +347,7 @@ void runTaskOnDataset(
     0,           // Number of preceding events
     NULL         // Event object destination
   );
-  if (ret != CL_SUCCESS)
-    printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 }
 
 /* Enqueues a task to compute the presence array for a given dataset and filter kernel.
@@ -385,8 +371,7 @@ void computePresenceArrayForDataset(
     sizeof(cl_mem),    // Size of argument value
     &mem_struct.buffer // Argument value
   );
-  if (ret != CL_SUCCESS)
-    printf("clSetKernelArg %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   /* Output buffer created to be an int flag for each element in input dataset. */
   presence->buffer_entries = mem_struct.buffer_entries;
@@ -403,8 +388,7 @@ void computePresenceArrayForDataset(
     sizeof(cl_mem),   // Size of argument value
     &presence->buffer // Argument value
   );
-  if (ret != CL_SUCCESS)
-    printf("clSetKernelArg PA %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clSetKernelArg PA %s\n", oclErrorString(ret));
 
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(
@@ -418,8 +402,7 @@ void computePresenceArrayForDataset(
     0,           // Number of preceding events
     NULL         // Event object destination
   );
-  if (ret != CL_SUCCESS)
-    printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 }
 
 /* ~~ END Task Dispatching Methods ~~ */

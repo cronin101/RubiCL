@@ -1,14 +1,14 @@
 require 'spec_helper'
 
-Task = Hadope::Task
+TASK = Hadope::Task
 
-describe Task do
-  it "is abstract" do
-    expect { Task.new }.to raise_error
+describe TASK do
+  it 'is abstract' do
+    expect { TASK.new }.to raise_error
   end
 
-  it "can have a single statement added" do
-    class SomeTask < Task; end
+  it 'can have a single statement added' do
+    class SomeTask < TASK; end
     task = SomeTask.new
     statement = 'do something;'
     task.add_statement statement
@@ -18,8 +18,8 @@ describe Task do
     task.statements.should == [statement] * 2
   end
 
-  it "can have multiple statements added" do
-    class SomeTask < Task; end
+  it 'can have multiple statements added' do
+    class SomeTask < TASK; end
     task = SomeTask.new
     statements = ['do something'] * 2
 

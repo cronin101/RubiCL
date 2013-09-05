@@ -1,7 +1,20 @@
 class Hadope::LambdaBytecodeParser < Struct.new(:function)
+  LOOKUP_TABLE = {
+    opt_plus: '+',
+    opt_minus: '-',
+    opt_mult: '*',
+    opt_div: '/',
+    opt_mod: '%',
+    opt_lt: '<',
+    opt_le: '<=',
+    opt_gt: '>',
+    opt_ge: '>=',
+    opt_eq: '==',
+    opt_neq: '!='
+  }
 
   def bytecode
-    RubyVM::InstructionSequence::disassemble function
+    RubyVM::InstructionSequence.disassemble function
   end
 
   def parsed_operations
@@ -12,18 +25,10 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
     tokens = parsed_operations
     stack = []
     while tokens.length > 0
-      token = tokens.shift
-      case token
+      case token = tokens.shift
       when Fixnum then stack.push token
       when Symbol then stack.push method_send(stack.pop, token)
-      when String
-        if token == 'x'
-          stack.push token
-        else
-          b = stack.pop
-          a = stack.pop
-          stack.push combine(token, a, b)
-        end
+      when String then token == 'x' ? stack.push(token) : stack.push(combine(token, stack.pop, stack.pop))
       end
     end
 
@@ -33,27 +38,13 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
   private
 
   def translate(operation)
-    lookup_table = {
-      opt_plus: '+',
-      opt_minus: '-',
-      opt_mult: '*',
-      opt_div: '/',
-      opt_mod: '%',
-      opt_lt: '<',
-      opt_le: '<=',
-      opt_gt: '>',
-      opt_ge: '>=',
-      opt_eq: '==',
-      opt_neq: '!='
-    }
-
     case operation
     when /getlocal/ then 'x'
     when /putobject_OP_INT2FIX_O_0_C_/ then 0
     when /putobject_OP_INT2FIX_O_1_C_/ then 1
     when /putobject\s+-?\d+/ then operation.split(' ').last.to_i
     when /opt_send_simple/ then operation.scan(/(?:mid:(.*?),)/)[0][0].to_sym
-    when /opt_/ then lookup_table.fetch operation[/opt_\w+/].to_sym
+    when /opt_/ then LOOKUP_TABLE.fetch operation[/opt_\w+/].to_sym
     else
       raise "Could not parse: #{operation}"
     end
@@ -67,8 +58,8 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
     end
   end
 
-  def combine(operator, arg1, arg2)
-   "#{enclose arg1} #{operator} #{enclose arg2}"
+  def combine(operator, arg2, arg1)
+    "#{enclose arg1} #{operator} #{enclose arg2}"
   end
 
   def is_value?(token)

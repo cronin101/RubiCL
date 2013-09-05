@@ -4,14 +4,14 @@ class Hadope::Device
   Cache = Struct.new(:dataset)
 
   def initialize
-    raise "Must be a subclass!" if self.class == Hadope::Device
+    raise 'Must be a subclass!' if self.class == Hadope::Device
     initialize_task_queue
     @logger = Hadope::Logger.get
     @cache = Cache.new(nil)
   end
 
   def [](type)
-    self.send type.hadope_conversion
+    send type.hadope_conversion
   end
 
   def load_integer_dataset(array)

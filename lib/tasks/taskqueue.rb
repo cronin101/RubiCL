@@ -12,14 +12,14 @@ class Hadope::TaskQueue
 
   def simplify!
     before = @tasks.map(&:statements)
-    @tasks = @tasks.inject [] do |queue, task|
+    @tasks = @tasks.reduce [] do |queue, task|
       if queue.empty?
-          result = [task]
+        result = [task]
       else
         *fixed_queue, previous = queue
 
         case [task.class, previous.class]
-        when [Hadope::Map]*2
+        when [Hadope::Map] * 2
           result = fixed_queue << previous.fuse!(task)
         else
           result = fixed_queue << previous << task
