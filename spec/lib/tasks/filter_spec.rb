@@ -10,5 +10,4 @@ describe FILTER do
   it 'can be created with a predicate' do
     expect { FILTER.new(:i, 'i > 1') }.to_not raise_error
   end
-
 end

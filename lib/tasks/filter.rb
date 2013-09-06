@@ -24,7 +24,7 @@ module Hadope
     end
 
     def return_statements
-      "presence_array[global_id] = #{@output_variable}"
+      "presence_array[global_id] = #{@output_variable};"
     end
 
   end
