@@ -28,7 +28,7 @@ void displayDeviceInfo(cl_device_type type) {
     clGetDeviceInfo(devices[i], CL_DEVICE_VERSION, 128, buf, NULL);
     printf("\tSupports: %s\n", buf);
     clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_GROUP_SIZE, 128, &max_workgroup_size, NULL);
-    printf("\tMax workgroup size: %d\n", max_workgroup_size);
+    printf("\tMax workgroup size: %lu\n", max_workgroup_size);
   }
 
   free(devices);
@@ -47,7 +47,7 @@ HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type) {
   /* Selecting an OpenCL platform */
   cl_uint num_platforms, i;
   ret = clGetPlatformIDs(
-    NULL,          // Limit
+    0,             // Limit
     NULL,          // Value destination
     &num_platforms // Count destination
   );
@@ -100,7 +100,7 @@ HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type) {
   ret = clGetDeviceIDs(
     platform,    // Selected platform
     device_type, // Type of device (CPU/GPU)
-    NULL,        // Limit
+    0,           // Limit
     NULL,        // Devices destination
     &num_devices // Count destination
   );
@@ -180,7 +180,7 @@ cl_mem createMemoryBuffer(
 void loadIntArrayIntoDevice(
   const HadopeEnvironment env,
   const HadopeMemoryBuffer mem_struct,
-  const int* dataset
+  int* dataset
 ) {
   cl_event write_event;
   cl_int ret = clEnqueueWriteBuffer(
@@ -190,8 +190,8 @@ void loadIntArrayIntoDevice(
     0,                                         // Offset in buffer to write to
     mem_struct.buffer_entries * sizeof(int),   // Input data size
     dataset,                                   // Input data
-    NULL,                                      // List of preceding actions
     0,                                         // Number of preceding actions
+    NULL,                                      // List of preceding actions
     &write_event                               // Event object destination
   );
 
@@ -226,8 +226,8 @@ void getIntArrayFromDevice(
     0,                                       // Offset to read from
     mem_struct.buffer_entries * sizeof(int), // Size of output data
     dataset,                                 // Output destination
-    NULL,                                    // List of preceding actions
     0,                                       // Number of preceding actions
+    NULL,                                    // List of preceding actions
     NULL                                     // Event object destination
   );
   if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
@@ -318,8 +318,8 @@ void runTaskOnDataset(
     0,           // Global offset of work index
     g_work_size, // Array of work sizes by dimension
     NULL,        // Local work size, omitted so will be automatically deduced
-    NULL,        // Preceding events list
     0,           // Number of preceding events
+    NULL,        // Preceding events list
     NULL         // Event object destination
   );
   if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
@@ -373,12 +373,18 @@ void computePresenceArrayForDataset(
     0,           // Global offset of work index
     g_work_size, // Array of work size in each dimension
     NULL,        // Local work size, omitted so will be deduced by OpenCL platform
-    NULL,        // Preceding events list
     0,           // Number of preceding events
+    NULL,        // Preceding events list
     NULL         // Event object destination
   );
   if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 }
 
+void filterDatasetByPresence(
+  const HadopeEnvironment env,
+  const HadopeMemoryBuffer mem_struct,
+  const HadopeMemoryBuffer presence
+) {
+}
 /* ~~ END Task Dispatching Methods ~~ */
 

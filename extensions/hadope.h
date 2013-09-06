@@ -43,7 +43,7 @@ HadopeTask buildTaskFromSource(
 void loadIntArrayIntoDevice(
   const HadopeEnvironment env,
   const HadopeMemoryBuffer mem_struct,
-  const int *dataset
+  int *dataset
 );
 
 void getIntArrayFromDevice(
@@ -55,5 +55,18 @@ void runTaskOnDataset(
   const HadopeEnvironment env,
   const HadopeMemoryBuffer mem_struct,
   const HadopeTask task
+);
+
+void computePresenceArrayForDataset(
+  const HadopeEnvironment env,
+  const HadopeMemoryBuffer mem_struct,
+  const HadopeTask task,
+  HadopeMemoryBuffer * presence
+);
+
+void filterDatasetByPresence(
+  const HadopeEnvironment env,
+  const HadopeMemoryBuffer mem_struct,
+  const HadopeMemoryBuffer presence
 );
 #endif

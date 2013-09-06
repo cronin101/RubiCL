@@ -19,7 +19,7 @@ static VALUE initOpenCLenvironment(cl_device_type device_type){
 
 /* Following two methods do what they say on the tin. */
 static VALUE methodInitGPUEnvironment(VALUE self){
-  return init_OpenCL_environment(CL_DEVICE_TYPE_GPU);
+  return initOpenCLenvironment(CL_DEVICE_TYPE_GPU);
 }
 
 static VALUE methodInitCPUEnvironment(VALUE self){
@@ -192,10 +192,9 @@ static VALUE methodRunFilterTask(
   Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
   HadopeMemoryBuffer* presence_struct = malloc(sizeof(HadopeMemoryBuffer));
   computePresenceArrayForDataset(*environment, *mem_struct, task, presence_struct);
+  filterDatasetByPresence(*environment, *mem_struct, *presence_struct);
 
-  /* DIRTY_HACK: Packages presence_strut to be returned to device class */
-  VALUE presence_object = rb_define_class("HadopePresenceArray", rb_cObject);
-  return Data_Wrap_Struct(presence_object, NULL, NULL, presence_struct);
+  return self;
 }
 
 /* ~~ END Task Dispatching Methods ~~ */
