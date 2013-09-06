@@ -10,11 +10,14 @@ describe TASK_KERNEL_GENERATOR do
   context 'Map tasks' do
     it 'can generate the kernel from components and boilerplate' do
       map = Hadope::Map.new(:i, 'i + 1')
-      map.should_receive(:variable_declarations).once
-      map.should_receive(:setup_statements).once
-      map.should_receive(:body).once
-      map.should_receive(:return_statements).once
       expect { map.to_kernel }.to_not raise_error
+    end
+  end
+
+  context 'Filter tasks' do
+    it 'can generate the kernel from components and boilerplate' do
+      filter = Hadope::Filter.new(:i, 'i > 1')
+      expect { filter.to_kernel }.to_not raise_error
     end
   end
 
