@@ -19,6 +19,7 @@ module Hadope
 
   require_relative './lib/tasks/taskqueue'
   require_relative './lib/tasks/map'
+  require_relative './lib/tasks/filter'
 
   def self.opencl_device
     @opencl_device.get

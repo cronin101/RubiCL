@@ -12,22 +12,6 @@ module Hadope
       add_statements statements.flatten
     end
 
-    def variable_declarations
-      @required_variables.map { |v| "#{type} #{v}" }.join(";\n  ") << ';'
-    end
-
-    def setup_statements
-      "int global_id = get_global_id(0);\n  #{@input_variable} = data_array[global_id];"
-    end
-
-    def body
-      @statements.join(";\n  ") << ';'
-    end
-
-    def return_statements
-      "data_array[global_id] = #{@output_variable};"
-    end
-
     def fuse!(next_map)
       conversion =  if next_map.input_variable == output_variable
                       [] # No variable pipelining required!
@@ -46,6 +30,14 @@ module Hadope
 
     def type
       'int'
+    end
+
+    def body
+      @statements.join(";\n  ") << ';'
+    end
+
+    def return_statements
+      "data_array[global_id] = #{@output_variable};"
     end
 
   end

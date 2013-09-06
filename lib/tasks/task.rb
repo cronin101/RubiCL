@@ -36,4 +36,12 @@ class Hadope::Task
     self.class.to_s.downcase.gsub(/\W/, '') << @@count.to_s
   end
 
+  def variable_declarations
+    @required_variables.map { |v| "#{type} #{v}" }.join(";\n  ") << ';'
+  end
+
+  def setup_statements
+    "int global_id = get_global_id(0);\n  #{@input_variable} = data_array[global_id];"
+  end
+
 end
