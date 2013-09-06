@@ -1,4 +1,6 @@
 #include "hadope.h"
+#include "prefix_sum/prescan.h"
+
 #define DEBUG 1
 
 void releaseMemoryCallback(

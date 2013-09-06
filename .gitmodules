@@ -1,0 +1,3 @@
+[submodule "extensions/prefix_sum"]
+	path = extensions/prefix_sum
+	url = https://github.com/cronin101/OpenclPrefixSum
