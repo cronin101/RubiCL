@@ -1,3 +1,6 @@
-[submodule "extensions/prefix_sum"]
-	path = extensions/prefix_sum
+[submodule "coverage"]
+	path = coverage
+	url = https://github.com/cronin101/HadopeCoverage
+[submodule "ext/lib/prefix_sum"]
+	path = ext/lib/prefix_sum
 	url = https://github.com/cronin101/OpenclPrefixSum

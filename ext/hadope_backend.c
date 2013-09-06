@@ -1,5 +1,5 @@
 #include "ruby.h"
-#include "./hadope.h"
+#include "lib/hadope.h"
 
 /* ~~ Init Methods ~~ */
 

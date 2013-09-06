@@ -1,4 +1,4 @@
-require './extensions/hadope_backend.so'
+require './ext/hadope_backend'
 require 'forwardable'
 
 module Hadope

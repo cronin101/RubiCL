@@ -1,4 +1,4 @@
-#include "hadope.h"
+#include "./hadope.h"
 #include "prefix_sum/prescan.h"
 
 #define DEBUG 1
