@@ -26,6 +26,12 @@ class Hadope::Device
     self
   end
 
+  def filter(&block)
+    predicate = Hadope::LambdaBytecodeParser.new(block).to_infix.first
+    @task_queue.push Hadope::Filter.new(:x, predicate)
+    self
+  end
+
   def retrieve_integer_dataset
     run_tasks unless @task_queue.empty?
     @cache.dataset ||= retrieve_integer_dataset_from_buffer @buffer
@@ -39,13 +45,20 @@ class Hadope::Device
 
   def run_map(task)
     kernel = task.to_kernel
-    @logger.log "Executing kernel: #{kernel.inspect}"
+    @logger.log "Executing map kernel: #{kernel.inspect}"
     run_map_task(kernel, kernel.length, task.name, @buffer)
+  end
+
+  def run_filter(task)
+    kernel = task.to_kernel
+    @logger.log "Executing filter kernel: #{kernel.inspect}"
+    run_filter_task(kernel, kernel.length, task.name, @buffer)
   end
 
   def run_task(task)
     case task
-    when Hadope::Map then run_map task
+    when Hadope::Map    then run_map task
+    when Hadope::Filter then run_filter task
     end
   end
 
