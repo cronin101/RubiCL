@@ -13,24 +13,16 @@ class Hadope::TaskQueue
   def simplify!
     before = @tasks.map(&:statements)
     @tasks = @tasks.reduce [] do |queue, task|
-      if queue.empty?
-        result = [task]
+      if queue.empty? then [task]
       else
         *fixed_queue, previous = queue
-
         case [task.class, previous.class]
-        when [Hadope::Map] * 2
-          result = fixed_queue << previous.fuse!(task)
-        else
-          result = fixed_queue << previous << task
+        when [Hadope::Map] * 2 then fixed_queue << previous.fuse!(task)
+        else                        fixed_queue << previous << task
         end
       end
-      result
     end
-    after = @tasks.map(&:statements)
-
-    @logger.log "Simplify!: Simplified from #{before.inspect}, to #{after.inspect}."
-
+    @logger.log "Simplify!: Simplified from #{before.inspect}, to #{@tasks.map(&:statements).inspect}."
     self
   end
 
