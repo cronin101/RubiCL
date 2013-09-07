@@ -116,7 +116,7 @@ static VALUE methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object){
   VALUE environment_object = rb_iv_get(self, "@environment");
   Data_Get_Struct(environment_object, HadopeEnvironment, environment);
 
-  /* Enqueue the task to read array from olc device into recipient */
+  /* Enqueue the task to read array from OCL device into recipient */
   getIntArrayFromDevice(*environment, *mem_struct, dataset);
 
   /* Create new Ruby array and fill with C ints converted to FIXNUMs */
@@ -177,8 +177,9 @@ static VALUE methodRunFilterTask(
   VALUE task_name_object,
   VALUE mem_struct_object
 ){
-  HadopeMemoryBuffer *mem_struct;
+  HadopeMemoryBuffer *dataset;
   HadopeEnvironment *environment;
+  int i;
 
   /* Convert Objects into C types and builds Kernel using environment ivar */
   char* task_source = StringValuePtr(task_source_object);
@@ -189,26 +190,34 @@ static VALUE methodRunFilterTask(
   HadopeTask task = buildTaskFromSource(*environment, task_source, source_size, task_name);
 
   /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
-  Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
-  HadopeMemoryBuffer* presence_struct = malloc(sizeof(HadopeMemoryBuffer));
-  computePresenceArrayForDataset(*environment, *mem_struct, task, presence_struct);
-  filterDatasetByPresence(*environment, *mem_struct, *presence_struct);
+  Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, dataset);
+  HadopeMemoryBuffer* presence = malloc(sizeof(HadopeMemoryBuffer));
+  computePresenceArrayForDataset(*environment, *dataset, task, presence);
+  HadopeMemoryBuffer prescan = exclusivePrefixSum(*environment, *presence);
 
-  return self;
+  int* result = calloc(prescan.buffer_entries, sizeof(int));
+  getIntArrayFromDevice(*environment, prescan, result);
+
+  /* Create new Ruby array and fill with C ints converted to FIXNUMs */
+  VALUE output_array = rb_ary_new2(prescan.buffer_entries);
+  for (i = 0; i < prescan.buffer_entries; i++) rb_ary_store(output_array, i, INT2FIX(result[i]));
+  free(result);
+
+  return output_array;
 }
 
 /* ~~ END Task Dispatching Methods ~~ */
 
 static VALUE methodCleanUsedResources(VALUE self, VALUE mem_struct_object){
-  HadopeMemoryBuffer *mem_struct;
+  HadopeMemoryBuffer *dataset;
   HadopeEnvironment *environment;
 
-  Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
+  Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, dataset);
   VALUE environment_object = rb_iv_get(self, "@environment");
   Data_Get_Struct(environment_object, HadopeEnvironment, environment);
   clFlush(environment->queue);
   clFinish(environment->queue);
-  clReleaseMemObject(mem_struct->buffer);
+  clReleaseMemObject(dataset->buffer);
 
   return self;
 }

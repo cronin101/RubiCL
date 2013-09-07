@@ -52,7 +52,7 @@ class Hadope::Device
   def run_filter(task)
     kernel = task.to_kernel
     @logger.log "Executing filter kernel: #{kernel.inspect}"
-    run_filter_task(kernel, kernel.length, task.name, @buffer)
+    puts run_filter_task(kernel, kernel.length, task.name, @buffer).inspect
   end
 
   def run_task(task)

@@ -1,5 +1,6 @@
 #include "./hadope.h"
 #include "prefix_sum/prescan.h"
+#include "oclerrorexplain.h"
 
 #define DEBUG 1
 
@@ -9,6 +10,23 @@ void releaseMemoryCallback(
   void* memory
 ) {
   free(memory);
+}
+
+void setGroupSize(
+  const HadopeEnvironment env
+) {
+  size_t max_workgroup_size = 0;
+  size_t returned_size = 0;
+  cl_int ret = clGetDeviceInfo(
+    env.device_id,
+    CL_DEVICE_MAX_WORK_GROUP_SIZE,
+    sizeof(size_t),
+    &max_workgroup_size,
+    &returned_size
+  );
+
+  if (ret != CL_SUCCESS) printf("clGetDeviceInfo %s\n", oclErrorString(ret));
+  GROUP_SIZE = min(GROUP_SIZE,  max_workgroup_size);
 }
 
 void displayDeviceInfo(cl_device_type type) {
@@ -141,6 +159,9 @@ HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type) {
     &ret           // Status destination
   );
   if (ret != CL_SUCCESS) printf("clCreateCommandQueue %s\n", oclErrorString(ret));
+
+  /* Record the maximum supported group size. */
+  setGroupSize(env);
 
   return env;
 }
@@ -380,11 +401,115 @@ void computePresenceArrayForDataset(
   if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 }
 
-void filterDatasetByPresence(
+HadopeMemoryBuffer exclusivePrefixSum(
   const HadopeEnvironment env,
-  const HadopeMemoryBuffer mem_struct,
   const HadopeMemoryBuffer presence
 ) {
+  int i;
+  cl_int ret;
+  HadopeMemoryBuffer output_struct;
+
+  const char* prescan_filename = "./ext/lib/prefix_sum/scan_kernel.cl";
+  if (DEBUG) printf("Loading kernel '%s'.\n", prescan_filename);
+  char *source = LoadProgramSourceFromFile(prescan_filename);
+  if (!source) printf("Error loading '%s' source.\n", prescan_filename);
+
+  ComputeProgram = clCreateProgramWithSource(
+    env.context,
+    1,
+    (const char **) &source,
+    NULL,
+    &ret
+  );
+  if (ret != CL_SUCCESS) printf("clCreateProgramWithSource %s\n", oclErrorString(ret));
+
+  ret = clBuildProgram(
+    ComputeProgram,
+    0,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+  );
+  if (ret != CL_SUCCESS) printf("clBuildProgram %s\n", oclErrorString(ret));
+
+  ComputeKernels = (cl_kernel*) calloc(KernelCount, sizeof(cl_kernel));
+
+  for(i = 0; i < KernelCount; i++) {
+    ComputeKernels[i] = clCreateKernel(
+      ComputeProgram,
+      KernelNames[i],
+      &ret
+    );
+    if (!ComputeKernels[i] || ret != CL_SUCCESS) printf("clCreateKernel %s\n", oclErrorString(ret));
+
+    size_t wgSize;
+    ret = clGetKernelWorkGroupInfo(
+      ComputeKernels[i],
+      env.device_id,
+      CL_KERNEL_WORK_GROUP_SIZE,
+      sizeof(size_t),
+      &wgSize,
+      NULL
+    );
+    if (ret != CL_SUCCESS) printf("clGetKernelWorkGroupInfo %s\n", oclErrorString(ret));
+    GROUP_SIZE = min(GROUP_SIZE, wgSize);
+  }
+
+  free(source);
+
+  cl_mem output_buffer = clCreateBuffer(
+    env.context,
+    CL_MEM_READ_WRITE,
+    presence.buffer_entries * sizeof(int),
+    NULL,
+    NULL
+  );
+
+  int* result = (int*) calloc(presence.buffer_entries, sizeof(int));
+
+  ret = clEnqueueWriteBuffer(
+    env.queue,
+    output_buffer,
+    CL_TRUE,
+    0,
+    presence.buffer_entries * sizeof(int),
+    result,
+    0,
+    NULL,
+    NULL
+  );
+  if (ret != CL_SUCCESS) printf("clEnqueueWriteBuffer %s\n", oclErrorString(ret));
+
+  CreatePartialSumBuffers(presence.buffer_entries, env.context);
+  PreScanBuffer(env.queue, output_buffer, presence.buffer, GROUP_SIZE, GROUP_SIZE, presence.buffer_entries);
+
+  ret = clFinish(env.queue);
+  if (ret != CL_SUCCESS) printf("clFinish %s\n", oclErrorString(ret));
+
+  /*
+  ret = clEnqueueReadBuffer(
+    env.queue,
+    output_buffer,
+    CL_TRUE,
+    0,
+    presence.buffer_entries * sizeof(int),
+    result,
+    0,
+    NULL,
+    NULL
+  );
+  */
+  if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
+
+  ReleasePartialSums();
+  for(i = 0; i < KernelCount; i++) clReleaseKernel(ComputeKernels[i]);
+  clReleaseProgram(ComputeProgram);
+
+  output_struct.buffer_entries = presence.buffer_entries;
+  output_struct.buffer = output_buffer;
+
+  return output_struct;
 }
 /* ~~ END Task Dispatching Methods ~~ */
 
