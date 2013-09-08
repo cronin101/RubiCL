@@ -197,8 +197,10 @@ static VALUE methodRunFilterTask(
 
   int* result = calloc(prescan.buffer_entries, sizeof(int));
   getIntArrayFromDevice(*environment, prescan, result);
+
   *dataset = filterByScatteredWrites(*environment, *dataset, *presence, prescan);
 
+  releaseTemporaryFilterBuffers(presence, &prescan);
   return self;
 }
 

@@ -2,7 +2,7 @@
 require 'mkmf'
 
 $LIBS << ' -framework OpenCL'
-$objs = %w{lib/prefix_sum/prescan.o lib/oclerrorexplain.o lib/hadope.o hadope_backend.o}
+$objs = %w{lib/oclerrorexplain.o lib/prefix_sum/prescan.o lib/hadope.o hadope_backend.o}
 
 extension_name = 'hadope_backend'
 

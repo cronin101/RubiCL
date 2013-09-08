@@ -254,6 +254,13 @@ void getIntArrayFromDevice(
   if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 }
 
+void releaseTemporaryFilterBuffers(
+  HadopeMemoryBuffer* presence,
+  HadopeMemoryBuffer* index_scan
+) {
+  clReleaseMemObject(presence->buffer);
+  clReleaseMemObject(index_scan->buffer);
+}
 /* ~~ END Memory Management Methods ~~ */
 
 /* ~~ Task Compilation Methods ~~ */
@@ -410,7 +417,6 @@ HadopeMemoryBuffer exclusivePrefixSum(
   HadopeMemoryBuffer output_struct;
 
   const char* prescan_filename = "./ext/lib/prefix_sum/scan_kernel.cl";
-  if (DEBUG) printf("Loading kernel '%s'.\n", prescan_filename);
   char *source = LoadProgramSourceFromFile(prescan_filename);
   if (!source) printf("Error loading '%s' source.\n", prescan_filename);
 
@@ -506,8 +512,34 @@ HadopeMemoryBuffer filterByScatteredWrites(
   cl_int ret;
   HadopeMemoryBuffer filtered_dataset;
   int index_reduce, last_element_presence;
+  ret = clEnqueueReadBuffer(
+    env.queue,                                     // Device's command queue
+    index_scan.buffer,                             // Buffer to output data from
+    CL_FALSE,                                      // Block? Async to hide latency
+    (index_scan.buffer_entries - 1) * sizeof(int), // Offset to read from
+    sizeof(int),                                   // Size of output data
+    &index_reduce,                                 // Output destination
+    0,                                             // Number of preceding actions
+    NULL,                                          // List of preceding actions
+    NULL                                           // Event object destination
+  );
+  if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
+
+  ret = clEnqueueReadBuffer(
+    env.queue,                                   // Device's command queue
+    presence.buffer,                             // Buffer to output data from
+    CL_FALSE,                                    // Block? Async to hide latency
+    (presence.buffer_entries - 1) * sizeof(int), // Offset to read from
+    sizeof(int),                                 // Size of output data
+    &last_element_presence,                      // Output destination
+    0,                                           // Number of preceding actions
+    NULL,                                        // List of preceding actions
+    NULL                                         // Event object destination
+  );
+  if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
+
+  /* Build kernel whilst data is being fetched from device */
   const char* scatter_filename = "./ext/lib/scatter_kernel.cl";
-  if (DEBUG) printf("Loading kernel '%s'.\n", scatter_filename);
   char *source = LoadProgramSourceFromFile(scatter_filename);
   if (!source) printf("Error loading '%s' source.\n", scatter_filename);
 
@@ -537,31 +569,9 @@ HadopeMemoryBuffer filterByScatteredWrites(
   );
   if (!scatter_kernel || ret != CL_SUCCESS) printf("clCreateKernel %s\n", oclErrorString(ret));
 
-  ret = clEnqueueReadBuffer(
-    env.queue,                                     // Device's command queue
-    index_scan.buffer,                             // Buffer to output data from
-    CL_TRUE,                                       // Block? Makes no sense to be asynchronous here
-    (index_scan.buffer_entries - 1) * sizeof(int), // Offset to read from
-    sizeof(int),                                   // Size of output data
-    &index_reduce,                                 // Output destination
-    0,                                             // Number of preceding actions
-    NULL,                                          // List of preceding actions
-    NULL                                           // Event object destination
-  );
-  if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
-
-  ret = clEnqueueReadBuffer(
-    env.queue,                                   // Device's command queue
-    presence.buffer,                             // Buffer to output data from
-    CL_TRUE,                                     // Block? Makes no sense to be asynchronous here
-    (presence.buffer_entries - 1) * sizeof(int), // Offset to read from
-    sizeof(int),                                 // Size of output data
-    &last_element_presence,                      // Output destination
-    0,                                           // Number of preceding actions
-    NULL,                                        // List of preceding actions
-    NULL                                         // Event object destination
-  );
-  if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
+  /* Ensure that retrieval has finished then use fetched data to set correct result dataset length */
+  ret = clFinish(env.queue);
+  if (ret != CL_SUCCESS) printf("clFinish %s\n", oclErrorString(ret));
 
   int filtered_entries = index_reduce + last_element_presence;
   cl_mem filtered_buffer = clCreateBuffer(
@@ -571,8 +581,8 @@ HadopeMemoryBuffer filterByScatteredWrites(
     NULL,
     NULL
   );
-  int* result = (int*) calloc(filtered_entries, sizeof(int));
 
+  int* result = (int*) calloc(filtered_entries, sizeof(int));
   ret = clEnqueueWriteBuffer(
     env.queue,
     filtered_buffer,
@@ -621,23 +631,23 @@ HadopeMemoryBuffer filterByScatteredWrites(
   size_t g_work_size[1] = {input_dataset.buffer_entries};
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(
-    env.queue,   // Device's command queue
+    env.queue,      // Device's command queue
     scatter_kernel, // Kernel to enqueue
-    1,           // Dimensionality of work
-    0,           // Global offset of work index
-    g_work_size, // Array of work size in each dimension
-    NULL,        // Local work size, omitted so will be deduced by OpenCL platform
-    0,           // Number of preceding events
-    NULL,        // Preceding events list
-    NULL         // Event object destination
+    1,              // Dimensionality of work
+    0,              // Global offset of work index
+    g_work_size,    // Array of work size in each dimension
+    NULL,           // Local work size, omitted so will be deduced by OpenCL platform
+    0,              // Number of preceding events
+    NULL,           // Preceding events list
+    NULL            // Event object destination
   );
   if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 
+  clReleaseMemObject(input_dataset.buffer);
+
   filtered_dataset.buffer_entries = filtered_entries;
   filtered_dataset.buffer = filtered_buffer;
-
   return filtered_dataset;
-
 }
 /* ~~ END Task Dispatching Methods ~~ */
 

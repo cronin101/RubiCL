@@ -74,4 +74,9 @@ HadopeMemoryBuffer filterByScatteredWrites(
   HadopeMemoryBuffer presence,
   HadopeMemoryBuffer index_scan
 );
+
+void releaseTemporaryFilterBuffers(
+  HadopeMemoryBuffer* presence,
+  HadopeMemoryBuffer* index_scan
+);
 #endif
