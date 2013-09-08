@@ -197,13 +197,9 @@ static VALUE methodRunFilterTask(
 
   int* result = calloc(prescan.buffer_entries, sizeof(int));
   getIntArrayFromDevice(*environment, prescan, result);
+  *dataset = filterByScatteredWrites(*environment, *dataset, *presence, prescan);
 
-  /* Create new Ruby array and fill with C ints converted to FIXNUMs */
-  VALUE output_array = rb_ary_new2(prescan.buffer_entries);
-  for (i = 0; i < prescan.buffer_entries; i++) rb_ary_store(output_array, i, INT2FIX(result[i]));
-  free(result);
-
-  return output_array;
+  return self;
 }
 
 /* ~~ END Task Dispatching Methods ~~ */

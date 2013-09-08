@@ -487,21 +487,6 @@ HadopeMemoryBuffer exclusivePrefixSum(
   ret = clFinish(env.queue);
   if (ret != CL_SUCCESS) printf("clFinish %s\n", oclErrorString(ret));
 
-  /*
-  ret = clEnqueueReadBuffer(
-    env.queue,
-    output_buffer,
-    CL_TRUE,
-    0,
-    presence.buffer_entries * sizeof(int),
-    result,
-    0,
-    NULL,
-    NULL
-  );
-  */
-  if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
-
   ReleasePartialSums();
   for(i = 0; i < KernelCount; i++) clReleaseKernel(ComputeKernels[i]);
   clReleaseProgram(ComputeProgram);
@@ -510,6 +495,149 @@ HadopeMemoryBuffer exclusivePrefixSum(
   output_struct.buffer = output_buffer;
 
   return output_struct;
+}
+
+HadopeMemoryBuffer filterByScatteredWrites(
+  const HadopeEnvironment env,
+  HadopeMemoryBuffer input_dataset,
+  HadopeMemoryBuffer presence,
+  HadopeMemoryBuffer index_scan
+) {
+  cl_int ret;
+  HadopeMemoryBuffer filtered_dataset;
+  int index_reduce, last_element_presence;
+  const char* scatter_filename = "./ext/lib/scatter_kernel.cl";
+  if (DEBUG) printf("Loading kernel '%s'.\n", scatter_filename);
+  char *source = LoadProgramSourceFromFile(scatter_filename);
+  if (!source) printf("Error loading '%s' source.\n", scatter_filename);
+
+  ComputeProgram = clCreateProgramWithSource(
+    env.context,
+    1,
+    (const char **) &source,
+    NULL,
+    &ret
+  );
+  if (ret != CL_SUCCESS) printf("clCreateProgramWithSource %s\n", oclErrorString(ret));
+
+  ret = clBuildProgram(
+    ComputeProgram,
+    0,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+  );
+  if (ret != CL_SUCCESS) printf("clBuildProgram %s\n", oclErrorString(ret));
+
+  cl_kernel scatter_kernel = clCreateKernel(
+    ComputeProgram,
+    "ScatterFilterKernel",
+    &ret
+  );
+  if (!scatter_kernel || ret != CL_SUCCESS) printf("clCreateKernel %s\n", oclErrorString(ret));
+
+  ret = clEnqueueReadBuffer(
+    env.queue,                                     // Device's command queue
+    index_scan.buffer,                             // Buffer to output data from
+    CL_TRUE,                                       // Block? Makes no sense to be asynchronous here
+    (index_scan.buffer_entries - 1) * sizeof(int), // Offset to read from
+    sizeof(int),                                   // Size of output data
+    &index_reduce,                                 // Output destination
+    0,                                             // Number of preceding actions
+    NULL,                                          // List of preceding actions
+    NULL                                           // Event object destination
+  );
+  if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
+
+  ret = clEnqueueReadBuffer(
+    env.queue,                                   // Device's command queue
+    presence.buffer,                             // Buffer to output data from
+    CL_TRUE,                                     // Block? Makes no sense to be asynchronous here
+    (presence.buffer_entries - 1) * sizeof(int), // Offset to read from
+    sizeof(int),                                 // Size of output data
+    &last_element_presence,                      // Output destination
+    0,                                           // Number of preceding actions
+    NULL,                                        // List of preceding actions
+    NULL                                         // Event object destination
+  );
+  if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
+
+  int filtered_entries = index_reduce + last_element_presence;
+  cl_mem filtered_buffer = clCreateBuffer(
+    env.context,
+    CL_MEM_READ_WRITE,
+    filtered_entries * sizeof(int),
+    NULL,
+    NULL
+  );
+  int* result = (int*) calloc(filtered_entries, sizeof(int));
+
+  ret = clEnqueueWriteBuffer(
+    env.queue,
+    filtered_buffer,
+    CL_TRUE,
+    0,
+    filtered_entries * sizeof(int),
+    result,
+    0,
+    NULL,
+    NULL
+  );
+  if (ret != CL_SUCCESS) printf("clEnqueueWriteBuffer %s\n", oclErrorString(ret));
+
+  ret = clSetKernelArg(
+    scatter_kernel,       // Kernel concerned
+    0,                    // Index of argument to specify
+    sizeof(cl_mem),       // Size of argument value
+    &input_dataset.buffer // Argument value
+  );
+  if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+
+  ret = clSetKernelArg(
+    scatter_kernel,       // Kernel concerned
+    1,                    // Index of argument to specify
+    sizeof(cl_mem),       // Size of argument value
+    &presence.buffer      // Argument value
+  );
+  if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+
+  ret = clSetKernelArg(
+    scatter_kernel,       // Kernel concerned
+    2,                    // Index of argument to specify
+    sizeof(cl_mem),       // Size of argument value
+    &index_scan.buffer    // Argument value
+  );
+  if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+
+  ret = clSetKernelArg(
+    scatter_kernel,       // Kernel concerned
+    3,                    // Index of argument to specify
+    sizeof(cl_mem),       // Size of argument value
+    &filtered_buffer      // Argument value
+  );
+  if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+
+  size_t g_work_size[1] = {input_dataset.buffer_entries};
+  /* Kernel enqueued to be executed on the environment's command queue */
+  ret = clEnqueueNDRangeKernel(
+    env.queue,   // Device's command queue
+    scatter_kernel, // Kernel to enqueue
+    1,           // Dimensionality of work
+    0,           // Global offset of work index
+    g_work_size, // Array of work size in each dimension
+    NULL,        // Local work size, omitted so will be deduced by OpenCL platform
+    0,           // Number of preceding events
+    NULL,        // Preceding events list
+    NULL         // Event object destination
+  );
+  if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
+
+  filtered_dataset.buffer_entries = filtered_entries;
+  filtered_dataset.buffer = filtered_buffer;
+
+  return filtered_dataset;
+
 }
 /* ~~ END Task Dispatching Methods ~~ */
 

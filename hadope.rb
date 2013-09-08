@@ -26,3 +26,6 @@ module Hadope
   end
 
 end
+
+# Sensible default for now
+Hadope.opencl_device = Hadope::CPU
