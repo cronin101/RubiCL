@@ -26,7 +26,7 @@ KERNEL
 
   def filter_kernel
     <<KERNEL
-__kernel void #{task.name}(__global #{task.type} *data_array, __global int *presence_array) {
+__kernel void #{task.name}(__global #{task.type} *data_array, __global #{task.type} *presence_array) {
   #{task.variable_declarations}
   #{task.setup_statements}
 

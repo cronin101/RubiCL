@@ -333,7 +333,7 @@ void runTaskOnDataset(
   const HadopeMemoryBuffer mem_struct,
   const HadopeTask task
 ) {
-  size_t g_work_size[1] = {mem_struct.buffer_entries};
+  size_t g_work_size[1] = {ceil((float) mem_struct.buffer_entries / 4)};
 
   /* Kernel's global data_array set to be the given device memory buffer */
   cl_int ret = clSetKernelArg(
@@ -387,7 +387,7 @@ void computePresenceArrayForDataset(
   presence->buffer = createMemoryBuffer(
     env,                                      // Environment struct
     (presence->buffer_entries * sizeof(int)), // Size of buffer to create
-    CL_MEM_READ_WRITE                         // Buffer flags set
+    CL_MEM_HOST_READ_ONLY                     // Buffer flags set
   );
 
   /* Kernel's global presence_array set to be the newly created presence buffer */
@@ -424,7 +424,7 @@ HadopeMemoryBuffer exclusivePrefixSum(
 
   cl_mem output_buffer = clCreateBuffer(
     env.context,
-    CL_MEM_READ_WRITE,
+    CL_MEM_HOST_READ_ONLY,
     presence.buffer_entries * sizeof(int),
     NULL,
     NULL
@@ -548,7 +548,7 @@ HadopeMemoryBuffer filterByScatteredWrites(
   int filtered_entries = index_reduce + last_element_presence;
   cl_mem filtered_buffer = clCreateBuffer(
     env.context,
-    CL_MEM_READ_WRITE,
+    CL_MEM_HOST_READ_ONLY,
     filtered_entries * sizeof(int),
     NULL,
     NULL
