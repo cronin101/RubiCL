@@ -422,6 +422,14 @@ HadopeMemoryBuffer exclusivePrefixSum(
   cl_int ret;
   HadopeMemoryBuffer output_struct;
 
+  cl_mem output_buffer = clCreateBuffer(
+    env.context,
+    CL_MEM_READ_WRITE,
+    presence.buffer_entries * sizeof(int),
+    NULL,
+    NULL
+  );
+
   const char* prescan_filename = "./ext/lib/prefix_sum/scan_kernel.cl";
   char *source = LoadProgramSourceFromFile(prescan_filename);
   if (!source) printf("Error loading '%s' source.\n", prescan_filename);
@@ -469,29 +477,6 @@ HadopeMemoryBuffer exclusivePrefixSum(
   }
 
   free(source);
-
-  cl_mem output_buffer = clCreateBuffer(
-    env.context,
-    CL_MEM_READ_WRITE,
-    presence.buffer_entries * sizeof(int),
-    NULL,
-    NULL
-  );
-
-  int* result = (int*) calloc(presence.buffer_entries, sizeof(int));
-
-  ret = clEnqueueWriteBuffer(
-    env.queue,
-    output_buffer,
-    CL_TRUE,
-    0,
-    presence.buffer_entries * sizeof(int),
-    result,
-    0,
-    NULL,
-    NULL
-  );
-  if (ret != CL_SUCCESS) printf("clEnqueueWriteBuffer %s\n", oclErrorString(ret));
 
   CreatePartialSumBuffers(presence.buffer_entries, env.context);
   PreScanBuffer(env.queue, output_buffer, presence.buffer, GROUP_SIZE, GROUP_SIZE, presence.buffer_entries);
@@ -549,31 +534,12 @@ HadopeMemoryBuffer filterByScatteredWrites(
   char *source = LoadProgramSourceFromFile(scatter_filename);
   if (!source) printf("Error loading '%s' source.\n", scatter_filename);
 
-  ComputeProgram = clCreateProgramWithSource(
-    env.context,
-    1,
-    (const char **) &source,
-    NULL,
-    &ret
+  HadopeTask scatter_task = buildTaskFromSource(
+    env,
+    source,
+    strlen(source),
+    "ScatterFilterKernel"
   );
-  if (ret != CL_SUCCESS) printf("clCreateProgramWithSource %s\n", oclErrorString(ret));
-
-  ret = clBuildProgram(
-    ComputeProgram,
-    0,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-  );
-  if (ret != CL_SUCCESS) printf("clBuildProgram %s\n", oclErrorString(ret));
-
-  cl_kernel scatter_kernel = clCreateKernel(
-    ComputeProgram,
-    "ScatterFilterKernel",
-    &ret
-  );
-  if (!scatter_kernel || ret != CL_SUCCESS) printf("clCreateKernel %s\n", oclErrorString(ret));
 
   /* Ensure that retrieval has finished then use fetched data to set correct result dataset length */
   ret = clFinish(env.queue);
@@ -588,22 +554,8 @@ HadopeMemoryBuffer filterByScatteredWrites(
     NULL
   );
 
-  int* result = (int*) calloc(filtered_entries, sizeof(int));
-  ret = clEnqueueWriteBuffer(
-    env.queue,
-    filtered_buffer,
-    CL_TRUE,
-    0,
-    filtered_entries * sizeof(int),
-    result,
-    0,
-    NULL,
-    NULL
-  );
-  if (ret != CL_SUCCESS) printf("clEnqueueWriteBuffer %s\n", oclErrorString(ret));
-
   ret = clSetKernelArg(
-    scatter_kernel,       // Kernel concerned
+    scatter_task.kernel,  // Kernel concerned
     0,                    // Index of argument to specify
     sizeof(cl_mem),       // Size of argument value
     &input_dataset.buffer // Argument value
@@ -611,7 +563,7 @@ HadopeMemoryBuffer filterByScatteredWrites(
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   ret = clSetKernelArg(
-    scatter_kernel,       // Kernel concerned
+    scatter_task.kernel,  // Kernel concerned
     1,                    // Index of argument to specify
     sizeof(cl_mem),       // Size of argument value
     &presence.buffer      // Argument value
@@ -619,7 +571,7 @@ HadopeMemoryBuffer filterByScatteredWrites(
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   ret = clSetKernelArg(
-    scatter_kernel,       // Kernel concerned
+    scatter_task.kernel,  // Kernel concerned
     2,                    // Index of argument to specify
     sizeof(cl_mem),       // Size of argument value
     &index_scan.buffer    // Argument value
@@ -627,7 +579,7 @@ HadopeMemoryBuffer filterByScatteredWrites(
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   ret = clSetKernelArg(
-    scatter_kernel,       // Kernel concerned
+    scatter_task.kernel,  // Kernel concerned
     3,                    // Index of argument to specify
     sizeof(cl_mem),       // Size of argument value
     &filtered_buffer      // Argument value
@@ -637,15 +589,15 @@ HadopeMemoryBuffer filterByScatteredWrites(
   size_t g_work_size[1] = {input_dataset.buffer_entries};
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(
-    env.queue,      // Device's command queue
-    scatter_kernel, // Kernel to enqueue
-    1,              // Dimensionality of work
-    0,              // Global offset of work index
-    g_work_size,    // Array of work size in each dimension
-    NULL,           // Local work size, omitted so will be deduced by OpenCL platform
-    0,              // Number of preceding events
-    NULL,           // Preceding events list
-    NULL            // Event object destination
+    env.queue,           // Device's command queue
+    scatter_task.kernel, // Kernel to enqueue
+    1,                   // Dimensionality of work
+    0,                   // Global offset of work index
+    g_work_size,         // Array of work size in each dimension
+    NULL,                // Local work size, omitted so will be deduced by OpenCL platform
+    0,                   // Number of preceding events
+    NULL,                // Preceding events list
+    NULL                 // Event object destination
   );
   if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 
