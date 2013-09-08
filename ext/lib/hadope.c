@@ -261,6 +261,12 @@ void releaseTemporaryFilterBuffers(
   clReleaseMemObject(presence->buffer);
   clReleaseMemObject(index_scan->buffer);
 }
+
+void releaseDeviceDataset(
+  HadopeMemoryBuffer* dataset
+) {
+  clReleaseMemObject(dataset->buffer);
+}
 /* ~~ END Memory Management Methods ~~ */
 
 /* ~~ Task Compilation Methods ~~ */

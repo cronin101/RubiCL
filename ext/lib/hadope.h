@@ -79,4 +79,8 @@ void releaseTemporaryFilterBuffers(
   HadopeMemoryBuffer* presence,
   HadopeMemoryBuffer* index_scan
 );
+
+void releaseDeviceDataset(
+    HadopeMemoryBuffer* dataset
+);
 #endif

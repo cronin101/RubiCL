@@ -1,8 +1,15 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    asymptotic (0.0.7)
+      colored
+      gnuplot
+      peach
+    colored (1.2)
     diff-lcs (1.2.4)
+    gnuplot (2.6.2)
     multi_json (1.7.9)
+    peach (0.5.1)
     rspec (2.14.1)
       rspec-core (~> 2.14.0)
       rspec-expectations (~> 2.14.0)
@@ -20,5 +27,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  asymptotic
   rspec
   simplecov

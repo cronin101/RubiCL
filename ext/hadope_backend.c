@@ -122,6 +122,7 @@ static VALUE methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object){
   /* Create new Ruby array and fill with C ints converted to FIXNUMs */
   VALUE output_array = rb_ary_new2(mem_struct->buffer_entries);
   for (i = 0; i < mem_struct->buffer_entries; i++) rb_ary_store(output_array, i, INT2FIX(dataset[i]));
+  releaseDeviceDataset(mem_struct);
   free(dataset);
 
   return output_array;
@@ -195,12 +196,9 @@ static VALUE methodRunFilterTask(
   computePresenceArrayForDataset(*environment, *dataset, task, presence);
   HadopeMemoryBuffer prescan = exclusivePrefixSum(*environment, *presence);
 
-  int* result = calloc(prescan.buffer_entries, sizeof(int));
-  getIntArrayFromDevice(*environment, prescan, result);
-
   *dataset = filterByScatteredWrites(*environment, *dataset, *presence, prescan);
-
   releaseTemporaryFilterBuffers(presence, &prescan);
+
   return self;
 }
 
