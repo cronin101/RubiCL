@@ -445,11 +445,11 @@ HadopeMemoryBuffer exclusivePrefixSum(
 
   ret = clBuildProgram(
     ComputeProgram,
-    0,
-    NULL,
-    NULL,
-    NULL,
-    NULL
+    1,                       // Number of devices involved
+    &env.device_id,          // List of involved devices
+    "-cl-fast-relaxed-math", // Compilation options
+    NULL,                    // Build complete callback, building is synchronous if omitted
+    NULL                     // Callback user data
   );
   if (ret != CL_SUCCESS) printf("clBuildProgram %s\n", oclErrorString(ret));
 

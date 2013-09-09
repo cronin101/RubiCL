@@ -32,6 +32,9 @@ class Hadope::Device
     self
   end
 
+  alias_method :collect, :map
+  alias_method :select, :filter
+
   def retrieve_integer_dataset
     run_tasks unless @task_queue.empty?
     @cache.dataset ||= retrieve_integer_dataset_from_buffer @buffer

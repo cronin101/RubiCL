@@ -39,22 +39,20 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
 
   def translate(operation)
     case operation
-    when /getlocal/ then 'x'
+    when /getlocal/                    then 'x'
     when /putobject_OP_INT2FIX_O_0_C_/ then 0
     when /putobject_OP_INT2FIX_O_1_C_/ then 1
-    when /putobject\s+-?\d+/ then operation.split(' ').last.to_i
-    when /opt_send_simple/ then operation.scan(/(?:mid:(.*?),)/)[0][0].to_sym
-    when /opt_/ then LOOKUP_TABLE.fetch operation[/opt_\w+/].to_sym
-    else
-      raise "Could not parse: #{operation}"
+    when /putobject\s+-?\d+/           then operation.split(' ').last.to_i
+    when /opt_send_simple/             then operation.scan(/(?:mid:(.*?),)/)[0][0].to_sym
+    when /opt_/                        then LOOKUP_TABLE.fetch operation[/opt_\w+/].to_sym
+    else raise "Could not parse: #{operation}"
     end
   end
 
   def method_send(target, method)
     case method
     when :-@ then '-' << target
-    else
-      raise "#method_send not implemented for #{method.inspect}"
+    else raise "#method_send not implemented for #{method.inspect}"
     end
   end
 
@@ -65,9 +63,8 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
   def is_value?(token)
     case token
     when Fixnum then true
-    when 'x' then true
-    else
-      false
+    when 'x'    then true
+    else false
     end
   end
 
