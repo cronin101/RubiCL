@@ -3,7 +3,7 @@ class Hadope::TaskQueue
 
   attr_accessor :tasks
 
-  delegate [:clear, :empty?, :push, :shift, :size] => :tasks
+  delegate [:clear, :empty?, :push, :shift, :size, :unshift] => :tasks
 
   def initialize
     @tasks = []

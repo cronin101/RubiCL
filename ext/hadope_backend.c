@@ -88,7 +88,7 @@ static VALUE methodLoadIntDataset(
   /* Iteration over Ruby integer array converting Ruby FIXNUMs to C ints. */
   int array_size = RARRAY_LEN(dataset_object);
   int* dataset = calloc(array_size, sizeof(int));
-  for (i=0; i < array_size; i++) dataset[i] = FIX2INT(rb_ary_entry(dataset_object, i));
+  for (i=0; i < array_size; i++) dataset[i] = rb_ary_entry(dataset_object, i);
 
   Data_Get_Struct(memory_struct_object, HadopeMemoryBuffer, mem_struct);
   VALUE environment_object = rb_iv_get(self, "@environment");
@@ -121,7 +121,8 @@ static VALUE methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object){
 
   /* Create new Ruby array and fill with C ints converted to FIXNUMs */
   VALUE output_array = rb_ary_new2(mem_struct->buffer_entries);
-  for (i = 0; i < mem_struct->buffer_entries; i++) rb_ary_store(output_array, i, INT2FIX(dataset[i]));
+  for (i = 0; i < mem_struct->buffer_entries; i++) rb_ary_store(output_array, i, dataset[i]);
+
   releaseDeviceDataset(mem_struct);
   free(dataset);
 

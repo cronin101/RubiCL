@@ -16,7 +16,7 @@ module Hadope
     end
 
     def type
-      'int'
+      'int4'
     end
 
     def body

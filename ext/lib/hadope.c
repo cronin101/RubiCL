@@ -371,7 +371,7 @@ void computePresenceArrayForDataset(
   const HadopeTask task,
   HadopeMemoryBuffer *presence
 ) {
-  size_t g_work_size[1] = {mem_struct.buffer_entries};
+  size_t g_work_size[1] = {ceil((float)mem_struct.buffer_entries/4)};
 
   /* Kernel's global data_array set to be the given device memory buffer */
   cl_int ret = clSetKernelArg(

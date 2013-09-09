@@ -1,6 +1,9 @@
 class Hadope::Device
   include HadopeBackend
 
+  FIX2INT = [:x, 'x = x >> 1']
+  INT2FIX = [:x, 'x = (x << 1) | 0x01']
+
   Cache = Struct.new(:dataset)
 
   def initialize
@@ -15,18 +18,21 @@ class Hadope::Device
   end
 
   def load_integer_dataset(array)
+    @task_queue.clear
     @buffer = create_memory_buffer(array.size, 'int')
     transfer_integer_dataset_to_buffer(@cache.dataset = array, @buffer)
     self
   end
 
   def map(&block)
+    @cache.dataset = nil
     expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
     @task_queue.push Hadope::Map.new(:x, "x = #{expression}")
     self
   end
 
   def filter(&block)
+    @cache.dataset = nil
     predicate = Hadope::LambdaBytecodeParser.new(block).to_infix.first
     @task_queue.push Hadope::Filter.new(:x, predicate)
     self
@@ -36,8 +42,12 @@ class Hadope::Device
   alias_method :select, :filter
 
   def retrieve_integer_dataset
-    run_tasks unless @task_queue.empty?
-    @cache.dataset ||= retrieve_integer_dataset_from_buffer @buffer
+    if @cache.dataset
+      @cache.dataset
+    else
+      run_tasks unless @task_queue.empty?
+      @cache.dataset = retrieve_integer_dataset_from_buffer @buffer
+    end
   end
 
   private
@@ -66,9 +76,10 @@ class Hadope::Device
   end
 
   def run_tasks
+    @task_queue.unshift Hadope::Map.new(*FIX2INT)
+    @task_queue.push Hadope::Map.new(*INT2FIX)
     @task_queue.simplify!
     run_task @task_queue.shift until @task_queue.empty?
-    @cache.dataset = nil
   end
 
 end
