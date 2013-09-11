@@ -36,7 +36,15 @@ cl_mem createMemoryBuffer(
 HadopeTask buildTaskFromSource(
   const HadopeEnvironment env,
   const char* kernel_source,
-  const size_t source_size, char* name
+  const size_t source_size,
+  char* name
+);
+
+HadopeTask buildTaskFromBinary(
+  const HadopeEnvironment env,
+  const unsigned char* kernel_binary,
+  const size_t binary_size,
+  char* name
 );
 
 void loadIntArrayIntoDevice(

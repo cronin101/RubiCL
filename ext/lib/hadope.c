@@ -319,6 +319,37 @@ HadopeTask buildTaskFromSource(
   return task;
 }
 
+HadopeTask buildTaskFromBinary(
+  const HadopeEnvironment env,
+  const unsigned char* kernel_binary,
+  const size_t binary_size,
+  char* name
+) {
+  HadopeTask task;
+  cl_int ret;
+
+  task.name = name;
+  task.program = clCreateProgramWithBinary(
+    env.context,
+    1,
+    &env.device_id,
+    &binary_size,
+    &kernel_binary,
+    NULL,
+    &ret
+  );
+  if (ret != CL_SUCCESS) printf("clCreateProgramWithBinary %s\n", oclErrorString(ret));
+
+  task.kernel = clCreateKernel(
+    task.program, // Built program
+    task.name,    // Entry point to kernel
+    &ret          // Status destination
+  );
+  if (ret != CL_SUCCESS) printf("clCreateKernel %s\n", oclErrorString(ret));
+
+  return task;
+}
+
 /* ~~ END Task Compilation Methods ~~ */
 
 /* ~~ Task Dispatching Methods ~~ */
@@ -430,28 +461,21 @@ HadopeMemoryBuffer exclusivePrefixSum(
     NULL
   );
 
-  const char* prescan_filename = "./ext/lib/prefix_sum/scan_kernel.cl";
-  char *source = LoadProgramSourceFromFile(prescan_filename);
-  if (!source) printf("Error loading '%s' source.\n", prescan_filename);
+  const char* prescan_filename = "./ext/lib/prefix_sum/scan_kernel.out";
+  const unsigned char* binary = LoadProgramSourceFromFile(prescan_filename);
+  if (!binary) printf("Error loading '%s' binary.\n", prescan_filename);
 
-  ComputeProgram = clCreateProgramWithSource(
+  const size_t binary_size = strlen((char*) binary);
+  ComputeProgram = clCreateProgramWithBinary(
     env.context,
     1,
-    (const char **) &source,
+    &env.device_id,
+    &binary_size,
+    &binary,
     NULL,
     &ret
   );
-  if (ret != CL_SUCCESS) printf("clCreateProgramWithSource %s\n", oclErrorString(ret));
-
-  ret = clBuildProgram(
-    ComputeProgram,
-    1,                       // Number of devices involved
-    &env.device_id,          // List of involved devices
-    "-cl-fast-relaxed-math", // Compilation options
-    NULL,                    // Build complete callback, building is synchronous if omitted
-    NULL                     // Callback user data
-  );
-  if (ret != CL_SUCCESS) printf("clBuildProgram %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clCreateProgramWithBinary %s\n", oclErrorString(ret));
 
   ComputeKernels = (cl_kernel*) calloc(KernelCount, sizeof(cl_kernel));
 
@@ -476,7 +500,7 @@ HadopeMemoryBuffer exclusivePrefixSum(
     GROUP_SIZE = min(GROUP_SIZE, wgSize);
   }
 
-  free(source);
+  free((void *)binary);
 
   CreatePartialSumBuffers(presence.buffer_entries, env.context);
   PreScanBuffer(env.queue, output_buffer, presence.buffer, GROUP_SIZE, GROUP_SIZE, presence.buffer_entries);
@@ -530,14 +554,14 @@ HadopeMemoryBuffer filterByScatteredWrites(
   if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 
   /* Build kernel whilst data is being fetched from device */
-  const char* scatter_filename = "./ext/lib/scatter_kernel.cl";
-  char *source = LoadProgramSourceFromFile(scatter_filename);
+  const char* scatter_filename = "./ext/lib/scatter_kernel.out";
+  const unsigned char* source = LoadProgramSourceFromFile(scatter_filename);
   if (!source) printf("Error loading '%s' source.\n", scatter_filename);
 
-  HadopeTask scatter_task = buildTaskFromSource(
+  HadopeTask scatter_task = buildTaskFromBinary(
     env,
     source,
-    strlen(source),
+    strlen((char* )source),
     "ScatterFilterKernel"
   );
 
