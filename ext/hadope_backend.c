@@ -70,6 +70,36 @@ static VALUE methodCreateMemoryBuffer(
   return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
 }
 
+/*  Creates a memory buffer object containing a device-accessible reference to the given dataset.
+ *
+ *  @dataset_object: Ruby object containing an array of integers. */
+static VALUE methodPinIntDataset(
+    VALUE self,
+    VALUE dataset_object
+) {
+    Check_Type(dataset_object, T_ARRAY);
+    int array_size = RARRAY_LEN(dataset_object);
+    int* dataset = calloc(array_size, sizeof(int));
+
+    int i;
+    for (i = 0; i < array_size; ++i) dataset[i] = rb_ary_entry(dataset_object, i);
+
+    HadopeEnvironment *environment;
+    VALUE environment_object = rb_iv_get(self, "@environment");
+    Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+
+    VALUE memory_struct_object = rb_define_class("HadopeMemoryBuffer", rb_cObject);
+    HadopeMemoryBuffer* mem_struct = malloc(sizeof(HadopeMemoryBuffer));
+    mem_struct->buffer_entries = array_size;
+    mem_struct->buffer = pinIntArrayForDevice(
+        *environment,
+        dataset,
+        array_size
+    );
+
+    return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
+}
+
 /* Loads an integer array from given Ruby object into the cl_mem buffer previously created
  *
  * @dataset_object: Ruby object containing an array of integers.
@@ -226,6 +256,7 @@ void Init_hadope_backend(){
   rb_define_private_method(HadopeBackend, "initialize_CPU_environment", methodInitCPUEnvironment, 0);
   rb_define_private_method(HadopeBackend, "create_memory_buffer", methodCreateMemoryBuffer, 2);
   rb_define_private_method(HadopeBackend, "transfer_integer_dataset_to_buffer", methodLoadIntDataset, 2);
+  rb_define_private_method(HadopeBackend, "create_pinned_buffer", methodPinIntDataset, 1);
   rb_define_private_method(HadopeBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
   rb_define_private_method(HadopeBackend, "run_map_task", methodRunMapTask, 4);
   rb_define_private_method(HadopeBackend, "run_filter_task", methodRunFilterTask, 4);
