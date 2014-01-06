@@ -159,6 +159,26 @@ static VALUE methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object){
   return output_array;
 }
 
+static VALUE methodRetievePinnedIntDataset(VALUE self, VALUE memory_struct_object) {
+    HadopeMemoryBuffer *mem_struct;
+    Data_Get_Struct(memory_struct_object, HadopeMemoryBuffer, mem_struct);
+
+    HadopeEnvironment *environment;
+    VALUE environment_object = rb_iv_get(self, "@environment");
+    Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+
+    int* dataset = getPinnedIntArrayFromDevice(*environment, *mem_struct);
+
+    int entries = mem_struct->buffer_entries;
+    VALUE output_array = rb_ary_new2(entries);
+    int i = 0;
+    for (i = 0; i < entries; ++i) rb_ary_store(output_array, i, dataset[i]);
+
+    releaseDeviceDataset(mem_struct);
+
+    return output_array;
+}
+
 /* ~~ END Memory Management Methods ~~ */
 
 /* ~~ Task Dispatching Methods ~~ */
@@ -258,6 +278,7 @@ void Init_hadope_backend(){
   rb_define_private_method(HadopeBackend, "transfer_integer_dataset_to_buffer", methodLoadIntDataset, 2);
   rb_define_private_method(HadopeBackend, "create_pinned_buffer", methodPinIntDataset, 1);
   rb_define_private_method(HadopeBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
+  rb_define_private_method(HadopeBackend, "retrieve_pinned_integer_dataset_from_buffer", methodRetievePinnedIntDataset, 1);
   rb_define_private_method(HadopeBackend, "run_map_task", methodRunMapTask, 4);
   rb_define_private_method(HadopeBackend, "run_filter_task", methodRunFilterTask, 4);
   rb_define_private_method(HadopeBackend, "clean_used_resources", methodCleanUsedResources, 1);

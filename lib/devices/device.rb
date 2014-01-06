@@ -56,6 +56,15 @@ class Hadope::Device
     end
   end
 
+  def retrieve_pinned_integer_dataset
+    if @cache.dataset
+      @cache.dataset
+    else
+      run_tasks unless @task_queue.empty?
+      @cache.dataset = retrieve_pinned_integer_dataset_from_buffer @buffer
+    end
+  end
+
   private
 
   def initialize_task_queue

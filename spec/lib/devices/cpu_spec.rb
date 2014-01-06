@@ -12,12 +12,17 @@ describe CPU do
   end
 
   it 'can successfully pin an integer dataset' do
-    expect { CPU.get.pin_integer_dataset [1,2,3] }.to_not raise_error
+    expect { CPU.get.pin_integer_dataset [1, 2, 3] }.to_not raise_error
   end
 
   it 'can succesfully retrieve an integer dataset' do
     CPU.get.load_integer_dataset [1, 2, 3]
     CPU.get.retrieve_integer_dataset.should == [1, 2, 3]
+  end
+
+  it 'can successfully retrieve a pinned integer dataset' do
+    CPU.get.pin_integer_dataset [1, 2, 3]
+    CPU.get.retrieve_pinned_integer_dataset.should == [1, 2, 3]
   end
 
   it 'allows loading and retrieving via square-bracket syntax' do

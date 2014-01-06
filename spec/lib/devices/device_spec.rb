@@ -40,7 +40,7 @@ describe DEVICE do
 
   it "allows the output to be retrieved by 'casting' to a Ruby type" do
     class StubDevice < DEVICE
-      def retrieve_integer_dataset
+      def retrieve_pinned_integer_dataset
         [1]
       end
     end
