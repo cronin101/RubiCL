@@ -434,9 +434,12 @@ void computePresenceArrayForDataset(
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   /* Output buffer created to be an int flag for each element in input dataset. */
-  int* blank_flags = calloc(presence->buffer_entries, sizeof(int));
   presence->buffer_entries = mem_struct.buffer_entries;
-  presence->buffer = pinIntArrayForDevice(env, blank_flags, presence->buffer_entries);
+  presence->buffer = createMemoryBuffer(
+    env,                                      // Environment struct
+    (presence->buffer_entries * sizeof(int)), // Size of buffer to create
+    CL_MEM_HOST_READ_ONLY                     // Buffer flags set
+  );
 
   /* Kernel's global presence_array set to be the newly created presence buffer */
   ret = clSetKernelArg(
@@ -470,8 +473,13 @@ HadopeMemoryBuffer exclusivePrefixSum(
   cl_int ret;
   HadopeMemoryBuffer output_struct;
 
-  int* blank_output = calloc(presence.buffer_entries, sizeof(int));
-  cl_mem output_buffer = pinIntArrayForDevice(env, blank_output, presence.buffer_entries);
+  cl_mem output_buffer = clCreateBuffer(
+    env.context,
+    CL_MEM_HOST_READ_ONLY,
+    presence.buffer_entries * sizeof(int),
+    NULL,
+    NULL
+  );
 
   const char* prescan_filename = "./ext/lib/prefix_sum/scan_kernel.cl";
   char *source = LoadProgramSourceFromFile(prescan_filename);
@@ -546,31 +554,29 @@ HadopeMemoryBuffer filterByScatteredWrites(
   cl_int ret;
   HadopeMemoryBuffer filtered_dataset;
   int index_reduce, last_element_presence;
-  index_reduce = * (int *) clEnqueueMapBuffer(
+  ret = clEnqueueReadBuffer(
     env.queue,                                     // Device's command queue
     index_scan.buffer,                             // Buffer to output data from
     CL_FALSE,                                      // Block? Async to hide latency
-    CL_MAP_READ,
     (index_scan.buffer_entries - 1) * sizeof(int), // Offset to read from
     sizeof(int),                                   // Size of output data
+    &index_reduce,                                 // Output destination
     0,                                             // Number of preceding actions
     NULL,                                          // List of preceding actions
-    NULL,                                          // Event object destination
-    &ret
+    NULL                                           // Event object destination
   );
   if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 
-  last_element_presence = * (int *) clEnqueueMapBuffer(
+  ret = clEnqueueReadBuffer(
     env.queue,                                   // Device's command queue
     presence.buffer,                             // Buffer to output data from
     CL_FALSE,                                    // Block? Async to hide latency
-    CL_MAP_READ,
     (presence.buffer_entries - 1) * sizeof(int), // Offset to read from
     sizeof(int),                                 // Size of output data
+    &last_element_presence,                      // Output destination
     0,                                           // Number of preceding actions
     NULL,                                        // List of preceding actions
-    NULL,                                        // Event object destination
-    &ret
+    NULL                                         // Event object destination
   );
   if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 
@@ -591,8 +597,13 @@ HadopeMemoryBuffer filterByScatteredWrites(
   if (ret != CL_SUCCESS) printf("clFinish %s\n", oclErrorString(ret));
 
   int filtered_entries = index_reduce + last_element_presence;
-  int* blank_output = calloc(filtered_entries, sizeof(int));
-  cl_mem filtered_buffer = pinIntArrayForDevice(env, blank_output, filtered_entries);
+  cl_mem filtered_buffer = clCreateBuffer(
+    env.context,
+    CL_MEM_HOST_READ_ONLY,
+    filtered_entries * sizeof(int),
+    NULL,
+    NULL
+  );
 
   ret = clSetKernelArg(
     scatter_task.kernel,  // Kernel concerned
