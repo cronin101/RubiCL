@@ -24,6 +24,12 @@ class Hadope::Device
     self
   end
 
+  def pin_integer_dataset(array)
+    @task_queue.clear
+    @buffer = create_pinned_buffer(@cache.dataset = array)
+    self
+  end
+
   def map(&block)
     @cache.dataset = nil
     expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
@@ -47,6 +53,15 @@ class Hadope::Device
     else
       run_tasks unless @task_queue.empty?
       @cache.dataset = retrieve_integer_dataset_from_buffer @buffer
+    end
+  end
+
+  def retrieve_pinned_integer_dataset
+    if @cache.dataset
+      @cache.dataset
+    else
+      run_tasks unless @task_queue.empty?
+      @cache.dataset = retrieve_pinned_integer_dataset_from_buffer @buffer
     end
   end
 

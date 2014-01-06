@@ -227,6 +227,31 @@ void loadIntArrayIntoDevice(
 
 }
 
+/* Pins an existing dataset into device-addressable memory
+ *
+ * @env: Struct containing device/context/queue variables.
+ * @dataset: Pointer to an integer array of data to be pinned
+ * @length: Length of the integer dataset being pinned.
+ *
+ * @Return: cl_mem reference for addressing pinned memory. */
+cl_mem pinIntArrayForDevice(
+    const HadopeEnvironment env,
+    int* dataset,
+    int dataset_length
+) {
+  cl_int ret;
+  cl_mem buffer = clCreateBuffer(
+    env.context,                                // Context to use
+    CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,    // cl_mem_flags set
+    dataset_length * sizeof(int),               // Size of buffer
+    dataset,                                    // Dataset to pin
+    &ret                                        // Status destination
+  );
+  if (ret != CL_SUCCESS) printf("clCreateBuffer %s\n", oclErrorString(ret));
+
+  return buffer;
+}
+
 /* Reads the contents of device memory buffer into a given dataset array
  *
  * @env: Struct containing device/context/queue variables.
@@ -235,7 +260,7 @@ void loadIntArrayIntoDevice(
 void getIntArrayFromDevice(
   const HadopeEnvironment env,
   const HadopeMemoryBuffer mem_struct,
-  int *dataset
+  int* dataset
 ) {
   /* Wait for pending actions to complete */
   clFinish(env.queue);
@@ -252,6 +277,32 @@ void getIntArrayFromDevice(
     NULL                                     // Event object destination
   );
   if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
+}
+
+/* Reads the contents of a pinned dataset via DMA request
+ *
+ *  @env: Struct containing device/context/queue variables.*
+ *  @mem_struct Struct containing cl_mem buffer referencing dataset. */
+int* getPinnedIntArrayFromDevice(
+    const HadopeEnvironment env,
+    const HadopeMemoryBuffer mem_struct
+){
+    /* Wait for pending actions */
+    clFinish(env.queue);
+
+    cl_int ret;
+    return clEnqueueMapBuffer(
+        env.queue,
+        mem_struct.buffer,
+        CL_TRUE,
+        CL_MAP_READ,
+        0,
+        mem_struct.buffer_entries * sizeof(int),
+        0,
+        NULL,
+        NULL,
+        &ret
+    );
 }
 
 void releaseTemporaryFilterBuffers(
