@@ -17,11 +17,13 @@ describe CPU do
 
   it 'can succesfully retrieve an integer dataset' do
     CPU.get.load_integer_dataset [1, 2, 3]
+    CPU.get.instance_eval { @cache.dataset = nil }
     CPU.get.retrieve_integer_dataset.should == [1, 2, 3]
   end
 
   it 'can successfully retrieve a pinned integer dataset' do
     CPU.get.pin_integer_dataset [1, 2, 3]
+    CPU.get.instance_eval { @cache.dataset = nil }
     CPU.get.retrieve_pinned_integer_dataset.should == [1, 2, 3]
   end
 
