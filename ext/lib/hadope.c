@@ -588,6 +588,45 @@ int sumIntegerDataset(
     return input_last + prefix_last;
 }
 
+int filteredBufferLength(
+    const HadopeEnvironment env,
+    HadopeMemoryBuffer presence,
+    HadopeMemoryBuffer index_scan
+) {
+  int index_reduce, last_element_presence;
+  cl_int ret = clEnqueueReadBuffer(
+    env.queue,                                     // Device's command queue
+    index_scan.buffer,                             // Buffer to output data from
+    CL_FALSE,                                      // Block? Async to hide latency
+    (index_scan.buffer_entries - 1) * sizeof(int), // Offset to read from
+    sizeof(int),                                   // Size of output data
+    &index_reduce,                                 // Output destination
+    0,                                             // Number of preceding actions
+    NULL,                                          // List of preceding actions
+    NULL                                           // Event object destination
+  );
+  if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
+
+  ret = clEnqueueReadBuffer(
+    env.queue,                                   // Device's command queue
+    presence.buffer,                             // Buffer to output data from
+    CL_FALSE,                                    // Block? Async to hide latency
+    (presence.buffer_entries - 1) * sizeof(int), // Offset to read from
+    sizeof(int),                                 // Size of output data
+    &last_element_presence,                      // Output destination
+    0,                                           // Number of preceding actions
+    NULL,                                        // List of preceding actions
+    NULL                                         // Event object destination
+  );
+  if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
+
+  clFinish(env.queue);
+  clReleaseMemObject(presence.buffer);
+  clReleaseMemObject(index_scan.buffer);
+
+  return index_reduce + last_element_presence;
+}
+
 HadopeMemoryBuffer filterByScatteredWrites(
   const HadopeEnvironment env,
   HadopeMemoryBuffer input_dataset,

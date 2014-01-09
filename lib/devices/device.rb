@@ -71,6 +71,14 @@ class Hadope::Device
     sum_integer_buffer @buffer
   end
 
+  def count(needle)
+    @task_queue.unshift Hadope::Map.new(*FIX2INT)
+    run_tasks(do_conversions:false)
+    task = Hadope::Filter.new(:x, "x == #{needle}")
+    kernel = task.to_kernel
+    count_post_filter(kernel, kernel.length, task.name, @buffer)
+  end
+
   private
 
   def initialize_task_queue

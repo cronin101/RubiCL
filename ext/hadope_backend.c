@@ -267,6 +267,34 @@ static VALUE methodRunFilterTask(
   return self;
 }
 
+static VALUE methodCountFilteredBuffer(
+    VALUE self,
+    VALUE task_source_object,
+    VALUE source_size_object,
+    VALUE task_name_object,
+    VALUE mem_struct_object
+    ) {
+      HadopeMemoryBuffer *dataset;
+      HadopeEnvironment *environment;
+      int i;
+
+      /* Convert Objects into C types and builds Kernel using environment ivar */
+      char* task_source = StringValuePtr(task_source_object);
+      int source_size = FIX2INT(source_size_object);
+      char* task_name = StringValuePtr(task_name_object);
+      VALUE environment_object = rb_iv_get(self, "@environment");
+      Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+      HadopeTask task = buildTaskFromSource(*environment, task_source, source_size, task_name);
+
+      /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
+      Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, dataset);
+      HadopeMemoryBuffer* presence = malloc(sizeof(HadopeMemoryBuffer));
+      computePresenceArrayForDataset(*environment, *dataset, task, presence);
+      HadopeMemoryBuffer prescan = exclusivePrefixSum(*environment, *presence);
+
+      return INT2FIX(filteredBufferLength(*environment, *presence, prescan));
+}
+
 /* ~~ END Task Dispatching Methods ~~ */
 
 static VALUE methodCleanUsedResources(VALUE self, VALUE mem_struct_object){
@@ -294,6 +322,7 @@ void Init_hadope_backend(){
   rb_define_private_method(HadopeBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
   rb_define_private_method(HadopeBackend, "retrieve_pinned_integer_dataset_from_buffer", methodRetievePinnedIntDataset, 1);
   rb_define_private_method(HadopeBackend, "sum_integer_buffer", methodSumIntegerBuffer, 1);
+  rb_define_private_method(HadopeBackend, "count_post_filter", methodCountFilteredBuffer, 4);
   rb_define_private_method(HadopeBackend, "run_map_task", methodRunMapTask, 4);
   rb_define_private_method(HadopeBackend, "run_filter_task", methodRunFilterTask, 4);
   rb_define_private_method(HadopeBackend, "clean_used_resources", methodCleanUsedResources, 1);

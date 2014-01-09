@@ -85,6 +85,12 @@ int sumIntegerDataset(
     HadopeMemoryBuffer input_dataset
 );
 
+int filteredBufferLength(
+    const HadopeEnvironment env,
+    HadopeMemoryBuffer presence,
+    HadopeMemoryBuffer input_dataset
+);
+
 HadopeMemoryBuffer filterByScatteredWrites(
   const HadopeEnvironment env,
   HadopeMemoryBuffer input_dataset,
