@@ -65,6 +65,13 @@ class Hadope::Device
     end
   end
 
+  def sum
+    conversion = Hadope::Map.new(*FIX2INT)
+    kernel = conversion.to_kernel
+    run_map_task(kernel, kernel.length, conversion.name, @buffer)
+    sum_integer_buffer @buffer
+  end
+
   private
 
   def initialize_task_queue

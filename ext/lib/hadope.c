@@ -545,6 +545,49 @@ HadopeMemoryBuffer exclusivePrefixSum(
   return output_struct;
 }
 
+int sumIntegerDataset(
+    const HadopeEnvironment env,
+    HadopeMemoryBuffer input_dataset
+) {
+    HadopeMemoryBuffer prefixed = exclusivePrefixSum(env, input_dataset);
+
+    /* Sum is last element of input dataset added to last element of
+     * exclusive prefix summed dataset */
+    int input_last, prefix_last;
+    /* Reading the last element of the _exclusive_ prefix sum */
+    cl_int ret = clEnqueueReadBuffer(
+        env.queue,                                      // Command queue
+        prefixed.buffer,                                // Buffer holding exc prefix sum
+        CL_FALSE,                                       // Async to hide latency
+        (prefixed.buffer_entries - 1) * sizeof(int),    // Final element offset
+        sizeof(int),                                    // Output size
+        &prefix_last,                                   // Output destination
+        0, NULL,                                        // Num, List preceding actions
+        NULL                                            // Event object destination
+    );
+
+    /* Reading the last element of the input dataset */
+    input_last = * (int *) clEnqueueMapBuffer(
+        env.queue,                                          // Command queue
+        input_dataset.buffer,                               // Buffer holding input dataset
+        CL_FALSE,                                           // Async to hide latency
+        CL_MAP_READ,
+        (input_dataset.buffer_entries - 1) * sizeof(int),   // Final element offset
+        sizeof(int),                                        // Output size
+        0, NULL,                                            // Num, List preceding actions
+        NULL,                                               // Event object destination
+        &ret
+    );
+
+    /* Ensure that reading has finished */
+    ret = clFinish(env.queue);
+
+    clReleaseMemObject(input_dataset.buffer);
+    clReleaseMemObject(prefixed.buffer);
+
+    return input_last + prefix_last;
+}
+
 HadopeMemoryBuffer filterByScatteredWrites(
   const HadopeEnvironment env,
   HadopeMemoryBuffer input_dataset,

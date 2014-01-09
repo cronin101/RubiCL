@@ -183,6 +183,20 @@ static VALUE methodRetievePinnedIntDataset(VALUE self, VALUE memory_struct_objec
 
 /* ~~ Task Dispatching Methods ~~ */
 
+static VALUE methodSumIntegerBuffer(
+    VALUE self,
+    VALUE memory_struct_object
+) {
+    HadopeMemoryBuffer *mem_struct;
+    Data_Get_Struct(memory_struct_object, HadopeMemoryBuffer, mem_struct);
+
+    HadopeEnvironment *environment;
+    VALUE environment_object = rb_iv_get(self, "@environment");
+    Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+
+    return INT2FIX(sumIntegerDataset(*environment, *mem_struct));
+}
+
 /* Takes a code-generated OpenCL kernel and builds it for the target ocl device
  * then enqueues its execution on a specified dataset.
  *
@@ -279,6 +293,7 @@ void Init_hadope_backend(){
   rb_define_private_method(HadopeBackend, "create_pinned_buffer", methodPinIntDataset, 1);
   rb_define_private_method(HadopeBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
   rb_define_private_method(HadopeBackend, "retrieve_pinned_integer_dataset_from_buffer", methodRetievePinnedIntDataset, 1);
+  rb_define_private_method(HadopeBackend, "sum_integer_buffer", methodSumIntegerBuffer, 1);
   rb_define_private_method(HadopeBackend, "run_map_task", methodRunMapTask, 4);
   rb_define_private_method(HadopeBackend, "run_filter_task", methodRunFilterTask, 4);
   rb_define_private_method(HadopeBackend, "clean_used_resources", methodCleanUsedResources, 1);

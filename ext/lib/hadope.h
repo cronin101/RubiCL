@@ -80,6 +80,11 @@ HadopeMemoryBuffer exclusivePrefixSum(
   const HadopeMemoryBuffer presence
 );
 
+int sumIntegerDataset(
+    const HadopeEnvironment env,
+    HadopeMemoryBuffer input_dataset
+);
+
 HadopeMemoryBuffer filterByScatteredWrites(
   const HadopeEnvironment env,
   HadopeMemoryBuffer input_dataset,
