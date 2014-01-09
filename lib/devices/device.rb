@@ -66,9 +66,8 @@ class Hadope::Device
   end
 
   def sum
-    conversion = Hadope::Map.new(*FIX2INT)
-    kernel = conversion.to_kernel
-    run_map_task(kernel, kernel.length, conversion.name, @buffer)
+    @task_queue.unshift Hadope::Map.new(*FIX2INT)
+    run_tasks(do_conversions:false)
     sum_integer_buffer @buffer
   end
 
@@ -97,9 +96,11 @@ class Hadope::Device
     end
   end
 
-  def run_tasks
-    @task_queue.unshift Hadope::Map.new(*FIX2INT)
-    @task_queue.push Hadope::Map.new(*INT2FIX)
+  def run_tasks(do_conversions:true)
+    if do_conversions
+      @task_queue.unshift Hadope::Map.new(*FIX2INT)
+      @task_queue.push Hadope::Map.new(*INT2FIX)
+    end
     @task_queue.simplify!
     run_task @task_queue.shift until @task_queue.empty?
   end
