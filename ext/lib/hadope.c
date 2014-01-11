@@ -545,6 +545,10 @@ HadopeMemoryBuffer exclusivePrefixSum(
   return output_struct;
 }
 
+/* Returns the summation of a integer dataset.
+ *
+ * @env: Struct containing device/context/queue variables.
+ * @input_dataset: Struct containing cl_mem buffer / target dataset. */
 int sumIntegerDataset(
     const HadopeEnvironment env,
     HadopeMemoryBuffer input_dataset
@@ -588,6 +592,12 @@ int sumIntegerDataset(
     return input_last + prefix_last;
 }
 
+/* Returns the number of elements that would be kept after a presence array calculation
+ * has been completed.
+ *
+ * @env: HadopeEnvironment struct
+ * @presence: presence array post filter calculation.
+ * @index_scan: result of exclusive prefix sum on presence array. */
 int filteredBufferLength(
     const HadopeEnvironment env,
     HadopeMemoryBuffer presence,
