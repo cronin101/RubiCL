@@ -159,6 +159,10 @@ static VALUE methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object){
   return output_array;
 }
 
+/* Loads a (processed?) integer array previously pinned for the ocl device and
+ * converts it into a Ruby array to be returned to the device class.
+ *
+ * @memory_struct_object: Ruby object storing HadopeMemoryBuffer. */
 static VALUE methodRetievePinnedIntDataset(VALUE self, VALUE memory_struct_object) {
     HadopeMemoryBuffer *mem_struct;
     Data_Get_Struct(memory_struct_object, HadopeMemoryBuffer, mem_struct);
@@ -183,6 +187,9 @@ static VALUE methodRetievePinnedIntDataset(VALUE self, VALUE memory_struct_objec
 
 /* ~~ Task Dispatching Methods ~~ */
 
+/* Returns the summation (fold with +) of a integer memory buffer.
+ *
+ * @memory_struct_object: Ruby object storing HadopeMemoryBuffer. */
 static VALUE methodSumIntegerBuffer(
     VALUE self,
     VALUE memory_struct_object
@@ -267,6 +274,12 @@ static VALUE methodRunFilterTask(
   return self;
 }
 
+/* Returns the number of elements that would remain in the buffer after a given filter task.
+ *
+ * @task_source_object: Ruby object containing the filter kernel to enqueue.
+ * @source_size_object: Ruby object containing the length of the filter kernel's source.
+ * @task_name_object: Ruby object containing the name of the filter task to enqueue.
+ * @mem_struct_object: Ruby object containing the HadopeMemoryBuffer to filter. */
 static VALUE methodCountFilteredBuffer(
     VALUE self,
     VALUE task_source_object,
