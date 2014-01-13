@@ -1,5 +1,6 @@
 class Hadope::Device
   include HadopeBackend
+  include Hadope::RequireType
 
   FIX2INT = [:x, 'x = x >> 1']
   INT2FIX = [:x, 'x = (x << 1) | 0x01']
@@ -17,6 +18,7 @@ class Hadope::Device
     send type.hadope_conversion
   end
 
+  sets_type :int,
   def load_integer_dataset(array)
     @task_queue.clear
     @buffer = create_memory_buffer(array.size, 'int')
@@ -24,6 +26,7 @@ class Hadope::Device
     self
   end
 
+  sets_type :int,
   def pin_integer_dataset(array)
     @task_queue.clear
     @buffer = create_pinned_buffer(@cache.dataset = array)
@@ -47,6 +50,7 @@ class Hadope::Device
   alias_method :collect, :map
   alias_method :select, :filter
 
+  requires_type :int,
   def retrieve_integer_dataset
     if @cache.dataset
       @cache.dataset
@@ -56,6 +60,7 @@ class Hadope::Device
     end
   end
 
+  requires_type :int,
   def retrieve_pinned_integer_dataset
     if @cache.dataset
       @cache.dataset
@@ -65,12 +70,14 @@ class Hadope::Device
     end
   end
 
+  requires_type :int,
   def sum
     @task_queue.unshift Hadope::Map.new(*FIX2INT)
     run_tasks(do_conversions:false)
     sum_integer_buffer @buffer
   end
 
+  requires_type :int,
   def count(needle)
     @task_queue.unshift Hadope::Map.new(*FIX2INT)
     run_tasks(do_conversions:false)

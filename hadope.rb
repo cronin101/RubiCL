@@ -6,6 +6,8 @@ module Hadope
     attr_writer :opencl_device
   end
 
+  require_relative './lib/modules/require_type.rb'
+
   require_relative './lib/types/array.rb'
   require_relative './lib/types/fixnum.rb'
   require_relative './lib/types/int.rb'
