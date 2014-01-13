@@ -57,4 +57,15 @@ describe DEVICE do
     cpu = Hadope::CPU.get.load_integer_dataset([1, 2, 3]).map { |x| x + 1 }
     2.times { cpu.retrieve_integer_dataset.should == [2, 3, 4] }
   end
+
+  it 'can compute the summation of an integer buffer' do
+    Hadope::CPU.get.load_integer_dataset([1, 2, 3, 4])
+    Hadope::CPU.get.sum.should == 10
+  end
+
+  it 'can count the number of occurrences of a number in an integer buffer' do
+    Hadope::CPU.get.load_integer_dataset([1, 1, 2, 2, 2])
+    Hadope::CPU.get.count(2).should == 3
+  end
+
 end
