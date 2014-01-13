@@ -33,6 +33,15 @@ class Hadope::Device
     self
   end
 
+  requires_type :int, (sets_type :int_tuple,
+  def zip(array)
+    @cache.dataset = nil
+    @task_queue.clear
+
+    @fsts = @buffer
+    @snds = create_pinned_buffer(array)
+  end)
+
   def map(&block)
     @cache.dataset = nil
     expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first

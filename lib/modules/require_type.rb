@@ -9,6 +9,8 @@ module Hadope::RequireType
         check_buffer_type! type
         send(post_check, *arg)
       end
+
+      method
     end
 
     def sets_type(type, method)
@@ -18,7 +20,10 @@ module Hadope::RequireType
         @buffer_type = type
         send(post_set, *arg)
       end
+
+    method
     end
+
   end
 
   def self.included(base)
