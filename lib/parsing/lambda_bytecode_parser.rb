@@ -39,12 +39,13 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
 
   def translate(operation)
     case operation
-    when /getlocal/                    then 'x'
-    when /putobject_OP_INT2FIX_O_0_C_/ then 0
-    when /putobject_OP_INT2FIX_O_1_C_/ then 1
-    when /putobject\s+-?\d+/           then operation.split(' ').last.to_i
-    when /opt_send_simple/             then operation.scan(/(?:mid:(.*?),)/)[0][0].to_sym
-    when /opt_/                        then LOOKUP_TABLE.fetch operation[/opt_\w+/].to_sym
+    when /getlocal_OP__WC__0 #{function.arity + 1}/ then 'x'
+    when /getlocal_OP__WC__0 #{function.arity}/     then 'y'
+    when /putobject_OP_INT2FIX_O_0_C_/              then 0
+    when /putobject_OP_INT2FIX_O_1_C_/              then 1
+    when /putobject\s+-?\d+/                        then operation.split(' ').last.to_i
+    when /opt_send_simple/                          then operation.scan(/(?:mid:(.*?),)/)[0][0].to_sym
+    when /opt_/                                     then LOOKUP_TABLE.fetch operation[/opt_\w+/].to_sym
     else raise "Could not parse: #{operation}"
     end
   end
