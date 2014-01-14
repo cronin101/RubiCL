@@ -28,7 +28,7 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
       case token = tokens.shift
       when Fixnum then stack.push token
       when Symbol then stack.push method_send(stack.pop, token)
-      when String then token == 'x' ? stack.push(token) : stack.push(combine(token, stack.pop, stack.pop))
+      when String then ['x', 'y'].include?(token) ? stack.push(token) : stack.push(combine(token, stack.pop, stack.pop))
       end
     end
 
@@ -63,8 +63,8 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
 
   def is_value?(token)
     case token
-    when Fixnum then true
-    when 'x'    then true
+    when Fixnum       then true
+    when *['x', 'y']  then true
     else false
     end
   end

@@ -5,9 +5,9 @@ module Hadope::RequireType
     def requires_type(type, method)
       post_check = "post_check_#{method}".to_sym
       alias_method post_check, method
-      define_method method do |*arg|
+      define_method method do |*arg, &block|
         check_buffer_type! type
-        send(post_check, *arg)
+        send(post_check, *arg, &block)
       end
 
       method
@@ -16,9 +16,9 @@ module Hadope::RequireType
     def sets_type(type, method)
       post_set = "post_set_#{method}".to_sym
       alias_method post_set, method
-      define_method method do |*arg|
+      define_method method do |*arg, &block|
         @buffer_type = type
-        send(post_set, *arg)
+        send(post_set, *arg, &block)
       end
 
     method

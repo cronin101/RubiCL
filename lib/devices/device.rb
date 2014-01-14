@@ -40,6 +40,12 @@ class Hadope::Device
 
     @fsts = @buffer
     @snds = create_pinned_buffer(array)
+    self
+  end)
+
+  requires_type :int_tuple, (sets_type :int,
+  def braid(&block)
+    expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
   end)
 
   def map(&block)
