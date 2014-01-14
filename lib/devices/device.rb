@@ -46,6 +46,8 @@ class Hadope::Device
   requires_type :int_tuple, (sets_type :int,
   def braid(&block)
     expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
+    @task_queue.push (braid = Hadope::Braid.new(:x, :y, expression))
+    braid.to_kernel
   end)
 
   def map(&block)

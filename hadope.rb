@@ -22,6 +22,7 @@ module Hadope
   require_relative './lib/tasks/taskqueue'
   require_relative './lib/tasks/map'
   require_relative './lib/tasks/filter'
+  require_relative './lib/tasks/braid'
 
   def self.opencl_device
     @opencl_device.get
