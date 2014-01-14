@@ -13,12 +13,12 @@ void releaseMemoryCallback(
 }
 
 void setGroupSize(
-  const HadopeEnvironment env
+  const HadopeEnvironment* env
 ) {
   size_t max_workgroup_size = 0;
   size_t returned_size = 0;
   cl_int ret = clGetDeviceInfo(
-    env.device_id,
+    env->device_id,
     CL_DEVICE_MAX_WORK_GROUP_SIZE,
     sizeof(size_t),
     &max_workgroup_size,
@@ -57,8 +57,7 @@ void displayDeviceInfo(cl_device_type type) {
 /* Selects target device then creates context and command queue, packages in HadopeEnvironment and returns.
  *
  * @device_type: CL_DEVICE_TYPE_GPU / CL_DEVICE_TYPE_CPU */
-HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type) {
-  HadopeEnvironment env;
+void createHadopeEnvironment(const cl_device_type device_type, HadopeEnvironment* env) {
   cl_platform_id platform;
   cl_int ret;
 
@@ -137,14 +136,14 @@ HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type) {
     displayDeviceInfo(device_type);
     printf("Selecting Device 1.\n");
   }
-  env.device_id = devices[0];
+  env->device_id = devices[0];
   free(devices);
 
   /* Create OpenCL context for target device and store in environment*/
-  env.context = clCreateContext(
+  env->context = clCreateContext(
     NULL,           // Context properties to set
     1,              // Number of devices specified
-    &env.device_id, // Device specified
+    &env->device_id,// Device specified
     NULL,           // Error callback function
     NULL,           // User data specified
     &ret            // Status destination
@@ -152,18 +151,16 @@ HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type) {
   if (ret != CL_SUCCESS) printf("clCreateContext %s\n", oclErrorString(ret));
 
   /* Create command queue for context/target-device and store in environment */
-  env.queue = clCreateCommandQueue(
-    env.context,   // Context to use
-    env.device_id, // Device to send commands to
-    0,             // Queue properties bitfield, neither out_of_order nor profiling flags set.
-    &ret           // Status destination
+  env->queue = clCreateCommandQueue(
+    env->context,   // Context to use
+    env->device_id, // Device to send commands to
+    0,              // Queue properties bitfield, neither out_of_order nor profiling flags set.
+    &ret            // Status destination
   );
   if (ret != CL_SUCCESS) printf("clCreateCommandQueue %s\n", oclErrorString(ret));
 
   /* Record the maximum supported group size. */
   setGroupSize(env);
-
-  return env;
 }
 
 /* ~~ END Init Methods ~~ */
@@ -176,13 +173,13 @@ HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type) {
  * @req_memory: The size of the memory buffer to create.
  * @fs: Flags to set on memory buffer... CL_MEM_READ_WRITE/CL_MEM_READ. */
 cl_mem createMemoryBuffer(
-  const HadopeEnvironment env,
+  const HadopeEnvironment* env,
   const size_t req_memory,
   const cl_mem_flags flags
 ) {
   cl_int ret;
   cl_mem buffer = clCreateBuffer(
-    env.context, // Context to use
+    env->context, // Context to use
     flags,       // cl_mem_flags set
     req_memory,  // Size of buffer
     NULL,        // Prexisting data
@@ -235,13 +232,13 @@ void loadIntArrayIntoDevice(
  *
  * @Return: cl_mem reference for addressing pinned memory. */
 cl_mem pinIntArrayForDevice(
-    const HadopeEnvironment env,
+    const HadopeEnvironment* env,
     int* dataset,
     int dataset_length
 ) {
   cl_int ret;
   cl_mem buffer = clCreateBuffer(
-    env.context,                                // Context to use
+    env->context,                                // Context to use
     CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,    // cl_mem_flags set
     dataset_length * sizeof(int),               // Size of buffer
     dataset,                                    // Dataset to pin
@@ -284,20 +281,20 @@ void getIntArrayFromDevice(
  *  @env: Struct containing device/context/queue variables.*
  *  @mem_struct Struct containing cl_mem buffer referencing dataset. */
 int* getPinnedIntArrayFromDevice(
-    const HadopeEnvironment env,
-    const HadopeMemoryBuffer mem_struct
+    const HadopeEnvironment* env,
+    const HadopeMemoryBuffer* mem_struct
 ){
     /* Wait for pending actions */
-    clFinish(env.queue);
+    clFinish(env->queue);
 
     cl_int ret;
     return clEnqueueMapBuffer(
-        env.queue,
-        mem_struct.buffer,
+        env->queue,
+        mem_struct->buffer,
         CL_TRUE,
         CL_MAP_READ,
         0,
-        mem_struct.buffer_entries * sizeof(int),
+        mem_struct->buffer_entries * sizeof(int),
         0,
         NULL,
         NULL,
@@ -329,19 +326,19 @@ void releaseDeviceDataset(
  * @kernel_source: String containing the .cl Kernel source.
  * @source_size: The size of the source.
  * @name: The name of the task within the source to build. */
-HadopeTask buildTaskFromSource(
-  const HadopeEnvironment env,
+HadopeTask* buildTaskFromSource(
+  const HadopeEnvironment* env,
   const char* kernel_source,
   const size_t source_size,
   char* name
 ) {
-  HadopeTask task;
-  cl_int ret;
+  HadopeTask* task = malloc(sizeof(HadopeTask));
 
   /* Create cl_program from given task/name and store inside HadopeTask struct. */
-  task.name = name;
-  task.program = clCreateProgramWithSource(
-    env.context,                    // Context
+  cl_int ret;
+  task->name = name;
+  task->program = clCreateProgramWithSource(
+    env->context,                    // Context
     1,                              // Number of parts that the source is in
     (const char **) &kernel_source, // Array of program source code
     &source_size,                   // Total size of source
@@ -351,18 +348,18 @@ HadopeTask buildTaskFromSource(
 
   /* Create kernel from cl_program to execute later on target-device */
   ret = clBuildProgram(
-    task.program,            // Program to build
+    task->program,            // Program to build
     1,                       // Number of devices involved
-    &env.device_id,          // List of involved devices
+    &env->device_id,          // List of involved devices
     "-cl-fast-relaxed-math", // Compilation options
     NULL,                    // Build complete callback, building is synchronous if omitted
     NULL                     // Callback user data
   );
   if (ret != CL_SUCCESS) printf("clBuildProgram %s\n", oclErrorString(ret));
 
-  task.kernel = clCreateKernel(
-    task.program, // Built program
-    task.name,    // Entry point to kernel
+  task->kernel = clCreateKernel(
+    task->program, // Built program
+    task->name,    // Entry point to kernel
     &ret          // Status destination
   );
   if (ret != CL_SUCCESS) printf("clCreateKernel %s\n", oclErrorString(ret));
@@ -380,25 +377,25 @@ HadopeTask buildTaskFromSource(
  * @mem_struct: Struct containing cl_mem buffer / target dataset.
  * @task: Struct containing the kernel to execute and the task name. */
 void runTaskOnDataset(
-  const HadopeEnvironment env,
-  const HadopeMemoryBuffer mem_struct,
-  const HadopeTask task
+  const HadopeEnvironment* env,
+  const HadopeMemoryBuffer* mem_struct,
+  const HadopeTask* task
 ) {
-  size_t g_work_size[1] = {ceil((float) mem_struct.buffer_entries / 4)};
+  size_t g_work_size[1] = {ceil((float) mem_struct->buffer_entries / 4)};
 
   /* Kernel's global data_array set to be the given device memory buffer */
   cl_int ret = clSetKernelArg(
-    task.kernel,       // Kernel concerned
+    task->kernel,       // Kernel concerned
     0,                 // Index of argument to specify
     sizeof(cl_mem),    // Size of argument value
-    &mem_struct.buffer // Argument value
+    &mem_struct->buffer // Argument value
   );
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(
-    env.queue,   // Device's command queue
-    task.kernel, // Kernel to enqueue
+    env->queue,   // Device's command queue
+    task->kernel, // Kernel to enqueue
     1,           // Dimensionality of work
     0,           // Global offset of work index
     g_work_size, // Array of work sizes by dimension
@@ -417,24 +414,24 @@ void runTaskOnDataset(
  * @task: HadopeTask containing the kernel to set flags if the predicate is satisfied.
  * @presence: Pointer to HadopeMemoryBuffer struct, to be assigned the presence_array */
 void computePresenceArrayForDataset(
-  const HadopeEnvironment env,
-  const HadopeMemoryBuffer mem_struct,
-  const HadopeTask task,
+  const HadopeEnvironment* env,
+  const HadopeMemoryBuffer* mem_struct,
+  const HadopeTask* task,
   HadopeMemoryBuffer *presence
 ) {
-  size_t g_work_size[1] = {ceil((float)mem_struct.buffer_entries/4)};
+  size_t g_work_size[1] = {ceil((float)mem_struct->buffer_entries/4)};
 
   /* Kernel's global data_array set to be the given device memory buffer */
   cl_int ret = clSetKernelArg(
-    task.kernel,       // Kernel concerned
+    task->kernel,       // Kernel concerned
     0,                 // Index of argument to specify
     sizeof(cl_mem),    // Size of argument value
-    &mem_struct.buffer // Argument value
+    &mem_struct->buffer // Argument value
   );
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   /* Output buffer created to be an int flag for each element in input dataset. */
-  presence->buffer_entries = mem_struct.buffer_entries;
+  presence->buffer_entries = mem_struct->buffer_entries;
   presence->buffer = createMemoryBuffer(
     env,                                      // Environment struct
     (presence->buffer_entries * sizeof(int)), // Size of buffer to create
@@ -443,7 +440,7 @@ void computePresenceArrayForDataset(
 
   /* Kernel's global presence_array set to be the newly created presence buffer */
   ret = clSetKernelArg(
-    task.kernel,      // Kernel concerned
+    task->kernel,      // Kernel concerned
     1,                // Index of argument to specify
     sizeof(cl_mem),   // Size of argument value
     &presence->buffer // Argument value
@@ -452,8 +449,8 @@ void computePresenceArrayForDataset(
 
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(
-    env.queue,   // Device's command queue
-    task.kernel, // Kernel to enqueue
+    env->queue,   // Device's command queue
+    task->kernel, // Kernel to enqueue
     1,           // Dimensionality of work
     0,           // Global offset of work index
     g_work_size, // Array of work size in each dimension
@@ -465,18 +462,17 @@ void computePresenceArrayForDataset(
   if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 }
 
-HadopeMemoryBuffer exclusivePrefixSum(
-  const HadopeEnvironment env,
-  const HadopeMemoryBuffer presence
+void exclusivePrefixSum(
+  const HadopeEnvironment* env,
+  const HadopeMemoryBuffer* presence,
+  HadopeMemoryBuffer* result
 ) {
-  int i;
   cl_int ret;
-  HadopeMemoryBuffer output_struct;
 
-  cl_mem output_buffer = clCreateBuffer(
-    env.context,
+  result->buffer = clCreateBuffer(
+    env->context,
     CL_MEM_HOST_READ_ONLY,
-    presence.buffer_entries * sizeof(int),
+    presence->buffer_entries * sizeof(int),
     NULL,
     NULL
   );
@@ -486,7 +482,7 @@ HadopeMemoryBuffer exclusivePrefixSum(
   if (!source) printf("Error loading '%s' source.\n", prescan_filename);
 
   ComputeProgram = clCreateProgramWithSource(
-    env.context,
+    env->context,
     1,
     (const char **) &source,
     NULL,
@@ -497,7 +493,7 @@ HadopeMemoryBuffer exclusivePrefixSum(
   ret = clBuildProgram(
     ComputeProgram,
     1,                       // Number of devices involved
-    &env.device_id,          // List of involved devices
+    &env->device_id,          // List of involved devices
     "-cl-fast-relaxed-math", // Compilation options
     NULL,                    // Build complete callback, building is synchronous if omitted
     NULL                     // Callback user data
@@ -506,7 +502,7 @@ HadopeMemoryBuffer exclusivePrefixSum(
 
   ComputeKernels = (cl_kernel*) calloc(KernelCount, sizeof(cl_kernel));
 
-  for(i = 0; i < KernelCount; i++) {
+  for(int i = 0; i < KernelCount; ++i) {
     ComputeKernels[i] = clCreateKernel(
       ComputeProgram,
       KernelNames[i],
@@ -517,7 +513,7 @@ HadopeMemoryBuffer exclusivePrefixSum(
     size_t wgSize;
     ret = clGetKernelWorkGroupInfo(
       ComputeKernels[i],
-      env.device_id,
+      env->device_id,
       CL_KERNEL_WORK_GROUP_SIZE,
       sizeof(size_t),
       &wgSize,
@@ -529,20 +525,17 @@ HadopeMemoryBuffer exclusivePrefixSum(
 
   free(source);
 
-  CreatePartialSumBuffers(presence.buffer_entries, env.context);
-  PreScanBuffer(env.queue, output_buffer, presence.buffer, GROUP_SIZE, GROUP_SIZE, presence.buffer_entries);
+  CreatePartialSumBuffers(presence->buffer_entries, env->context);
+  PreScanBuffer(env->queue, result->buffer, presence->buffer, GROUP_SIZE, GROUP_SIZE, presence->buffer_entries);
 
-  ret = clFinish(env.queue);
+  ret = clFinish(env->queue);
   if (ret != CL_SUCCESS) printf("clFinish %s\n", oclErrorString(ret));
 
   ReleasePartialSums();
-  for(i = 0; i < KernelCount; i++) clReleaseKernel(ComputeKernels[i]);
+  for(int i = 0; i < KernelCount; ++i) clReleaseKernel(ComputeKernels[i]);
   clReleaseProgram(ComputeProgram);
 
-  output_struct.buffer_entries = presence.buffer_entries;
-  output_struct.buffer = output_buffer;
-
-  return output_struct;
+  result->buffer_entries = presence->buffer_entries;
 }
 
 /* Returns the summation of a integer dataset.
@@ -550,20 +543,21 @@ HadopeMemoryBuffer exclusivePrefixSum(
  * @env: Struct containing device/context/queue variables.
  * @input_dataset: Struct containing cl_mem buffer / target dataset. */
 int sumIntegerDataset(
-    const HadopeEnvironment env,
-    HadopeMemoryBuffer input_dataset
+    const HadopeEnvironment* env,
+    HadopeMemoryBuffer* input_dataset
 ) {
-    HadopeMemoryBuffer prefixed = exclusivePrefixSum(env, input_dataset);
+    HadopeMemoryBuffer* prefixed = malloc(sizeof(HadopeMemoryBuffer));
+    exclusivePrefixSum(env, input_dataset, prefixed);
 
     /* Sum is last element of input dataset added to last element of
      * exclusive prefix summed dataset */
     int input_last, prefix_last;
     /* Reading the last element of the _exclusive_ prefix sum */
     cl_int ret = clEnqueueReadBuffer(
-        env.queue,                                      // Command queue
-        prefixed.buffer,                                // Buffer holding exc prefix sum
+        env->queue,                                      // Command queue
+        prefixed->buffer,                                // Buffer holding exc prefix sum
         CL_FALSE,                                       // Async to hide latency
-        (prefixed.buffer_entries - 1) * sizeof(int),    // Final element offset
+        (prefixed->buffer_entries - 1) * sizeof(int),    // Final element offset
         sizeof(int),                                    // Output size
         &prefix_last,                                   // Output destination
         0, NULL,                                        // Num, List preceding actions
@@ -572,11 +566,11 @@ int sumIntegerDataset(
 
     /* Reading the last element of the input dataset */
     input_last = * (int *) clEnqueueMapBuffer(
-        env.queue,                                          // Command queue
-        input_dataset.buffer,                               // Buffer holding input dataset
+        env->queue,                                          // Command queue
+        input_dataset->buffer,                               // Buffer holding input dataset
         CL_FALSE,                                           // Async to hide latency
         CL_MAP_READ,
-        (input_dataset.buffer_entries - 1) * sizeof(int),   // Final element offset
+        (input_dataset->buffer_entries - 1) * sizeof(int),   // Final element offset
         sizeof(int),                                        // Output size
         0, NULL,                                            // Num, List preceding actions
         NULL,                                               // Event object destination
@@ -584,10 +578,11 @@ int sumIntegerDataset(
     );
 
     /* Ensure that reading has finished */
-    ret = clFinish(env.queue);
+    ret = clFinish(env->queue);
 
-    clReleaseMemObject(input_dataset.buffer);
-    clReleaseMemObject(prefixed.buffer);
+    clReleaseMemObject(input_dataset->buffer);
+    clReleaseMemObject(prefixed->buffer);
+    free(prefixed);
 
     return input_last + prefix_last;
 }
@@ -599,16 +594,16 @@ int sumIntegerDataset(
  * @presence: presence array post filter calculation.
  * @index_scan: result of exclusive prefix sum on presence array. */
 int filteredBufferLength(
-    const HadopeEnvironment env,
-    HadopeMemoryBuffer presence,
-    HadopeMemoryBuffer index_scan
+    const HadopeEnvironment* env,
+    HadopeMemoryBuffer* presence,
+    HadopeMemoryBuffer* index_scan
 ) {
   int index_reduce, last_element_presence;
   cl_int ret = clEnqueueReadBuffer(
-    env.queue,                                     // Device's command queue
-    index_scan.buffer,                             // Buffer to output data from
+    env->queue,                                     // Device's command queue
+    index_scan->buffer,                             // Buffer to output data from
     CL_FALSE,                                      // Block? Async to hide latency
-    (index_scan.buffer_entries - 1) * sizeof(int), // Offset to read from
+    (index_scan->buffer_entries - 1) * sizeof(int), // Offset to read from
     sizeof(int),                                   // Size of output data
     &index_reduce,                                 // Output destination
     0,                                             // Number of preceding actions
@@ -618,10 +613,10 @@ int filteredBufferLength(
   if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 
   ret = clEnqueueReadBuffer(
-    env.queue,                                   // Device's command queue
-    presence.buffer,                             // Buffer to output data from
+    env->queue,                                   // Device's command queue
+    presence->buffer,                             // Buffer to output data from
     CL_FALSE,                                    // Block? Async to hide latency
-    (presence.buffer_entries - 1) * sizeof(int), // Offset to read from
+    (presence->buffer_entries - 1) * sizeof(int), // Offset to read from
     sizeof(int),                                 // Size of output data
     &last_element_presence,                      // Output destination
     0,                                           // Number of preceding actions
@@ -630,27 +625,26 @@ int filteredBufferLength(
   );
   if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 
-  clFinish(env.queue);
-  clReleaseMemObject(presence.buffer);
-  clReleaseMemObject(index_scan.buffer);
+  clFinish(env->queue);
+  clReleaseMemObject(presence->buffer);
+  clReleaseMemObject(index_scan->buffer);
 
   return index_reduce + last_element_presence;
 }
 
 void filterByScatteredWrites(
-  const HadopeEnvironment env,
+  const HadopeEnvironment* env,
   HadopeMemoryBuffer* input_dataset,
-  HadopeMemoryBuffer presence,
-  HadopeMemoryBuffer index_scan
+  HadopeMemoryBuffer* presence,
+  HadopeMemoryBuffer* index_scan
 ) {
-  cl_int ret;
   HadopeMemoryBuffer filtered_dataset;
   int index_reduce, last_element_presence;
-  ret = clEnqueueReadBuffer(
-    env.queue,                                     // Device's command queue
-    index_scan.buffer,                             // Buffer to output data from
+  cl_int ret = clEnqueueReadBuffer(
+    env->queue,                                     // Device's command queue
+    index_scan->buffer,                             // Buffer to output data from
     CL_FALSE,                                      // Block? Async to hide latency
-    (index_scan.buffer_entries - 1) * sizeof(int), // Offset to read from
+    (index_scan->buffer_entries - 1) * sizeof(int), // Offset to read from
     sizeof(int),                                   // Size of output data
     &index_reduce,                                 // Output destination
     0,                                             // Number of preceding actions
@@ -660,10 +654,10 @@ void filterByScatteredWrites(
   if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 
   ret = clEnqueueReadBuffer(
-    env.queue,                                   // Device's command queue
-    presence.buffer,                             // Buffer to output data from
+    env->queue,                                   // Device's command queue
+    presence->buffer,                             // Buffer to output data from
     CL_FALSE,                                    // Block? Async to hide latency
-    (presence.buffer_entries - 1) * sizeof(int), // Offset to read from
+    (presence->buffer_entries - 1) * sizeof(int), // Offset to read from
     sizeof(int),                                 // Size of output data
     &last_element_presence,                      // Output destination
     0,                                           // Number of preceding actions
@@ -677,7 +671,7 @@ void filterByScatteredWrites(
   char *source = LoadProgramSourceFromFile(scatter_filename);
   if (!source) printf("Error loading '%s' source.\n", scatter_filename);
 
-  HadopeTask scatter_task = buildTaskFromSource(
+  HadopeTask* scatter_task = buildTaskFromSource(
     env,
     source,
     strlen(source),
@@ -685,12 +679,12 @@ void filterByScatteredWrites(
   );
 
   /* Ensure that retrieval has finished then use fetched data to set correct result dataset length */
-  ret = clFinish(env.queue);
+  ret = clFinish(env->queue);
   if (ret != CL_SUCCESS) printf("clFinish %s\n", oclErrorString(ret));
 
   int filtered_entries = index_reduce + last_element_presence;
   cl_mem filtered_buffer = clCreateBuffer(
-    env.context,
+    env->context,
     CL_MEM_HOST_READ_ONLY,
     filtered_entries * sizeof(int),
     NULL,
@@ -698,7 +692,7 @@ void filterByScatteredWrites(
   );
 
   ret = clSetKernelArg(
-    scatter_task.kernel,   // Kernel concerned
+    scatter_task->kernel,   // Kernel concerned
     0,                     // Index of argument to specify
     sizeof(cl_mem),        // Size of argument value
     &input_dataset->buffer // Argument value
@@ -706,23 +700,23 @@ void filterByScatteredWrites(
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   ret = clSetKernelArg(
-    scatter_task.kernel,  // Kernel concerned
+    scatter_task->kernel,  // Kernel concerned
     1,                    // Index of argument to specify
     sizeof(cl_mem),       // Size of argument value
-    &presence.buffer      // Argument value
+    &presence->buffer      // Argument value
   );
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   ret = clSetKernelArg(
-    scatter_task.kernel,  // Kernel concerned
+    scatter_task->kernel,  // Kernel concerned
     2,                    // Index of argument to specify
     sizeof(cl_mem),       // Size of argument value
-    &index_scan.buffer    // Argument value
+    &index_scan->buffer    // Argument value
   );
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   ret = clSetKernelArg(
-    scatter_task.kernel,  // Kernel concerned
+    scatter_task->kernel,  // Kernel concerned
     3,                    // Index of argument to specify
     sizeof(cl_mem),       // Size of argument value
     &filtered_buffer      // Argument value
@@ -732,8 +726,8 @@ void filterByScatteredWrites(
   size_t g_work_size[1] = {input_dataset->buffer_entries};
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(
-    env.queue,           // Device's command queue
-    scatter_task.kernel, // Kernel to enqueue
+    env->queue,           // Device's command queue
+    scatter_task->kernel, // Kernel to enqueue
     1,                   // Dimensionality of work
     0,                   // Global offset of work index
     g_work_size,         // Array of work size in each dimension
@@ -744,6 +738,7 @@ void filterByScatteredWrites(
   );
   if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 
+  free(scatter_task);
   clReleaseMemObject(input_dataset->buffer);
 
   filtered_dataset.buffer_entries = filtered_entries;

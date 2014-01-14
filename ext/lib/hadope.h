@@ -25,22 +25,25 @@ typedef struct{
   cl_mem buffer;
 } HadopeMemoryBuffer;
 
-HadopeEnvironment createHadopeEnvironment(const cl_device_type device_type);
+void createHadopeEnvironment(
+    const cl_device_type device_type,
+    HadopeEnvironment* env
+);
 
 cl_mem createMemoryBuffer(
-  const HadopeEnvironment env,
+  const HadopeEnvironment* env,
   const size_t required_memory,
   const cl_mem_flags type
 );
 
 cl_mem pinIntArrayForDevice(
-    const HadopeEnvironment env,
+    const HadopeEnvironment* env,
     int* dataset,
     int dataset_length
 );
 
-HadopeTask buildTaskFromSource(
-  const HadopeEnvironment env,
+HadopeTask* buildTaskFromSource(
+  const HadopeEnvironment* env,
   const char* kernel_source,
   const size_t source_size, char* name
 );
@@ -58,31 +61,32 @@ void getIntArrayFromDevice(
 );
 
 int* getPinnedIntArrayFromDevice(
-    const HadopeEnvironment env,
-    const HadopeMemoryBuffer mem_struct
+    const HadopeEnvironment* env,
+    const HadopeMemoryBuffer* mem_struct
 );
 
 void runTaskOnDataset(
-  const HadopeEnvironment env,
-  const HadopeMemoryBuffer mem_struct,
-  const HadopeTask task
+  const HadopeEnvironment* env,
+  const HadopeMemoryBuffer* mem_struct,
+  const HadopeTask* task
 );
 
 void computePresenceArrayForDataset(
-  const HadopeEnvironment env,
-  const HadopeMemoryBuffer mem_struct,
-  const HadopeTask task,
-  HadopeMemoryBuffer * presence
+  const HadopeEnvironment* env,
+  const HadopeMemoryBuffer* mem_struct,
+  const HadopeTask* task,
+  HadopeMemoryBuffer* presence
 );
 
-HadopeMemoryBuffer exclusivePrefixSum(
-  const HadopeEnvironment env,
-  const HadopeMemoryBuffer presence
+void exclusivePrefixSum(
+    const HadopeEnvironment* env,
+    const HadopeMemoryBuffer* presence,
+    HadopeMemoryBuffer* result
 );
 
 int sumIntegerDataset(
-    const HadopeEnvironment env,
-    HadopeMemoryBuffer input_dataset
+    const HadopeEnvironment* env,
+    HadopeMemoryBuffer* input_dataset
 );
 
 void braidBuffers(
@@ -93,16 +97,16 @@ void braidBuffers(
 );
 
 int filteredBufferLength(
-    const HadopeEnvironment env,
-    HadopeMemoryBuffer presence,
-    HadopeMemoryBuffer input_dataset
+    const HadopeEnvironment* env,
+    HadopeMemoryBuffer* presence,
+    HadopeMemoryBuffer* input_dataset
 );
 
 void filterByScatteredWrites(
-  const HadopeEnvironment env,
+  const HadopeEnvironment* env,
   HadopeMemoryBuffer* input_dataset,
-  HadopeMemoryBuffer presence,
-  HadopeMemoryBuffer index_scan
+  HadopeMemoryBuffer* presence,
+  HadopeMemoryBuffer* index_scan
 );
 
 void releaseTemporaryFilterBuffers(
