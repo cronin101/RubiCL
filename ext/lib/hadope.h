@@ -85,15 +85,22 @@ int sumIntegerDataset(
     HadopeMemoryBuffer input_dataset
 );
 
+void braidBuffers(
+    const HadopeEnvironment* env,
+    const HadopeTask* task,
+    HadopeMemoryBuffer* fsts,
+    HadopeMemoryBuffer* snds
+);
+
 int filteredBufferLength(
     const HadopeEnvironment env,
     HadopeMemoryBuffer presence,
     HadopeMemoryBuffer input_dataset
 );
 
-HadopeMemoryBuffer filterByScatteredWrites(
+void filterByScatteredWrites(
   const HadopeEnvironment env,
-  HadopeMemoryBuffer input_dataset,
+  HadopeMemoryBuffer* input_dataset,
   HadopeMemoryBuffer presence,
   HadopeMemoryBuffer index_scan
 );

@@ -41,4 +41,7 @@ module Hadope
     end
 
   end
+
+  class SMap < Map
+  end
 end

@@ -42,8 +42,7 @@ KERNEL
     <<KERNEL
 __kernel void #{task.name}(
   __global #{task.type} *fst_array,
-  __global #{task.type} *snd_array,
-  __global #{task.type} *result_array
+  __global #{task.type} *snd_array
 ) {
   #{task.variable_declarations}
   #{task.setup_statements}

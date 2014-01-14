@@ -28,7 +28,7 @@ module Hadope
     end
 
     def return_statements
-      "result_array[global_id] = #{@output_variable};"
+      "fst_array[global_id] = #{@output_variable};"
     end
 
   end

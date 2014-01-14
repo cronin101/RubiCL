@@ -252,7 +252,6 @@ static VALUE methodRunFilterTask(
 ){
   HadopeMemoryBuffer *dataset;
   HadopeEnvironment *environment;
-  int i;
 
   /* Convert Objects into C types and builds Kernel using environment ivar */
   char* task_source = StringValuePtr(task_source_object);
@@ -268,10 +267,40 @@ static VALUE methodRunFilterTask(
   computePresenceArrayForDataset(*environment, *dataset, task, presence);
   HadopeMemoryBuffer prescan = exclusivePrefixSum(*environment, *presence);
 
-  *dataset = filterByScatteredWrites(*environment, *dataset, *presence, prescan);
+  filterByScatteredWrites(*environment, dataset, *presence, prescan);
   releaseTemporaryFilterBuffers(presence, &prescan);
 
   return self;
+}
+
+static VALUE methodRunBraidTask(
+    VALUE self,
+    VALUE task_source_object,
+    VALUE source_size_object,
+    VALUE task_name_object,
+    VALUE fst_memstruct_object,
+    VALUE snd_memstruct_object
+) {
+    HadopeEnvironment *environment;
+    VALUE environment_object = rb_iv_get(self, "@environment");
+    Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+
+    char* task_source = StringValuePtr(task_source_object);
+    char* task_name = StringValuePtr(task_name_object);
+
+    HadopeTask task = buildTaskFromSource(
+        *environment,
+        task_source,
+        FIX2INT(source_size_object),
+        task_name
+    );
+
+    HadopeMemoryBuffer *fsts, *snds;
+    Data_Get_Struct(fst_memstruct_object, HadopeMemoryBuffer, fsts);
+    Data_Get_Struct(snd_memstruct_object, HadopeMemoryBuffer, snds);
+
+    braidBuffers(environment, &task, fsts, snds);
+    return fst_memstruct_object;
 }
 
 /* Returns the number of elements that would remain in the buffer after a given filter task.
@@ -289,7 +318,6 @@ static VALUE methodCountFilteredBuffer(
     ) {
       HadopeMemoryBuffer *dataset;
       HadopeEnvironment *environment;
-      int i;
 
       /* Convert Objects into C types and builds Kernel using environment ivar */
       char* task_source = StringValuePtr(task_source_object);
@@ -338,5 +366,6 @@ void Init_hadope_backend(){
   rb_define_private_method(HadopeBackend, "count_post_filter", methodCountFilteredBuffer, 4);
   rb_define_private_method(HadopeBackend, "run_map_task", methodRunMapTask, 4);
   rb_define_private_method(HadopeBackend, "run_filter_task", methodRunFilterTask, 4);
+  rb_define_private_method(HadopeBackend, "run_braid_task", methodRunBraidTask, 5);
   rb_define_private_method(HadopeBackend, "clean_used_resources", methodCleanUsedResources, 1);
 }

@@ -637,9 +637,9 @@ int filteredBufferLength(
   return index_reduce + last_element_presence;
 }
 
-HadopeMemoryBuffer filterByScatteredWrites(
+void filterByScatteredWrites(
   const HadopeEnvironment env,
-  HadopeMemoryBuffer input_dataset,
+  HadopeMemoryBuffer* input_dataset,
   HadopeMemoryBuffer presence,
   HadopeMemoryBuffer index_scan
 ) {
@@ -698,10 +698,10 @@ HadopeMemoryBuffer filterByScatteredWrites(
   );
 
   ret = clSetKernelArg(
-    scatter_task.kernel,  // Kernel concerned
-    0,                    // Index of argument to specify
-    sizeof(cl_mem),       // Size of argument value
-    &input_dataset.buffer // Argument value
+    scatter_task.kernel,   // Kernel concerned
+    0,                     // Index of argument to specify
+    sizeof(cl_mem),        // Size of argument value
+    &input_dataset->buffer // Argument value
   );
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
@@ -729,7 +729,7 @@ HadopeMemoryBuffer filterByScatteredWrites(
   );
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
-  size_t g_work_size[1] = {input_dataset.buffer_entries};
+  size_t g_work_size[1] = {input_dataset->buffer_entries};
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(
     env.queue,           // Device's command queue
@@ -744,11 +744,50 @@ HadopeMemoryBuffer filterByScatteredWrites(
   );
   if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 
-  clReleaseMemObject(input_dataset.buffer);
+  clReleaseMemObject(input_dataset->buffer);
 
   filtered_dataset.buffer_entries = filtered_entries;
   filtered_dataset.buffer = filtered_buffer;
-  return filtered_dataset;
+
+  *input_dataset = filtered_dataset;
+}
+
+void braidBuffers(
+    const HadopeEnvironment* env,
+    const HadopeTask* task,
+    HadopeMemoryBuffer* fsts,
+    HadopeMemoryBuffer* snds
+) {
+    cl_int ret = clSetKernelArg(
+        task->kernel,   // Kernel concerned
+        0,              // Index of argument to specify
+        sizeof(cl_mem), // Size of argument value
+        &fsts->buffer   // Argument pointer
+    );
+    if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+
+    ret = clSetKernelArg(
+        task->kernel,   // Kernel concerned
+        1,              // Index of argument to specify
+        sizeof(cl_mem), // Size of argument value
+        &snds->buffer   // Argument pointer
+    );
+    if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+
+    /* Kernel enqueued to be executed on the environment's command queue */
+    size_t g_work_size[1] = {ceil((float) fsts->buffer_entries / 4)};
+    ret = clEnqueueNDRangeKernel(
+        env->queue,   // Device's command queue
+        task->kernel, // Kernel to enqueue
+        1,            // Dimensionality of work
+        0,            // Global offset of work index
+        g_work_size,  // Array of work sizes by dimension
+        NULL,         // Local work size, omitted so will be automatically deduced
+        0,            // Number of preceding events
+        NULL,         // Preceding events list
+        NULL          // Event object destination
+    );
+    if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 }
 /* ~~ END Task Dispatching Methods ~~ */
 

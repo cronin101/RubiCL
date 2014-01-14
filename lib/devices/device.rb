@@ -36,18 +36,18 @@ class Hadope::Device
   requires_type :int, (sets_type :int_tuple,
   def zip(array)
     @cache.dataset = nil
-    @task_queue.clear
 
     @fsts = @buffer
     @snds = create_pinned_buffer(array)
+    @task_queue.push Hadope::SMap.new(*FIX2INT)
     self
   end)
 
   requires_type :int_tuple, (sets_type :int,
   def braid(&block)
     expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
-    @task_queue.push (braid = Hadope::Braid.new(:x, :y, expression))
-    braid.to_kernel
+    @task_queue.push Hadope::Braid.new(:x, :y, expression)
+    self
   end)
 
   def map(&block)
@@ -115,16 +115,31 @@ class Hadope::Device
     run_map_task(kernel, kernel.length, task.name, @buffer)
   end
 
+  def run_smap(task)
+    kernel = task.to_kernel
+    @logger.log "Executing smap kernel: #{kernel.inspect}"
+    run_map_task(kernel, kernel.length, task.name, @snds)
+  end
+
   def run_filter(task)
     kernel = task.to_kernel
     @logger.log "Executing filter kernel: #{kernel.inspect}"
     run_filter_task(kernel, kernel.length, task.name, @buffer)
   end
 
+  def run_braid(task)
+    kernel = task.to_kernel
+    @logger.log "Executing braid kernel: #{kernel.inspect}"
+    @buffer = run_braid_task(kernel, kernel.length, task.name, @fsts, @snds)
+  end
+
   def run_task(task)
     case task
-    when Hadope::Map    then run_map task
+    when Hadope::SMap   then run_smap   task
+    when Hadope::Map    then run_map    task
     when Hadope::Filter then run_filter task
+    when Hadope::Braid  then run_braid  task
+    else raise "Unknown task: #{task.inspect}"
     end
   end
 
