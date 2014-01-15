@@ -5,51 +5,55 @@
 #define DEBUG 1
 
 void releaseMemoryCallback(
-  cl_event event,
-  cl_int event_command_exec_status,
-  void* memory
+    cl_event event,
+    cl_int event_command_exec_status,
+    void* memory
 ) {
-  free(memory);
+    if (DEBUG) printf("releaseMemoryCallback\n");
+    free(memory);
 }
 
 void setGroupSize(
   const HadopeEnvironment* env
 ) {
-  size_t max_workgroup_size = 0;
-  size_t returned_size = 0;
-  cl_int ret = clGetDeviceInfo(
-    env->device_id,
-    CL_DEVICE_MAX_WORK_GROUP_SIZE,
-    sizeof(size_t),
-    &max_workgroup_size,
-    &returned_size
-  );
+    if (DEBUG) printf("setGroupSize\n");
+    size_t max_workgroup_size = 0;
+    size_t returned_size = 0;
+    cl_int ret = clGetDeviceInfo(
+        env->device_id,
+        CL_DEVICE_MAX_WORK_GROUP_SIZE,
+        sizeof(size_t),
+        &max_workgroup_size,
+        &returned_size
+    );
 
-  if (ret != CL_SUCCESS) printf("clGetDeviceInfo %s\n", oclErrorString(ret));
-  GROUP_SIZE = min(GROUP_SIZE,  max_workgroup_size);
+    if (ret != CL_SUCCESS) printf("clGetDeviceInfo %s\n", oclErrorString(ret));
+    GROUP_SIZE = min(GROUP_SIZE,  max_workgroup_size);
 }
 
 void displayDeviceInfo(cl_device_type type) {
-  cl_uint num_devices, i;
-  clGetDeviceIDs(NULL, type, 0, NULL, &num_devices);
+    if (DEBUG) printf("displayDeviceInfo\n");
 
-  cl_device_id* devices = calloc(sizeof(cl_device_id), num_devices);
-  clGetDeviceIDs(NULL, type, num_devices, devices, NULL);
+    cl_uint num_devices;
+    clGetDeviceIDs(NULL, type, 0, NULL, &num_devices);
 
-  char buf[128];
-  size_t max_workgroup_size;
-  for (i = 0; i < num_devices; i++) {
-    clGetDeviceInfo(devices[i], CL_DEVICE_VENDOR, 128, buf, NULL);
-    printf("* Device %d: %s ", (i + 1), buf);
-    clGetDeviceInfo(devices[i], CL_DEVICE_NAME, 128, buf, NULL);
-    printf("%s\n", buf);
-    clGetDeviceInfo(devices[i], CL_DEVICE_VERSION, 128, buf, NULL);
-    printf("\tSupports: %s\n", buf);
-    clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_GROUP_SIZE, 128, &max_workgroup_size, NULL);
-    printf("\tMax workgroup size: %lu\n", max_workgroup_size);
-  }
+    cl_device_id* devices = calloc(sizeof(cl_device_id), num_devices);
+    clGetDeviceIDs(NULL, type, num_devices, devices, NULL);
 
-  free(devices);
+    char buf[128];
+    size_t max_workgroup_size;
+    for (cl_uint i = 0; i < num_devices; ++i) {
+        clGetDeviceInfo(devices[i], CL_DEVICE_VENDOR, 128, buf, NULL);
+        printf("* Device %d: %s ", (i + 1), buf);
+        clGetDeviceInfo(devices[i], CL_DEVICE_NAME, 128, buf, NULL);
+        printf("%s\n", buf);
+        clGetDeviceInfo(devices[i], CL_DEVICE_VERSION, 128, buf, NULL);
+        printf("\tSupports: %s\n", buf);
+        clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_GROUP_SIZE, 128, &max_workgroup_size, NULL);
+        printf("\tMax workgroup size: %lu\n", max_workgroup_size);
+    }
+
+    free(devices);
 }
 
 /* ~~ Init Methods ~~ */
@@ -58,6 +62,8 @@ void displayDeviceInfo(cl_device_type type) {
  *
  * @device_type: CL_DEVICE_TYPE_GPU / CL_DEVICE_TYPE_CPU */
 void createHadopeEnvironment(const cl_device_type device_type, HadopeEnvironment* env) {
+
+    if (DEBUG) printf("createHadopeEnvironment\n");
   cl_platform_id platform;
   cl_int ret;
 
@@ -177,6 +183,7 @@ cl_mem createMemoryBuffer(
   const size_t req_memory,
   const cl_mem_flags flags
 ) {
+    if (DEBUG) printf("createMemoryBuffer\n");
   cl_int ret;
   cl_mem buffer = clCreateBuffer(
     env->context, // Context to use
@@ -200,6 +207,7 @@ void loadIntArrayIntoDevice(
   const HadopeMemoryBuffer mem_struct,
   int* dataset
 ) {
+    if (DEBUG) printf("loadIntArrayIntoDevice\n");
   cl_event write_event;
   cl_int ret = clEnqueueWriteBuffer(
     env.queue,                                 // Command queue
@@ -236,6 +244,8 @@ cl_mem pinIntArrayForDevice(
     int* dataset,
     int dataset_length
 ) {
+
+    if (DEBUG) printf("pinIntArrayForDevice\n");
   cl_int ret;
   cl_mem buffer = clCreateBuffer(
     env->context,                                // Context to use
@@ -259,6 +269,7 @@ void getIntArrayFromDevice(
   const HadopeMemoryBuffer mem_struct,
   int* dataset
 ) {
+    if (DEBUG) printf("getIntArrayFromDevice\n");
   /* Wait for pending actions to complete */
   clFinish(env.queue);
 
@@ -284,6 +295,7 @@ int* getPinnedIntArrayFromDevice(
     const HadopeEnvironment* env,
     const HadopeMemoryBuffer* mem_struct
 ){
+    if (DEBUG) printf("getPinnedIntArrayFromDevice\n");
     /* Wait for pending actions */
     clFinish(env->queue);
 
@@ -306,6 +318,7 @@ void releaseTemporaryFilterBuffers(
   HadopeMemoryBuffer* presence,
   HadopeMemoryBuffer* index_scan
 ) {
+    if (DEBUG) printf("releaseTemporaryFilterBuffers\n");
   clReleaseMemObject(presence->buffer);
   clReleaseMemObject(index_scan->buffer);
 }
@@ -313,6 +326,7 @@ void releaseTemporaryFilterBuffers(
 void releaseDeviceDataset(
   HadopeMemoryBuffer* dataset
 ) {
+    if (DEBUG) printf("releaseDeviceDataset\n");
   clReleaseMemObject(dataset->buffer);
 }
 /* ~~ END Memory Management Methods ~~ */
@@ -332,6 +346,7 @@ HadopeTask* buildTaskFromSource(
   const size_t source_size,
   char* name
 ) {
+    if (DEBUG) printf("buildTaskFromSource\n");
   HadopeTask* task = malloc(sizeof(HadopeTask));
 
   /* Create cl_program from given task/name and store inside HadopeTask struct. */
@@ -381,6 +396,7 @@ void runTaskOnDataset(
   const HadopeMemoryBuffer* mem_struct,
   const HadopeTask* task
 ) {
+    if (DEBUG) printf("runTaskOnDataset\n");
   size_t g_work_size[1] = {ceil((float) mem_struct->buffer_entries / 4)};
 
   /* Kernel's global data_array set to be the given device memory buffer */
@@ -419,6 +435,7 @@ void computePresenceArrayForDataset(
   const HadopeTask* task,
   HadopeMemoryBuffer *presence
 ) {
+    if (DEBUG) printf("computePresenceArrayForDataset\n");
   size_t g_work_size[1] = {ceil((float)mem_struct->buffer_entries/4)};
 
   /* Kernel's global data_array set to be the given device memory buffer */
@@ -467,6 +484,8 @@ void exclusivePrefixSum(
   const HadopeMemoryBuffer* presence,
   HadopeMemoryBuffer* result
 ) {
+    if (DEBUG) printf("exclusivePrefixSum\n");
+
   cl_int ret;
 
   result->buffer = clCreateBuffer(
@@ -546,6 +565,8 @@ int sumIntegerDataset(
     const HadopeEnvironment* env,
     HadopeMemoryBuffer* input_dataset
 ) {
+    if (DEBUG) printf("sumIntegerDataset\n");
+
     HadopeMemoryBuffer* prefixed = malloc(sizeof(HadopeMemoryBuffer));
     exclusivePrefixSum(env, input_dataset, prefixed);
 
@@ -598,6 +619,8 @@ int filteredBufferLength(
     HadopeMemoryBuffer* presence,
     HadopeMemoryBuffer* index_scan
 ) {
+    if (DEBUG) printf("filteredBufferLength\n");
+
   int index_reduce, last_element_presence;
   cl_int ret = clEnqueueReadBuffer(
     env->queue,                                     // Device's command queue
@@ -638,6 +661,8 @@ void filterByScatteredWrites(
   HadopeMemoryBuffer* presence,
   HadopeMemoryBuffer* index_scan
 ) {
+    if (DEBUG) printf("filterByScatteredWrites\n");
+
   HadopeMemoryBuffer filtered_dataset;
   int index_reduce, last_element_presence;
   cl_int ret = clEnqueueReadBuffer(
@@ -753,6 +778,8 @@ void braidBuffers(
     HadopeMemoryBuffer* fsts,
     HadopeMemoryBuffer* snds
 ) {
+    if (DEBUG) printf("braidBuffers\n");
+
     cl_int ret = clSetKernelArg(
         task->kernel,   // Kernel concerned
         0,              // Index of argument to specify
