@@ -89,11 +89,11 @@ static VALUE methodPinIntDataset(
 
     VALUE memory_struct_object = rb_define_class("HadopeMemoryBuffer", rb_cObject);
     HadopeMemoryBuffer* mem_struct = malloc(sizeof(HadopeMemoryBuffer));
-    mem_struct->buffer_entries = array_size;
-    mem_struct->buffer = pinIntArrayForDevice(
+    pinIntArrayForDevice(
         environment,
         dataset,
-        array_size
+        array_size,
+        mem_struct
     );
 
     return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
@@ -222,11 +222,11 @@ static VALUE methodRunMapTask(
   char* task_source = StringValuePtr(task_source_object);
   int source_size = FIX2INT(source_size_object);
   char* task_name = StringValuePtr(task_name_object);
-  HadopeTask* task = buildTaskFromSource(environment, task_source, source_size, task_name);
+  HadopeTask task;
+  buildTaskFromSource(environment, task_source, source_size, task_name, &task);
 
   /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
-  runTaskOnDataset(environment, mem_struct, task);
-  free(task);
+  runTaskOnDataset(environment, mem_struct, &task);
 
   return self;
 }
@@ -254,19 +254,17 @@ static VALUE methodRunFilterTask(
     char* task_name = StringValuePtr(task_name_object);
     VALUE environment_object = rb_iv_get(self, "@environment");
     Data_Get_Struct(environment_object, HadopeEnvironment, environment);
-    HadopeTask* task = buildTaskFromSource(environment, task_source, source_size, task_name);
+    HadopeTask task;
+    buildTaskFromSource(environment, task_source, source_size, task_name, &task);
 
     /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
+    HadopeMemoryBuffer presence, prescan;
     Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, dataset);
-    HadopeMemoryBuffer* presence = malloc(sizeof(HadopeMemoryBuffer));
-    computePresenceArrayForDataset(environment, dataset, task, presence);
-    free(task);
+    computePresenceArrayForDataset(environment, dataset, &task, &presence);
+    exclusivePrefixSum(environment, &presence, &prescan);
 
-    HadopeMemoryBuffer* prescan = malloc(sizeof(HadopeMemoryBuffer));
-    exclusivePrefixSum(environment, presence, prescan);
-
-    filterByScatteredWrites(environment, dataset, presence, prescan);
-    releaseTemporaryFilterBuffers(presence, prescan);
+    filterByScatteredWrites(environment, dataset, &presence, &prescan);
+    releaseTemporaryFilterBuffers(&presence, &prescan);
 
     return self;
 }
@@ -286,19 +284,20 @@ static VALUE methodRunBraidTask(
     char* task_source = StringValuePtr(task_source_object);
     char* task_name = StringValuePtr(task_name_object);
 
-    HadopeTask* task = buildTaskFromSource(
+    HadopeTask task;
+    buildTaskFromSource(
         environment,
         task_source,
         FIX2INT(source_size_object),
-        task_name
+        task_name,
+        &task
     );
 
     HadopeMemoryBuffer *fsts, *snds;
     Data_Get_Struct(fst_memstruct_object, HadopeMemoryBuffer, fsts);
     Data_Get_Struct(snd_memstruct_object, HadopeMemoryBuffer, snds);
 
-    braidBuffers(environment, task, fsts, snds);
-    free(task);
+    braidBuffers(environment, &task, fsts, snds);
     return fst_memstruct_object;
 }
 
@@ -324,17 +323,17 @@ static VALUE methodCountFilteredBuffer(
       char* task_name = StringValuePtr(task_name_object);
       VALUE environment_object = rb_iv_get(self, "@environment");
       Data_Get_Struct(environment_object, HadopeEnvironment, environment);
-      HadopeTask* task = buildTaskFromSource(environment, task_source, source_size, task_name);
+      HadopeTask task;
+      buildTaskFromSource(environment, task_source, source_size, task_name, &task);
 
       /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
+      HadopeMemoryBuffer presence, prescan;
       Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, dataset);
-      HadopeMemoryBuffer* presence = malloc(sizeof(HadopeMemoryBuffer));
-      computePresenceArrayForDataset(environment, dataset, task, presence);
-      HadopeMemoryBuffer* prescan = malloc(sizeof(HadopeMemoryBuffer));
-      exclusivePrefixSum(environment, presence, prescan);
+      computePresenceArrayForDataset(environment, dataset, &task, &presence);
+      exclusivePrefixSum(environment, &presence, &prescan);
 
-      VALUE result =  INT2FIX(filteredBufferLength(environment, presence, prescan));
-      free(prescan);
+      VALUE result =  INT2FIX(filteredBufferLength(environment, &presence, &prescan));
+      releaseTemporaryFilterBuffers(&presence, &prescan);
       return result;
 }
 

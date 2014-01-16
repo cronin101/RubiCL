@@ -36,16 +36,18 @@ cl_mem createMemoryBuffer(
   const cl_mem_flags type
 );
 
-cl_mem pinIntArrayForDevice(
+void pinIntArrayForDevice(
     const HadopeEnvironment* env,
     int* dataset,
-    int dataset_length
+    int dataset_length,
+    HadopeMemoryBuffer* result
 );
 
-HadopeTask* buildTaskFromSource(
+void buildTaskFromSource(
   const HadopeEnvironment* env,
   const char* kernel_source,
-  const size_t source_size, char* name
+  const size_t source_size, char* name,
+  HadopeTask* result
 );
 
 void loadIntArrayIntoDevice(

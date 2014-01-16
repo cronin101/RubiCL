@@ -239,15 +239,17 @@ void loadIntArrayIntoDevice(
  * @length: Length of the integer dataset being pinned.
  *
  * @Return: cl_mem reference for addressing pinned memory. */
-cl_mem pinIntArrayForDevice(
+void pinIntArrayForDevice(
     const HadopeEnvironment* env,
     int* dataset,
-    int dataset_length
+    int dataset_length,
+    HadopeMemoryBuffer* result
 ) {
 
     if (DEBUG) printf("pinIntArrayForDevice\n");
   cl_int ret;
-  cl_mem buffer = clCreateBuffer(
+  result->buffer_entries = dataset_length;
+  result->buffer = clCreateBuffer(
     env->context,                                // Context to use
     CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,    // cl_mem_flags set
     dataset_length * sizeof(int),               // Size of buffer
@@ -255,8 +257,6 @@ cl_mem pinIntArrayForDevice(
     &ret                                        // Status destination
   );
   if (ret != CL_SUCCESS) printf("clCreateBuffer %s\n", oclErrorString(ret));
-
-  return buffer;
 }
 
 /* Reads the contents of device memory buffer into a given dataset array
@@ -340,19 +340,19 @@ void releaseDeviceDataset(
  * @kernel_source: String containing the .cl Kernel source.
  * @source_size: The size of the source.
  * @name: The name of the task within the source to build. */
-HadopeTask* buildTaskFromSource(
+void buildTaskFromSource(
   const HadopeEnvironment* env,
   const char* kernel_source,
   const size_t source_size,
-  char* name
+  char* name,
+  HadopeTask* result
 ) {
     if (DEBUG) printf("buildTaskFromSource\n");
-  HadopeTask* task = malloc(sizeof(HadopeTask));
 
   /* Create cl_program from given task/name and store inside HadopeTask struct. */
   cl_int ret;
-  task->name = name;
-  task->program = clCreateProgramWithSource(
+  result->name = name;
+  result->program = clCreateProgramWithSource(
     env->context,                    // Context
     1,                              // Number of parts that the source is in
     (const char **) &kernel_source, // Array of program source code
@@ -363,7 +363,7 @@ HadopeTask* buildTaskFromSource(
 
   /* Create kernel from cl_program to execute later on target-device */
   ret = clBuildProgram(
-    task->program,            // Program to build
+    result->program,            // Program to build
     1,                       // Number of devices involved
     &env->device_id,          // List of involved devices
     "-cl-fast-relaxed-math", // Compilation options
@@ -372,14 +372,12 @@ HadopeTask* buildTaskFromSource(
   );
   if (ret != CL_SUCCESS) printf("clBuildProgram %s\n", oclErrorString(ret));
 
-  task->kernel = clCreateKernel(
-    task->program, // Built program
-    task->name,    // Entry point to kernel
+  result->kernel = clCreateKernel(
+    result->program, // Built program
+    result->name,    // Entry point to kernel
     &ret          // Status destination
   );
   if (ret != CL_SUCCESS) printf("clCreateKernel %s\n", oclErrorString(ret));
-
-  return task;
 }
 
 /* ~~ END Task Compilation Methods ~~ */
@@ -567,8 +565,8 @@ int sumIntegerDataset(
 ) {
     if (DEBUG) printf("sumIntegerDataset\n");
 
-    HadopeMemoryBuffer* prefixed = malloc(sizeof(HadopeMemoryBuffer));
-    exclusivePrefixSum(env, input_dataset, prefixed);
+    HadopeMemoryBuffer prefixed;
+    exclusivePrefixSum(env, input_dataset, &prefixed);
 
     /* Sum is last element of input dataset added to last element of
      * exclusive prefix summed dataset */
@@ -576,9 +574,9 @@ int sumIntegerDataset(
     /* Reading the last element of the _exclusive_ prefix sum */
     cl_int ret = clEnqueueReadBuffer(
         env->queue,                                      // Command queue
-        prefixed->buffer,                                // Buffer holding exc prefix sum
+        prefixed.buffer,                                // Buffer holding exc prefix sum
         CL_FALSE,                                       // Async to hide latency
-        (prefixed->buffer_entries - 1) * sizeof(int),    // Final element offset
+        (prefixed.buffer_entries - 1) * sizeof(int),    // Final element offset
         sizeof(int),                                    // Output size
         &prefix_last,                                   // Output destination
         0, NULL,                                        // Num, List preceding actions
@@ -602,8 +600,7 @@ int sumIntegerDataset(
     ret = clFinish(env->queue);
 
     clReleaseMemObject(input_dataset->buffer);
-    clReleaseMemObject(prefixed->buffer);
-    free(prefixed);
+    clReleaseMemObject(prefixed.buffer);
 
     return input_last + prefix_last;
 }
@@ -649,8 +646,6 @@ int filteredBufferLength(
   if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 
   clFinish(env->queue);
-  clReleaseMemObject(presence->buffer);
-  clReleaseMemObject(index_scan->buffer);
 
   return index_reduce + last_element_presence;
 }
@@ -696,11 +691,13 @@ void filterByScatteredWrites(
   char *source = LoadProgramSourceFromFile(scatter_filename);
   if (!source) printf("Error loading '%s' source.\n", scatter_filename);
 
-  HadopeTask* scatter_task = buildTaskFromSource(
+  HadopeTask scatter_task;
+  buildTaskFromSource(
     env,
     source,
     strlen(source),
-    "ScatterFilterKernel"
+    "ScatterFilterKernel",
+    &scatter_task
   );
 
   /* Ensure that retrieval has finished then use fetched data to set correct result dataset length */
@@ -717,7 +714,7 @@ void filterByScatteredWrites(
   );
 
   ret = clSetKernelArg(
-    scatter_task->kernel,   // Kernel concerned
+    scatter_task.kernel,   // Kernel concerned
     0,                     // Index of argument to specify
     sizeof(cl_mem),        // Size of argument value
     &input_dataset->buffer // Argument value
@@ -725,7 +722,7 @@ void filterByScatteredWrites(
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   ret = clSetKernelArg(
-    scatter_task->kernel,  // Kernel concerned
+    scatter_task.kernel,  // Kernel concerned
     1,                    // Index of argument to specify
     sizeof(cl_mem),       // Size of argument value
     &presence->buffer      // Argument value
@@ -733,7 +730,7 @@ void filterByScatteredWrites(
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   ret = clSetKernelArg(
-    scatter_task->kernel,  // Kernel concerned
+    scatter_task.kernel,  // Kernel concerned
     2,                    // Index of argument to specify
     sizeof(cl_mem),       // Size of argument value
     &index_scan->buffer    // Argument value
@@ -741,7 +738,7 @@ void filterByScatteredWrites(
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   ret = clSetKernelArg(
-    scatter_task->kernel,  // Kernel concerned
+    scatter_task.kernel,  // Kernel concerned
     3,                    // Index of argument to specify
     sizeof(cl_mem),       // Size of argument value
     &filtered_buffer      // Argument value
@@ -752,7 +749,7 @@ void filterByScatteredWrites(
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(
     env->queue,           // Device's command queue
-    scatter_task->kernel, // Kernel to enqueue
+    scatter_task.kernel, // Kernel to enqueue
     1,                   // Dimensionality of work
     0,                   // Global offset of work index
     g_work_size,         // Array of work size in each dimension
@@ -763,7 +760,6 @@ void filterByScatteredWrites(
   );
   if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 
-  free(scatter_task);
   clReleaseMemObject(input_dataset->buffer);
 
   filtered_dataset.buffer_entries = filtered_entries;
