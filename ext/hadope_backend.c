@@ -211,24 +211,26 @@ static VALUE methodRunMapTask(
   VALUE task_name_object,
   VALUE mem_struct_object
 ){
-  HadopeMemoryBuffer *mem_struct;
-  Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
+    HadopeMemoryBuffer *mem_struct;
+    Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
+    /* Early termination for empty buffer */
+    if (!mem_struct->buffer_entries) return self;
 
-  VALUE environment_object = rb_iv_get(self, "@environment");
-  HadopeEnvironment *environment;
-  Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+    VALUE environment_object = rb_iv_get(self, "@environment");
+    HadopeEnvironment *environment;
+    Data_Get_Struct(environment_object, HadopeEnvironment, environment);
 
-  /* Convert Objects into C types and builds Kernel using environment ivar */
-  char* task_source = StringValuePtr(task_source_object);
-  int source_size = FIX2INT(source_size_object);
-  char* task_name = StringValuePtr(task_name_object);
-  HadopeTask task;
-  buildTaskFromSource(environment, task_source, source_size, task_name, &task);
+    /* Convert Objects into C types and builds Kernel using environment ivar */
+    char* task_source = StringValuePtr(task_source_object);
+    int source_size = FIX2INT(source_size_object);
+    char* task_name = StringValuePtr(task_name_object);
+    HadopeTask task;
+    buildTaskFromSource(environment, task_source, source_size, task_name, &task);
 
-  /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
-  runTaskOnDataset(environment, mem_struct, &task);
+    /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
+    runTaskOnDataset(environment, mem_struct, &task);
 
-  return self;
+    return self;
 }
 
 /* Takes a code-generated Filter kernel and builds it for device then executes on dataset.
@@ -246,23 +248,26 @@ static VALUE methodRunFilterTask(
   VALUE mem_struct_object
 ){
     HadopeMemoryBuffer *dataset;
-    HadopeEnvironment *environment;
+    Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, dataset);
+    /* Early termination for empty buffer */
+    if (!dataset->buffer_entries) return self;
 
-    /* Convert Objects into C types and builds Kernel using environment ivar */
+    /* Convert Objects into C types and build Kernel using environment ivar */
     char* task_source = StringValuePtr(task_source_object);
     int source_size = FIX2INT(source_size_object);
     char* task_name = StringValuePtr(task_name_object);
+
+    HadopeEnvironment *environment;
     VALUE environment_object = rb_iv_get(self, "@environment");
     Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+
     HadopeTask task;
     buildTaskFromSource(environment, task_source, source_size, task_name, &task);
 
     /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
     HadopeMemoryBuffer presence, prescan;
-    Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, dataset);
     computePresenceArrayForDataset(environment, dataset, &task, &presence);
     exclusivePrefixSum(environment, &presence, &prescan);
-
     filterByScatteredWrites(environment, dataset, &presence, &prescan);
     releaseTemporaryFilterBuffers(&presence, &prescan);
 
