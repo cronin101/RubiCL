@@ -31,14 +31,8 @@ void setGroupSize(
     GROUP_SIZE = min(GROUP_SIZE,  max_workgroup_size);
 }
 
-void displayDeviceInfo(cl_device_type type) {
+void displayDeviceInfo(cl_uint num_devices, cl_device_id* devices) {
     if (DEBUG) printf("displayDeviceInfo\n");
-
-    cl_uint num_devices;
-    clGetDeviceIDs(NULL, type, 0, NULL, &num_devices);
-
-    cl_device_id* devices = calloc(sizeof(cl_device_id), num_devices);
-    clGetDeviceIDs(NULL, type, num_devices, devices, NULL);
 
     char buf[128];
     size_t max_workgroup_size;
@@ -139,7 +133,7 @@ void createHadopeEnvironment(const cl_device_type device_type, HadopeEnvironment
   if (ret != CL_SUCCESS) printf("clGetDeviceIDs %s\n", oclErrorString(ret));
 
   if (DEBUG) {
-    displayDeviceInfo(device_type);
+    displayDeviceInfo(num_devices, devices);
     printf("Selecting Device 1.\n");
   }
   env->device_id = devices[0];
