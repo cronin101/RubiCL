@@ -35,6 +35,7 @@ class Hadope::Device
 
   requires_type :int, (sets_type :int_tuple,
   def zip(array)
+    raise "Second dataset must be the same length as the first." unless @buffer.length == array.length
     @cache.dataset = nil
 
     @fsts = @buffer
@@ -45,6 +46,7 @@ class Hadope::Device
 
   requires_type :int_tuple, (sets_type :int,
   def braid(&block)
+    raise "Braid function has incorrect arity." unless block.arity == 2
     expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
     @task_queue.push Hadope::Braid.new(:x, :y, expression)
     self
