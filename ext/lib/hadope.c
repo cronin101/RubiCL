@@ -46,8 +46,6 @@ void displayDeviceInfo(cl_uint num_devices, cl_device_id* devices) {
         clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_GROUP_SIZE, 128, &max_workgroup_size, NULL);
         printf("\tMax workgroup size: %lu\n", max_workgroup_size);
     }
-
-    free(devices);
 }
 
 /* ~~ Init Methods ~~ */
@@ -543,7 +541,7 @@ void exclusivePrefixSum(
   if (ret != CL_SUCCESS) printf("clFinish %s\n", oclErrorString(ret));
 
   ReleasePartialSums();
-  for(int i = 0; i < KernelCount; ++i) clReleaseKernel(ComputeKernels[i]);
+  for(int k = 0; k < KernelCount; ++k) clReleaseKernel(ComputeKernels[k]);
   clReleaseProgram(ComputeProgram);
 
   result->buffer_entries = presence->buffer_entries;
