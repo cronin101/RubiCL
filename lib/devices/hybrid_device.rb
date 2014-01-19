@@ -22,6 +22,33 @@ class Hadope::HybridDevice
     end
   end
 
+  def [](type)
+    send type.hadope_conversion
+  end
+
+  def pin_integer_dataset(array)
+    ratio = @ratio[:mapfilter]
+    parts = ratio.numerator + ratio.denominator
+    num_cpu = ((array.length / parts.to_f) * ratio.denominator).round
+    num_gpu = array.length - num_cpu
+
+    puts "NCPU: #{num_cpu}, NGPU: #{num_gpu}"
+
+    cpu, gpu = get_hybrid_devices
+    cpu.pin_integer_range(array, 0, num_cpu - 1)
+    gpu.pin_integer_range(array, num_cpu, array.length - 1)
+
+    self
+  end
+
+  def retrieve_pinned_integer_dataset
+    cpu, gpu = get_hybrid_devices
+    [cpu, gpu].each { |d| d.instance_eval { run_tasks } }
+    cpu = cpu.instance_eval { retrieve_pinned_integer_dataset_from_buffer @buffer }
+    gpu = gpu.instance_eval { retrieve_pinned_integer_dataset_from_buffer @buffer }
+    cpu.concat gpu
+  end
+
   TEST_ARRAY_LENGTH = 50_000_000
   TEST_DATASET_1    = (1..TEST_ARRAY_LENGTH).to_a
 

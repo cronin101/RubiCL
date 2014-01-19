@@ -70,18 +70,17 @@ static VALUE methodCreateMemoryBuffer(
   return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
 }
 
-/*  Creates a memory buffer object containing a device-accessible reference to the given dataset.
- *
- *  @dataset_object: Ruby object containing an array of integers. */
-static VALUE methodPinIntDataset(
+static VALUE methodPinIntRange(
     VALUE self,
-    VALUE dataset_object
+    VALUE dataset_object,
+    VALUE start,
+    VALUE finish
 ) {
-    Check_Type(dataset_object, T_ARRAY);
-    int array_size = RARRAY_LEN(dataset_object);
-    int* dataset = calloc(array_size, sizeof(int));
-
-    for (int i = 0; i < array_size; ++i) dataset[i] = rb_ary_entry(dataset_object, i);
+    int start_i = FIX2INT(start);
+    int finish_i = FIX2INT(finish);
+    int array_size = (finish_i - start_i) + 1;
+    int* dataset = malloc(array_size * sizeof(int));
+    for (int i = 0; i < array_size; ++i) dataset[i] = rb_ary_entry(dataset_object, start_i + i);
 
     HadopeEnvironment *environment;
     VALUE environment_object = rb_iv_get(self, "@environment");
@@ -97,6 +96,19 @@ static VALUE methodPinIntDataset(
     );
 
     return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
+}
+
+/*  Creates a memory buffer object containing a device-accessible reference to the given dataset.
+ *
+ *  @dataset_object: Ruby object containing an array of integers. */
+static VALUE methodPinIntDataset(
+    VALUE self,
+    VALUE dataset_object
+) {
+    Check_Type(dataset_object, T_ARRAY);
+    int array_size = RARRAY_LEN(dataset_object);
+
+    return methodPinIntRange(self, dataset_object, INT2FIX(0), INT2FIX(array_size - 1));
 }
 
 /* Loads an integer array from given Ruby object into the cl_mem buffer previously created
@@ -365,6 +377,8 @@ void Init_hadope_backend(){
   rb_define_private_method(HadopeBackend, "initialize_CPU_environment", methodInitCPUEnvironment, 0);
   rb_define_private_method(HadopeBackend, "create_memory_buffer", methodCreateMemoryBuffer, 2);
   rb_define_private_method(HadopeBackend, "transfer_integer_dataset_to_buffer", methodLoadIntDataset, 2);
+
+  rb_define_private_method(HadopeBackend, "pin_integer_range_buffer", methodPinIntRange, 3);
   rb_define_private_method(HadopeBackend, "create_pinned_buffer", methodPinIntDataset, 1);
   rb_define_private_method(HadopeBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
   rb_define_private_method(HadopeBackend, "retrieve_pinned_integer_dataset_from_buffer", methodRetievePinnedIntDataset, 1);

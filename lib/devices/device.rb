@@ -27,6 +27,13 @@ class Hadope::Device
 
   alias_method :load_integer_dataset, :pin_integer_dataset
 
+  sets_type :int,
+  def pin_integer_range(array, start, finish)
+    @task_queue.clear
+    @buffer = pin_integer_range_buffer array, start, finish
+    self
+  end
+
   requires_type :int, (sets_type :int_tuple,
   def zip(array)
     raise "Second dataset must be the same length as the first." unless @buffer.length == array.length
