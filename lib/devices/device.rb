@@ -19,19 +19,13 @@ class Hadope::Device
   end
 
   sets_type :int,
-  def load_integer_dataset(array)
-    @task_queue.clear
-    @buffer = create_memory_buffer(array.size, 'int')
-    transfer_integer_dataset_to_buffer(@cache.dataset = array, @buffer)
-    self
-  end
-
-  sets_type :int,
   def pin_integer_dataset(array)
     @task_queue.clear
     @buffer = create_pinned_buffer(@cache.dataset = array)
     self
   end
+
+  alias_method :load_integer_dataset, :pin_integer_dataset
 
   requires_type :int, (sets_type :int_tuple,
   def zip(array)
@@ -70,16 +64,6 @@ class Hadope::Device
   alias_method :select, :filter
 
   requires_type :int,
-  def retrieve_integer_dataset
-    if @cache.dataset
-      @cache.dataset
-    else
-      run_tasks unless @task_queue.empty?
-      @cache.dataset = retrieve_integer_dataset_from_buffer @buffer
-    end
-  end
-
-  requires_type :int,
   def retrieve_pinned_integer_dataset
     if @cache.dataset
       @cache.dataset
@@ -88,6 +72,8 @@ class Hadope::Device
       @cache.dataset = retrieve_pinned_integer_dataset_from_buffer @buffer
     end
   end
+
+  alias_method :retrieve_integer_dataset, :retrieve_pinned_integer_dataset
 
   requires_type :int,
   def sum

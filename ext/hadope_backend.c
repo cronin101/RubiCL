@@ -361,7 +361,7 @@ static VALUE methodCleanUsedResources(VALUE self, VALUE mem_struct_object){
 /* Used to give extension methods defined above to device class when HadopeBackend module is included. */
 void Init_hadope_backend(){
   VALUE HadopeBackend = rb_define_module("HadopeBackend");
-  rb_define_private_method(HadopeBackend, "init_GPU_environment", methodInitGPUEnvironment, 0);
+  rb_define_private_method(HadopeBackend, "initialize_GPU_environment", methodInitGPUEnvironment, 0);
   rb_define_private_method(HadopeBackend, "initialize_CPU_environment", methodInitCPUEnvironment, 0);
   rb_define_private_method(HadopeBackend, "create_memory_buffer", methodCreateMemoryBuffer, 2);
   rb_define_private_method(HadopeBackend, "transfer_integer_dataset_to_buffer", methodLoadIntDataset, 2);
