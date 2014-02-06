@@ -31,7 +31,7 @@ class Hadope::Device
     @buffer = create_buffer_from_dataset :pinned_double_buffer, array
   end
 
-  requires_type :int, (sets_type :int_tuple,
+  chainable requires_type :int, (sets_type :int_tuple,
   def zip(array)
     raise "Second dataset must be the same length as the first." unless @buffer.length == array.length
     @cache.dataset = nil
@@ -39,18 +39,16 @@ class Hadope::Device
     @fsts = @buffer
     @snds = create_pinned_buffer(array)
     @task_queue.push Hadope::SMap.new(*FIX2INT)
-    self
   end)
 
-  requires_type :int_tuple, (sets_type :int,
+  chainable requires_type :int_tuple, (sets_type :int,
   def braid(&block)
     raise "Braid function has incorrect arity." unless block.arity == 2
     expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
     @task_queue.push Hadope::Braid.new(:x, :y, expression)
-    self
   end)
 
-  def map(&block)
+  chainable def map(&block)
     @cache.dataset = nil
     expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
     if unary_types.include? loaded_type
@@ -58,14 +56,12 @@ class Hadope::Device
     else
       raise "#map not implemented for #{loaded_type.inspect}"
     end
-    self
   end
 
-  def filter(&block)
+  chainable def filter(&block)
     @cache.dataset = nil
     predicate = Hadope::LambdaBytecodeParser.new(block).to_infix.first
     @task_queue.push Hadope::Filter.new(:x, predicate)
-    self
   end
 
   alias_method :collect, :map

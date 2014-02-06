@@ -1,5 +1,6 @@
 class Hadope::TaskQueue
   extend Forwardable
+  include Hadope::ChainableDecorator
 
   attr_accessor :tasks
 
@@ -10,7 +11,7 @@ class Hadope::TaskQueue
     @logger = Hadope::Logger.get
   end
 
-  def simplify!
+  chainable def simplify!
     before = @tasks.map(&:statements)
     @tasks = @tasks.reduce [] do |queue, task|
       if queue.empty? then [task]
@@ -23,7 +24,6 @@ class Hadope::TaskQueue
       end
     end
     @logger.log "Simplify!: Simplified from #{before.inspect}, to #{@tasks.map(&:statements).inspect}."
-    self
   end
 
 end

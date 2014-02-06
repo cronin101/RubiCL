@@ -1,5 +1,8 @@
 module Hadope::ChainableDecorator
 
+  # This decorator makes a function return self on exit, so that chainable calls will
+  # all get sent to the same object, allowing the ( map -> filter -> map ) work-flow.
+
   module ClassMethods
     # Experimental method-decorator. Handle with care!
     def chainable method

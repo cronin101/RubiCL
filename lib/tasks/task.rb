@@ -1,4 +1,6 @@
 class Hadope::Task
+  include Hadope::ChainableDecorator
+
   @@count = 0
 
   attr_reader :statements
@@ -12,24 +14,21 @@ class Hadope::Task
     @logger.log "Created Task: #{name.inspect}."
   end
 
-  def add_variables(*variables)
+  chainable def add_variables(*variables)
     before = @required_variables.dup
     @required_variables.push(variables).flatten!.uniq!
     after = @required_variables
     new_variables = after - before
     @logger.log "Introduced variable(s): #{new_variables.inspect}." if new_variables.size > 0
-    self
   end
 
-  def add_statement(statement)
+  chainable def add_statement(statement)
     @statements.push statement
-    self
   end
 
-  def add_statements(statements)
+  chainable def add_statements(statements)
     statements.each { |statement| add_statement statement }
     @logger.log "Added statement(s): #{statements}."
-    self
   end
 
   def name
