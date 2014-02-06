@@ -70,7 +70,7 @@ static VALUE methodCreateMemoryBuffer(
   return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
 }
 
-/*  Creates a memory buffer object containing a device-accessible reference to the given dataset.
+/*  Creates a memory buffer object containing a device-accessible reference to the given FIXNUM dataset.
  *
  *  @dataset_object: Ruby object containing an array of integers. */
 static VALUE methodPinIntDataset(
@@ -101,6 +101,9 @@ static VALUE methodPinIntDataset(
     return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
 }
 
+/*  Creates a memory buffer object containing a device-accessible reference to the given FLOAT dataset.
+ *
+ *  @dataset_object: Ruby object containing an array of doubles. */
 static VALUE methodPinDoubleDataset(
     VALUE self,
     VALUE dataset_object
@@ -186,7 +189,7 @@ static VALUE methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object){
  * converts it into a Ruby array to be returned to the device class.
  *
  * @memory_struct_object: Ruby object storing HadopeMemoryBuffer. */
-static VALUE methodRetievePinnedIntDataset(VALUE self, VALUE memory_struct_object) {
+static VALUE methodRetrievePinnedIntDataset(VALUE self, VALUE memory_struct_object) {
     HadopeMemoryBuffer *mem_struct;
     Data_Get_Struct(memory_struct_object, HadopeMemoryBuffer, mem_struct);
 
@@ -194,11 +197,34 @@ static VALUE methodRetievePinnedIntDataset(VALUE self, VALUE memory_struct_objec
     HadopeEnvironment *environment;
     Data_Get_Struct(environment_object, HadopeEnvironment, environment);
 
-    int* dataset = getPinnedIntArrayFromDevice(environment, mem_struct);
+    int* dataset = getPinnedArrayFromDevice(environment, mem_struct, sizeof(int));
 
     int entries = mem_struct->buffer_entries;
     VALUE output_array = rb_ary_new2(entries);
     for (int i = 0; i < entries; ++i) rb_ary_store(output_array, i, dataset[i]);
+
+    releaseDeviceDataset(mem_struct);
+
+    return output_array;
+}
+
+/* Loads a (processed?) double array previously pinned for the ocl device and
+ * converts it into a Ruby array to be returned to the device class.
+ *
+ * @memory_struct_object: Ruby object storing HadopeMemoryBuffer. */
+static VALUE methodRetievePinnedDoubleDataset(VALUE self, VALUE memory_struct_object) {
+    HadopeMemoryBuffer *mem_struct;
+    Data_Get_Struct(memory_struct_object, HadopeMemoryBuffer, mem_struct);
+
+    VALUE environment_object = rb_iv_get(self, "@environment");
+    HadopeEnvironment *environment;
+    Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+
+    double* dataset = getPinnedArrayFromDevice(environment, mem_struct, sizeof(double));
+
+    int entries = mem_struct->buffer_entries;
+    VALUE output_array = rb_ary_new2(entries);
+    for (int i = 0; i < entries; ++i) rb_ary_store(output_array, DBL2NUM(i), dataset[i]);
 
     releaseDeviceDataset(mem_struct);
 
@@ -396,7 +422,7 @@ void Init_hadope_backend(){
   rb_define_private_method(HadopeBackend, "transfer_integer_dataset_to_buffer", methodLoadIntDataset, 2);
   rb_define_private_method(HadopeBackend, "create_pinned_integer_buffer", methodPinIntDataset, 1);
   rb_define_private_method(HadopeBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
-  rb_define_private_method(HadopeBackend, "retrieve_pinned_integer_dataset_from_buffer", methodRetievePinnedIntDataset, 1);
+  rb_define_private_method(HadopeBackend, "retrieve_pinned_integer_dataset_from_buffer", methodRetrievePinnedIntDataset, 1);
   rb_define_private_method(HadopeBackend, "sum_integer_buffer", methodSumIntegerBuffer, 1);
   rb_define_private_method(HadopeBackend, "count_post_filter", methodCountFilteredBuffer, 4);
   rb_define_private_method(HadopeBackend, "run_map_task", methodRunMapTask, 4);

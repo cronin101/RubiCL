@@ -63,9 +63,10 @@ void getIntArrayFromDevice(
   int *dataset
 );
 
-int* getPinnedIntArrayFromDevice(
+void* getPinnedArrayFromDevice(
     const HadopeEnvironment* env,
-    const HadopeMemoryBuffer* mem_struct
+    const HadopeMemoryBuffer* mem_struct,
+    const size_t unit_size
 );
 
 void runTaskOnDataset(

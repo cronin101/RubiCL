@@ -284,11 +284,12 @@ void getIntArrayFromDevice(
  *
  *  @env: Struct containing device/context/queue variables.*
  *  @mem_struct Struct containing cl_mem buffer referencing dataset. */
-int* getPinnedIntArrayFromDevice(
+void* getPinnedArrayFromDevice(
     const HadopeEnvironment* env,
-    const HadopeMemoryBuffer* mem_struct
+    const HadopeMemoryBuffer* mem_struct,
+    const size_t unit_size
 ){
-    if (DEBUG) printf("getPinnedIntArrayFromDevice\n");
+    if (DEBUG) printf("getPinnedArrayFromDevice\n");
     /* Wait for pending actions */
     clFinish(env->queue);
 
@@ -299,7 +300,7 @@ int* getPinnedIntArrayFromDevice(
         CL_TRUE,
         CL_MAP_READ,
         0,
-        mem_struct->buffer_entries * sizeof(int),
+        mem_struct->buffer_entries * unit_size,
         0,
         NULL,
         NULL,
