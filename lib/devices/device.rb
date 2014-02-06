@@ -30,6 +30,7 @@ class Hadope::Device
   def pin_double_dataset(array)
     @buffer = create_buffer_from_dataset :pinned_double_buffer, array
   end
+  alias_method :load_double_dataset, :pin_double_dataset
 
   chainable requires_type :int, (sets_type :int_tuple,
   def zip(array)
@@ -61,7 +62,11 @@ class Hadope::Device
   chainable def filter(&block)
     @cache.dataset = nil
     predicate = Hadope::LambdaBytecodeParser.new(block).to_infix.first
-    @task_queue.push Hadope::Filter.new(:x, predicate)
+    if unary_types.include? loaded_type
+      @task_queue.push Hadope::Filter.new(loaded_type, :x, predicate)
+    else
+      raise "#filter not implemented for #{loaded_type.inspect}"
+    end
   end
 
   alias_method :collect, :map

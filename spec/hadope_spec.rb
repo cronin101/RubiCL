@@ -2,12 +2,21 @@ require 'spec_helper'
 
 describe Hadope do
   context 'Showcasing features' do
-    it 'all features fit together' do
+    it 'can complete an Integer pipeline computation' do
       Hadope.opencl_device = Hadope::CPU
       expect do
         [1, 2, 3][Int]
           .map { |i| i + 1 }
           .filter { |i| i > 1 }[Fixnum]
+      end.to_not raise_error
+    end
+
+    it 'can complete a Double pipeline computation' do
+      Hadope.opencl_device = Hadope::CPU
+      expect do
+        [1.0, 2.0, 3.0][Double]
+          .map { |j| j + 1 }
+          .filter { |j| j > 1.5 }[Float]
       end.to_not raise_error
     end
 
@@ -34,6 +43,12 @@ describe Hadope do
         .filter { |n| n >= 9 }
         .map    { |o| o * 10 }
         .filter { |p| p < 140 }[Fixnum].should == [90, 120]
+
+      [1.0, 2.0, 3.0][Double]
+        .map { |j| j + 1.1 }
+        .filter { |j| j > 2.5 }[Float]
+        .should == [3.1, 4.1]
+
     end
   end
 

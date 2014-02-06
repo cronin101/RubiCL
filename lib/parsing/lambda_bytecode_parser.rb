@@ -27,6 +27,7 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
     while tokens.length > 0
       case token = tokens.shift
       when Fixnum then stack.push token
+      when Float  then stack.push token
       when Symbol then stack.push method_send(stack.pop, token)
       when String then ['x', 'y'].include?(token) ? stack.push(token) : stack.push(combine(token, stack.pop, stack.pop))
       end
@@ -43,6 +44,7 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
     when /getlocal_OP__WC__0 #{function.arity}/     then 'y'
     when /putobject_OP_INT2FIX_O_0_C_/              then 0
     when /putobject_OP_INT2FIX_O_1_C_/              then 1
+    when /putobject\s+-?\d+\.\d+/                   then operation.split(' ').last.to_f
     when /putobject\s+-?\d+/                        then operation.split(' ').last.to_i
     when /opt_send_simple/                          then operation.scan(/(?:mid:(.*?),)/)[0][0].to_sym
     when /opt_/                                     then LOOKUP_TABLE.fetch operation[/opt_\w+/].to_sym
@@ -64,6 +66,7 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
   def is_value?(token)
     case token
     when Fixnum       then true
+    when Float        then true
     when *['x', 'y']  then true
     else false
     end
