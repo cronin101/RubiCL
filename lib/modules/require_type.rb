@@ -31,7 +31,24 @@ module Hadope::RequireType
   end
 
   def check_buffer_type! type
-    raise "Type Mismatch! Found #@buffer_type, expected #{type}" unless type == @buffer_type
+    raise "Type Mismatch! Found #@buffer_type, expected #{type}" unless type == loaded_type
+  end
+
+  def loaded_type
+    @buffer_type
+  end
+
+  def vector_type
+    case loaded_type
+    when :int then 'int4'
+    when :float then 'float4'
+    else
+      raise "No vector_type for #{loaded_type.inspect}"
+    end
+  end
+
+  def unary_types
+    %i{int float}
   end
 
 end

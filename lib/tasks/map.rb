@@ -3,9 +3,10 @@ require_relative './task'
 module Hadope
   class Map < Task
 
-    attr_reader :input_variable, :output_variable
+    attr_reader :input_variable, :output_variable, :type
 
-    def initialize(input_variable, *statements)
+    def initialize(type='int4', input_variable, statements)
+      @type = type
       super()
       @output_variable = (@input_variable = input_variable)
       add_variables @input_variable
@@ -26,10 +27,6 @@ module Hadope
 
     def to_kernel
       TaskKernelGenerator.new(self).create_kernel
-    end
-
-    def type
-      'int4'
     end
 
     def body

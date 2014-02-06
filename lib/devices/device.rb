@@ -2,8 +2,9 @@ class Hadope::Device
   include HadopeBackend
   include Hadope::RequireType
 
-  FIX2INT = [:x, 'x = x >> 1']
-  INT2FIX = [:x, 'x = (x << 1) | 0x01']
+  FIX2INT = [:x, ['x = x >> 1']]
+  INT2FIX = [:x, ['x = (x << 1) | 0x01']]
+
 
   Cache = Struct.new(:dataset)
 
@@ -49,7 +50,11 @@ class Hadope::Device
   def map(&block)
     @cache.dataset = nil
     expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
-    @task_queue.push Hadope::Map.new(:x, "x = #{expression}")
+    if unary_types.include? loaded_type
+      @task_queue.push Hadope::Map.new(vector_type, :x, ["x = #{expression}"])
+    else
+      raise "#map not implemented for #{loaded_type.inspect}"
+    end
     self
   end
 

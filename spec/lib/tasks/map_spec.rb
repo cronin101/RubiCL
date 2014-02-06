@@ -4,11 +4,11 @@ MAP = Hadope::Map
 
 describe MAP do
   it 'can be created with no statements' do
-    expect { MAP.new :i }.to_not raise_error
+    expect { MAP.new :i, [] }.to_not raise_error
   end
 
   it 'can be created with a single statement' do
-    expect { MAP.new(:i, 'i + 1') }.to_not raise_error
+    expect { MAP.new(:i, ['i + 1']) }.to_not raise_error
   end
 
   it 'can be created with multiple statements' do
@@ -17,12 +17,12 @@ describe MAP do
 
   context '#fuse!' do
     it 'should create a pipelining variable when one is needed' do
-      fused = MAP.new(:i, 'i + 1').fuse! MAP.new(:j, 'j + 1')
+      fused = MAP.new(:i, ['i + 1']).fuse! MAP.new(:j, ['j + 1'])
       fused.instance_variable_get(:@statements).length.should == 3
     end
 
     it 'should not create a pipelining variable when one is not needed' do
-      fused = MAP.new(:i, 'i + 1').fuse! MAP.new(:i, 'i + 1')
+      fused = MAP.new(:i, ['i + 1']).fuse! MAP.new(:i, ['i + 1'])
       fused.instance_variable_get(:@statements).length.should == 2
     end
   end

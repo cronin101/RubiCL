@@ -2,7 +2,7 @@
 #include "prefix_sum/prescan.h"
 #include "oclerrorexplain.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 void releaseMemoryCallback(
     cl_event event,
