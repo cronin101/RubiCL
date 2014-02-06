@@ -2,8 +2,9 @@ class Hadope::Device
   include HadopeBackend
   include Hadope::RequireType
 
-  FIX2INT = [:x, 'x = x >> 1']
-  INT2FIX = [:x, 'x = (x << 1) | 0x01']
+  FIX2INT = [:x, ['x = x >> 1']]
+  INT2FIX = [:x, ['x = (x << 1) | 0x01']]
+
 
   Cache = Struct.new(:dataset)
 
@@ -20,12 +21,16 @@ class Hadope::Device
 
   sets_type :int,
   def pin_integer_dataset(array)
-    @task_queue.clear
-    @buffer = create_pinned_buffer(@cache.dataset = array)
+    @buffer = create_buffer_from_dataset :pinned_integer_buffer, array
     self
   end
-
   alias_method :load_integer_dataset, :pin_integer_dataset
+
+  sets_type :double,
+  def pin_double_dataset(array)
+    @buffer = create_buffer_from_dataset :pinned_double_buffer, array
+    self
+  end
 
   requires_type :int, (sets_type :int_tuple,
   def zip(array)
@@ -49,7 +54,11 @@ class Hadope::Device
   def map(&block)
     @cache.dataset = nil
     expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
-    @task_queue.push Hadope::Map.new(:x, "x = #{expression}")
+    if unary_types.include? loaded_type
+      @task_queue.push Hadope::Map.new(vector_type, :x, ["x = #{expression}"])
+    else
+      raise "#map not implemented for #{loaded_type.inspect}"
+    end
     self
   end
 
@@ -65,15 +74,15 @@ class Hadope::Device
 
   requires_type :int,
   def retrieve_pinned_integer_dataset
-    if @cache.dataset
-      @cache.dataset
-    else
-      run_tasks unless @task_queue.empty?
-      @cache.dataset = retrieve_pinned_integer_dataset_from_buffer @buffer
-    end
+    retrieve_from_device :pinned_integer_dataset
   end
 
   alias_method :retrieve_integer_dataset, :retrieve_pinned_integer_dataset
+
+  requires_type :double,
+  def retrieve_pinned_double_dataset
+    retrieve_from_device :pinned_double_dataset
+  end
 
   requires_type :int,
   def sum
@@ -131,13 +140,27 @@ class Hadope::Device
     end
   end
 
-  def run_tasks(do_conversions:true)
+  def run_tasks(do_conversions:(loaded_type == :int))
     if do_conversions
       @task_queue.unshift Hadope::Map.new(*FIX2INT)
       @task_queue.push Hadope::Map.new(*INT2FIX)
     end
     @task_queue.simplify!
     run_task @task_queue.shift until @task_queue.empty?
+  end
+
+  def create_buffer_from_dataset(buffer_type, dataset)
+    @task_queue.clear
+    send("create_#{buffer_type}", @cache.dataset = dataset)
+  end
+
+  def retrieve_from_device dataset_type
+    if @cache.dataset
+      @cache.dataset
+    else
+      run_tasks unless @task_queue.empty?
+      @cache.dataset = send("retrieve_#{dataset_type}_from_buffer", @buffer)
+    end
   end
 
 end

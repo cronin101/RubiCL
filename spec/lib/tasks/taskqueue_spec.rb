@@ -16,7 +16,7 @@ describe TASK_QUEUE do
     it 'should leave the queued tasks alone when they are not combinable' do
       class SomeTask < Hadope::Task; end
       not_map = SomeTask.new
-      map = Hadope::Map.new ->(i){ i + 1 }
+      map = Hadope::Map.new :i, ['i + 1']
 
       queue = TASK_QUEUE.new
       expect do
@@ -30,7 +30,7 @@ describe TASK_QUEUE do
     end
 
     it 'can be called when there is only one task' do
-      map = Hadope::Map.new(:i, 'i + 1')
+      map = Hadope::Map.new(:i, ['i + 1'])
       queue = TASK_QUEUE.new
       expect do
         queue.push map
@@ -40,8 +40,8 @@ describe TASK_QUEUE do
 
     context 'with consecutive map tasks' do
       it 'will perform map fusion' do
-        map1 = Hadope::Map.new(:i, 'i = i + 1')
-        map2 = Hadope::Map.new(:j, 'j = j + 1')
+        map1 = Hadope::Map.new(:i, ['i = i + 1'])
+        map2 = Hadope::Map.new(:j, ['j = j + 1'])
         queue = TASK_QUEUE.new
         expect do
           queue.push map1

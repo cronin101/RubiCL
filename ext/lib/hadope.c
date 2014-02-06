@@ -2,7 +2,7 @@
 #include "prefix_sum/prescan.h"
 #include "oclerrorexplain.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 void releaseMemoryCallback(
     cl_event event,
@@ -231,24 +231,25 @@ void loadIntArrayIntoDevice(
  * @length: Length of the integer dataset being pinned.
  *
  * @Return: cl_mem reference for addressing pinned memory. */
-void pinIntArrayForDevice(
+void pinArrayForDevice(
     const HadopeEnvironment* env,
-    int* dataset,
+    void* dataset,
     int dataset_length,
+    size_t dataset_size,
     HadopeMemoryBuffer* result
 ) {
 
-    if (DEBUG) printf("pinIntArrayForDevice\n");
-  cl_int ret;
-  result->buffer_entries = dataset_length;
-  result->buffer = clCreateBuffer(
-    env->context,                                // Context to use
-    CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,    // cl_mem_flags set
-    dataset_length * sizeof(int),               // Size of buffer
-    dataset,                                    // Dataset to pin
-    &ret                                        // Status destination
-  );
-  if (ret != CL_SUCCESS) printf("clCreateBuffer %s\n", oclErrorString(ret));
+    if (DEBUG) printf("pinArrayForDevice\n");
+    cl_int ret;
+    result->buffer_entries = dataset_length;
+    result->buffer = clCreateBuffer(
+        env->context,                               // Context to use
+        CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,    // cl_mem_flags set
+        dataset_size,                               // Size of buffer
+        dataset,                                    // Dataset to pin
+        &ret                                        // Status destination
+    );
+    if (ret != CL_SUCCESS) printf("clCreateBuffer %s\n", oclErrorString(ret));
 }
 
 /* Reads the contents of device memory buffer into a given dataset array
@@ -283,11 +284,12 @@ void getIntArrayFromDevice(
  *
  *  @env: Struct containing device/context/queue variables.*
  *  @mem_struct Struct containing cl_mem buffer referencing dataset. */
-int* getPinnedIntArrayFromDevice(
+void* getPinnedArrayFromDevice(
     const HadopeEnvironment* env,
-    const HadopeMemoryBuffer* mem_struct
+    const HadopeMemoryBuffer* mem_struct,
+    const size_t unit_size
 ){
-    if (DEBUG) printf("getPinnedIntArrayFromDevice\n");
+    if (DEBUG) printf("getPinnedArrayFromDevice\n");
     /* Wait for pending actions */
     clFinish(env->queue);
 
@@ -298,7 +300,7 @@ int* getPinnedIntArrayFromDevice(
         CL_TRUE,
         CL_MAP_READ,
         0,
-        mem_struct->buffer_entries * sizeof(int),
+        mem_struct->buffer_entries * unit_size,
         0,
         NULL,
         NULL,

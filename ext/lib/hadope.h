@@ -36,10 +36,11 @@ cl_mem createMemoryBuffer(
   const cl_mem_flags type
 );
 
-void pinIntArrayForDevice(
+void pinArrayForDevice(
     const HadopeEnvironment* env,
-    int* dataset,
+    void* dataset,
     int dataset_length,
+    size_t dataset_size,
     HadopeMemoryBuffer* result
 );
 
@@ -62,9 +63,10 @@ void getIntArrayFromDevice(
   int *dataset
 );
 
-int* getPinnedIntArrayFromDevice(
+void* getPinnedArrayFromDevice(
     const HadopeEnvironment* env,
-    const HadopeMemoryBuffer* mem_struct
+    const HadopeMemoryBuffer* mem_struct,
+    const size_t unit_size
 );
 
 void runTaskOnDataset(
