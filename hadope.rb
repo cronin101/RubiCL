@@ -10,7 +10,10 @@ module Hadope
 
   require_relative './lib/types/array.rb'
   require_relative './lib/types/fixnum.rb'
+  require_relative './lib/types/float.rb'
+
   require_relative './lib/types/int.rb'
+  require_relative './lib/types/double.rb'
 
   require_relative './lib/code_generation/task_kernel_generator.rb'
   require_relative './lib/parsing/lambda_bytecode_parser.rb'
