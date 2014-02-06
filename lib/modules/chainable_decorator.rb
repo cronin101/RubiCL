@@ -5,7 +5,7 @@ module Hadope::ChainableDecorator
     def chainable method
       method_body = instance_method(method)
       define_method method do |*arg, &block|
-        method_body.bind(self).(*arg)
+        method_body.bind(self).(*arg, &block)
         self
       end
 
