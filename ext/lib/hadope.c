@@ -231,24 +231,25 @@ void loadIntArrayIntoDevice(
  * @length: Length of the integer dataset being pinned.
  *
  * @Return: cl_mem reference for addressing pinned memory. */
-void pinIntArrayForDevice(
+void pinArrayForDevice(
     const HadopeEnvironment* env,
-    int* dataset,
+    void* dataset,
     int dataset_length,
+    size_t dataset_size,
     HadopeMemoryBuffer* result
 ) {
 
-    if (DEBUG) printf("pinIntArrayForDevice\n");
-  cl_int ret;
-  result->buffer_entries = dataset_length;
-  result->buffer = clCreateBuffer(
-    env->context,                                // Context to use
-    CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,    // cl_mem_flags set
-    dataset_length * sizeof(int),               // Size of buffer
-    dataset,                                    // Dataset to pin
-    &ret                                        // Status destination
-  );
-  if (ret != CL_SUCCESS) printf("clCreateBuffer %s\n", oclErrorString(ret));
+    if (DEBUG) printf("pinArrayForDevice\n");
+    cl_int ret;
+    result->buffer_entries = dataset_length;
+    result->buffer = clCreateBuffer(
+        env->context,                               // Context to use
+        CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,    // cl_mem_flags set
+        dataset_size,                               // Size of buffer
+        dataset,                                    // Dataset to pin
+        &ret                                        // Status destination
+    );
+    if (ret != CL_SUCCESS) printf("clCreateBuffer %s\n", oclErrorString(ret));
 }
 
 /* Reads the contents of device memory buffer into a given dataset array

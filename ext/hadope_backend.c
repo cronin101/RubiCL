@@ -78,10 +78,11 @@ static VALUE methodPinIntDataset(
     VALUE dataset_object
 ) {
     Check_Type(dataset_object, T_ARRAY);
-    int array_size = RARRAY_LEN(dataset_object);
-    int* dataset = calloc(array_size, sizeof(int));
+    int array_length = RARRAY_LEN(dataset_object);
+    size_t array_size = array_length * sizeof(int);
+    int* dataset = malloc(array_size);
 
-    for (int i = 0; i < array_size; ++i) dataset[i] = rb_ary_entry(dataset_object, i);
+    for (int i = 0; i < array_length; ++i) dataset[i] = rb_ary_entry(dataset_object, i);
 
     HadopeEnvironment *environment;
     VALUE environment_object = rb_iv_get(self, "@environment");
@@ -89,9 +90,37 @@ static VALUE methodPinIntDataset(
 
     VALUE memory_struct_object = rb_define_class("HadopeMemoryBuffer", rb_cObject);
     HadopeMemoryBuffer* mem_struct = malloc(sizeof(HadopeMemoryBuffer));
-    pinIntArrayForDevice(
+    pinArrayForDevice(
         environment,
         dataset,
+        array_length,
+        array_size,
+        mem_struct
+    );
+
+    return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
+}
+
+static VALUE methodPinDoubleDataset(
+    VALUE self,
+    VALUE dataset_object
+) {
+    Check_Type(dataset_object, T_ARRAY);
+    int array_length = RARRAY_LEN(dataset_object);
+    size_t array_size = array_length * sizeof(double);
+    double* dataset = malloc(array_size);
+
+    for (int i = 0; i < array_length; ++i) dataset[i] = NUM2DBL(rb_ary_entry(dataset_object, i));
+    HadopeEnvironment *environment;
+    VALUE environment_object = rb_iv_get(self, "@environment");
+    Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+
+    VALUE memory_struct_object = rb_define_class("HadopeMemoryBuffer", rb_cObject);
+    HadopeMemoryBuffer* mem_struct = malloc(sizeof(HadopeMemoryBuffer));
+    pinArrayForDevice(
+        environment,
+        dataset,
+        array_length,
         array_size,
         mem_struct
     );

@@ -74,24 +74,14 @@ class Hadope::Device
 
   requires_type :int,
   def retrieve_pinned_integer_dataset
-    if @cache.dataset
-      @cache.dataset
-    else
-      run_tasks unless @task_queue.empty?
-      @cache.dataset = retrieve_pinned_integer_dataset_from_buffer @buffer
-    end
+    retrieve_from_device :pinned_integer_dataset
   end
 
   alias_method :retrieve_integer_dataset, :retrieve_pinned_integer_dataset
 
   requires_type :double,
   def retrieve_pinned_double_dataset
-    if @cache.dataset
-      @cache.dataset
-    else
-      run_tasks unless @task_queue.empty?
-      @cache.dataset = retrieve_pinned_double_dataset_from_buffer @buffer
-    end
+    retrieve_from_device :pinned_double_dataset
   end
 
   requires_type :int,
@@ -162,6 +152,15 @@ class Hadope::Device
   def create_buffer_from_dataset(buffer_type, dataset)
     @task_queue.clear
     send("create_#{buffer_type}", @cache.dataset = dataset)
+  end
+
+  def retrieve_from_device dataset_type
+    if @cache.dataset
+      @cache.dataset
+    else
+      run_tasks unless @task_queue.empty?
+      @cache.dataset = send("retrieve_#{dataset_type}_from_buffer", @buffer)
+    end
   end
 
 end
