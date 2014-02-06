@@ -365,7 +365,7 @@ void Init_hadope_backend(){
   rb_define_private_method(HadopeBackend, "initialize_CPU_environment", methodInitCPUEnvironment, 0);
   rb_define_private_method(HadopeBackend, "create_memory_buffer", methodCreateMemoryBuffer, 2);
   rb_define_private_method(HadopeBackend, "transfer_integer_dataset_to_buffer", methodLoadIntDataset, 2);
-  rb_define_private_method(HadopeBackend, "create_pinned_buffer", methodPinIntDataset, 1);
+  rb_define_private_method(HadopeBackend, "create_pinned_integer_buffer", methodPinIntDataset, 1);
   rb_define_private_method(HadopeBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
   rb_define_private_method(HadopeBackend, "retrieve_pinned_integer_dataset_from_buffer", methodRetievePinnedIntDataset, 1);
   rb_define_private_method(HadopeBackend, "sum_integer_buffer", methodSumIntegerBuffer, 1);

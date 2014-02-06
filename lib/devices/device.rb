@@ -21,17 +21,14 @@ class Hadope::Device
 
   sets_type :int,
   def pin_integer_dataset(array)
-    @task_queue.clear
-    @buffer = create_pinned_buffer(@cache.dataset = array)
+    @buffer = create_buffer_from_dataset :pinned_integer_buffer, array
     self
   end
-
   alias_method :load_integer_dataset, :pin_integer_dataset
 
   sets_type :double,
   def pin_double_dataset(array)
-    @task_queue.clear
-    @buffer = create_pinned_double_buffer(@cache.dataset = array)
+    @buffer = create_buffer_from_dataset :pinned_double_buffer, array
     self
   end
 
@@ -153,13 +150,18 @@ class Hadope::Device
     end
   end
 
-  def run_tasks(do_conversions:true)
+  def run_tasks(do_conversions:(loaded_type == :int))
     if do_conversions
       @task_queue.unshift Hadope::Map.new(*FIX2INT)
       @task_queue.push Hadope::Map.new(*INT2FIX)
     end
     @task_queue.simplify!
     run_task @task_queue.shift until @task_queue.empty?
+  end
+
+  def create_buffer_from_dataset(buffer_type, dataset)
+    @task_queue.clear
+    send("create_#{buffer_type}", @cache.dataset = dataset)
   end
 
 end
