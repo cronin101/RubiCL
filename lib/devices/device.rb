@@ -1,6 +1,7 @@
 class Hadope::Device
   include HadopeBackend
   include Hadope::RequireType
+  include Hadope::ChainableDecorator
 
   FIX2INT = [:x, ['x = x >> 1']]
   INT2FIX = [:x, ['x = (x << 1) | 0x01']]
@@ -19,17 +20,15 @@ class Hadope::Device
     send type.hadope_conversion
   end
 
-  sets_type :int,
+  chainable sets_type :int,
   def pin_integer_dataset(array)
     @buffer = create_buffer_from_dataset :pinned_integer_buffer, array
-    self
   end
   alias_method :load_integer_dataset, :pin_integer_dataset
 
-  sets_type :double,
+  chainable sets_type :double,
   def pin_double_dataset(array)
     @buffer = create_buffer_from_dataset :pinned_double_buffer, array
-    self
   end
 
   requires_type :int, (sets_type :int_tuple,

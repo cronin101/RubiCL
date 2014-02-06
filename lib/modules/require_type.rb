@@ -40,8 +40,8 @@ module Hadope::RequireType
 
   def vector_type
     case loaded_type
-    when :int then 'int4'
-    when :double then 'double4'
+    when :int     then 'int4'
+    when :double  then 'double4'
     else
       raise "No vector_type for #{loaded_type.inspect}"
     end
