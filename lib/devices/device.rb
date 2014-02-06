@@ -28,6 +28,13 @@ class Hadope::Device
 
   alias_method :load_integer_dataset, :pin_integer_dataset
 
+  sets_type :double,
+  def pin_double_dataset(array)
+    @task_queue.clear
+    @buffer = create_pinned_double_buffer(@cache.dataset = array)
+    self
+  end
+
   requires_type :int, (sets_type :int_tuple,
   def zip(array)
     raise "Second dataset must be the same length as the first." unless @buffer.length == array.length
@@ -79,6 +86,16 @@ class Hadope::Device
   end
 
   alias_method :retrieve_integer_dataset, :retrieve_pinned_integer_dataset
+
+  requires_type :double,
+  def retrieve_pinned_double_dataset
+    if @cache.dataset
+      @cache.dataset
+    else
+      run_tasks unless @task_queue.empty?
+      @cache.dataset = retrieve_pinned_double_dataset_from_buffer @buffer
+    end
+  end
 
   requires_type :int,
   def sum
