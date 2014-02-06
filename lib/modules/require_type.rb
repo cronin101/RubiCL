@@ -3,22 +3,20 @@ module Hadope::RequireType
   module ClassMethods
     # Experimental method-decorators. Handle with care!
     def requires_type(type, method)
-      post_check = "post_check_#{method}".to_sym
-      alias_method post_check, method
+      method_body = instance_method(method)
       define_method method do |*arg, &block|
         check_buffer_type! type
-        send(post_check, *arg, &block)
+        method_body.bind(self).(*arg, &block)
       end
 
       method
     end
 
     def sets_type(type, method)
-      post_set = "post_set_#{method}".to_sym
-      alias_method post_set, method
+      method_body = instance_method(method)
       define_method method do |*arg, &block|
         @buffer_type = type
-        send(post_set, *arg, &block)
+        method_body.bind(self).(*arg, &block)
       end
 
     method
