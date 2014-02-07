@@ -3,8 +3,8 @@ class Hadope::Device
   include Hadope::RequireType
   include Hadope::ChainableDecorator
 
-  FIX2INT = [:x, ['x = x >> 1']]
-  INT2FIX = [:x, ['x = (x << 1) | 0x01']]
+  FIX2INT = [:int, :x, ['x = x >> 1']]
+  INT2FIX = [:int, :x, ['x = (x << 1) | 0x01']]
 
 
   Cache = Struct.new(:dataset)
@@ -30,6 +30,7 @@ class Hadope::Device
   def pin_double_dataset(array)
     @buffer = create_buffer_from_dataset :pinned_double_buffer, array
   end
+  alias_method :load_double_dataset, :pin_double_dataset
 
   chainable requires_type :int, (sets_type :int_tuple,
   def zip(array)
@@ -52,7 +53,7 @@ class Hadope::Device
     @cache.dataset = nil
     expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
     if unary_types.include? loaded_type
-      @task_queue.push Hadope::Map.new(vector_type, :x, ["x = #{expression}"])
+      @task_queue.push Hadope::Map.new(loaded_type, :x, ["x = #{expression}"])
     else
       raise "#map not implemented for #{loaded_type.inspect}"
     end
@@ -61,7 +62,11 @@ class Hadope::Device
   chainable def filter(&block)
     @cache.dataset = nil
     predicate = Hadope::LambdaBytecodeParser.new(block).to_infix.first
-    @task_queue.push Hadope::Filter.new(:x, predicate)
+    if unary_types.include? loaded_type
+      @task_queue.push Hadope::Filter.new(loaded_type, :x, predicate)
+    else
+      raise "#filter not implemented for #{loaded_type.inspect}"
+    end
   end
 
   alias_method :collect, :map
@@ -90,7 +95,7 @@ class Hadope::Device
   def count(needle)
     @task_queue.unshift Hadope::Map.new(*FIX2INT)
     run_tasks(do_conversions:false)
-    task = Hadope::Filter.new(:x, "x == #{needle}")
+    task = Hadope::Filter.new(loaded_type, :x, "x == #{needle}")
     kernel = task.to_kernel
     count_post_filter(kernel, kernel.length, task.name, @buffer)
   end

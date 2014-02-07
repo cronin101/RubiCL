@@ -1,7 +1,7 @@
 class Hadope::Logger
 
   VERBOSE_MODE_DEFAULT = false
-  LOG_TO_FILE_DEFAULT = true
+  LOG_TO_FILE_DEFAULT = false
 
   class << self
     attr_accessor :singleton

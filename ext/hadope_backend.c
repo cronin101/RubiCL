@@ -95,7 +95,8 @@ static VALUE methodPinIntDataset(
         dataset,
         array_length,
         array_size,
-        mem_struct
+        mem_struct,
+        INTEGER_BUFFER
     );
 
     return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
@@ -125,7 +126,8 @@ static VALUE methodPinDoubleDataset(
         dataset,
         array_length,
         array_size,
-        mem_struct
+        mem_struct,
+        DOUBLE_BUFFER
     );
 
     return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
@@ -156,6 +158,7 @@ static VALUE methodLoadIntDataset(
 
   /* Enqueue the task to load converted dataset into ocl device buffer. */
   loadIntArrayIntoDevice(*environment, *mem_struct, dataset);
+  mem_struct->type = INTEGER_BUFFER;
   return self;
 }
 

@@ -2,7 +2,7 @@
 #include "prefix_sum/prescan.h"
 #include "oclerrorexplain.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 void releaseMemoryCallback(
     cl_event event,
@@ -236,11 +236,13 @@ void pinArrayForDevice(
     void* dataset,
     int dataset_length,
     size_t dataset_size,
-    HadopeMemoryBuffer* result
+    HadopeMemoryBuffer* result,
+    buffer_contents_type type
 ) {
 
     if (DEBUG) printf("pinArrayForDevice\n");
     cl_int ret;
+    result->type = type;
     result->buffer_entries = dataset_length;
     result->buffer = clCreateBuffer(
         env->context,                               // Context to use
@@ -338,14 +340,14 @@ void buildTaskFromSource(
   const HadopeEnvironment* env,
   const char* kernel_source,
   const size_t source_size,
-  char* name,
+  const char* name,
   HadopeTask* result
 ) {
     if (DEBUG) printf("buildTaskFromSource\n");
 
   /* Create cl_program from given task/name and store inside HadopeTask struct. */
   cl_int ret;
-  result->name = name;
+  result->name = (char *) name;
   result->program = clCreateProgramWithSource(
     env->context,                    // Context
     1,                              // Number of parts that the source is in
@@ -389,7 +391,7 @@ void runTaskOnDataset(
   const HadopeTask* task
 ) {
     if (DEBUG) printf("runTaskOnDataset\n");
-  size_t g_work_size[1] = {ceil((float) mem_struct->buffer_entries / 4)};
+  size_t g_work_size[1] = {mem_struct->buffer_entries};
 
   /* Kernel's global data_array set to be the given device memory buffer */
   cl_int ret = clSetKernelArg(
@@ -398,7 +400,7 @@ void runTaskOnDataset(
     sizeof(cl_mem),    // Size of argument value
     &mem_struct->buffer // Argument value
   );
-  if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+  if (DEBUG || ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(
@@ -412,7 +414,9 @@ void runTaskOnDataset(
     NULL,        // Preceding events list
     NULL         // Event object destination
   );
-  if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
+  if (DEBUG || ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
+
+  if (DEBUG) printf("leaving runTaskOnDataset\n");
 }
 
 /* Enqueues a task to compute the presence array for a given dataset and filter kernel.
@@ -428,7 +432,7 @@ void computePresenceArrayForDataset(
   HadopeMemoryBuffer *presence
 ) {
     if (DEBUG) printf("computePresenceArrayForDataset\n");
-  size_t g_work_size[1] = {ceil((float)mem_struct->buffer_entries/4)};
+  size_t g_work_size[1] = {mem_struct->buffer_entries};
 
   /* Kernel's global data_array set to be the given device memory buffer */
   cl_int ret = clSetKernelArg(
@@ -681,7 +685,18 @@ void filterByScatteredWrites(
   if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 
   /* Build kernel whilst data is being fetched from device */
-  const char* scatter_filename = "./ext/lib/scatter_kernel.cl";
+    const char* scatter_filename;
+    const char* scatter_taskname;
+    switch (input_dataset->type) {
+    case (INTEGER_BUFFER):
+        scatter_filename = "./ext/lib/integer_scatter_kernel.cl";
+        scatter_taskname = "IntegerScatterFilterKernel";
+        break;
+    case (DOUBLE_BUFFER):
+        scatter_filename = "./ext/lib/double_scatter_kernel.cl";
+        scatter_taskname = "DoubleScatterFilterKernel";
+        break;
+    }
   char *source = LoadProgramSourceFromFile(scatter_filename);
   if (!source) printf("Error loading '%s' source.\n", scatter_filename);
 
@@ -690,7 +705,7 @@ void filterByScatteredWrites(
     env,
     source,
     strlen(source),
-    "ScatterFilterKernel",
+    scatter_taskname,
     &scatter_task
   );
 
@@ -698,11 +713,23 @@ void filterByScatteredWrites(
   ret = clFinish(env->queue);
   if (ret != CL_SUCCESS) printf("clFinish %s\n", oclErrorString(ret));
 
-  int filtered_entries = index_reduce + last_element_presence;
+    int filtered_entries = index_reduce + last_element_presence;
+    size_t filtered_buffer_size;
+    switch (input_dataset->type) {
+    case (INTEGER_BUFFER):
+        filtered_buffer_size = filtered_entries * sizeof(int);
+        printf("Filtered int buffer with %d entries of size %zu\n", filtered_entries, filtered_buffer_size);
+        break;
+    case (DOUBLE_BUFFER):
+        filtered_buffer_size = filtered_entries * sizeof(double);
+        printf("Filtered double buffer with %d entries of size %zu\n", filtered_entries, filtered_buffer_size);
+        break;
+    }
+    printf("Based buffer is size %zu\n", filtered_buffer_size);
   cl_mem filtered_buffer = clCreateBuffer(
     env->context,
     CL_MEM_HOST_READ_ONLY,
-    filtered_entries * sizeof(int),
+    filtered_buffer_size,
     NULL,
     NULL
   );

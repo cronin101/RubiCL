@@ -1,4 +1,4 @@
-__kernel void ScatterFilterKernel(
+__kernel void IntegerScatterFilterKernel(
     __global const int *input_data,
     __global const int *presence,
     __global const int *index,
