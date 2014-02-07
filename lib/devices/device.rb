@@ -91,13 +91,16 @@ class Hadope::Device
     sum_integer_buffer @buffer
   end
 
-  requires_type :int,
   def count(needle)
-    @task_queue.unshift Hadope::Map.new(*FIX2INT)
+    @task_queue.unshift Hadope::Map.new(*FIX2INT) if loaded_type == :int
     run_tasks(do_conversions:false)
-    task = Hadope::Filter.new(loaded_type, :x, "x == #{needle}")
-    kernel = task.to_kernel
-    count_post_filter(kernel, kernel.length, task.name, @buffer)
+    if unary_types.include? loaded_type
+      task = Hadope::Filter.new(loaded_type, :x, "x == #{needle}")
+      kernel = task.to_kernel
+      count_post_filter(kernel, kernel.length, task.name, @buffer)
+    else
+      raise "#count not implemented for #{loaded_type.inspect}"
+    end
   end
 
   private
