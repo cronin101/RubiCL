@@ -14,7 +14,7 @@ static VALUE initOpenCLenvironment(cl_device_type device_type){
   createHadopeEnvironment(device_type, environment);
 
   /* Struct is turned into a Ruby object so that it can be stored as an ivar */
-  return Data_Wrap_Struct(environment_object, NULL, &free, environment);
+  return Data_Wrap_Struct(environment_object, NULL, free, environment);
 }
 
 /* Following two methods do what they say on the tin. */
@@ -67,7 +67,7 @@ static VALUE methodCreateMemoryBuffer(
     CL_MEM_READ_WRITE
   );
 
-  return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
+  return Data_Wrap_Struct(memory_struct_object, NULL, free, mem_struct);
 }
 
 /*  Creates a memory buffer object containing a device-accessible reference to the given FIXNUM dataset.
@@ -95,11 +95,11 @@ static VALUE methodPinIntDataset(
         dataset,
         array_length,
         array_size,
-        mem_struct
+        mem_struct,
+        INTEGER_BUFFER
     );
-    mem_struct->type = INTEGER_BUFFER;
 
-    return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
+    return Data_Wrap_Struct(memory_struct_object, NULL, free, mem_struct);
 }
 
 /*  Creates a memory buffer object containing a device-accessible reference to the given FLOAT dataset.
@@ -126,11 +126,11 @@ static VALUE methodPinDoubleDataset(
         dataset,
         array_length,
         array_size,
-        mem_struct
+        mem_struct,
+        DOUBLE_BUFFER
     );
-    mem_struct->type = DOUBLE_BUFFER;
 
-    return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
+    return Data_Wrap_Struct(memory_struct_object, NULL, free, mem_struct);
 }
 
 /* Loads an integer array from given Ruby object into the cl_mem buffer previously created

@@ -15,7 +15,7 @@ describe Hadope do
       Hadope.opencl_device = Hadope::CPU
       expect do
         [1.0, 2.0, 3.0][Double]
-          .map { |j| j + 1 }
+          .map { |j| j + 1.0 }
           .filter { |j| j > 1.5 }[Float]
       end.to_not raise_error
     end
@@ -48,7 +48,6 @@ describe Hadope do
         .map { |j| j + 1.1 }
         .filter { |j| j > 2.5 }[Float]
         .should == [3.1, 4.1]
-
     end
   end
 

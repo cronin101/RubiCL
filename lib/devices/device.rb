@@ -53,7 +53,7 @@ class Hadope::Device
     @cache.dataset = nil
     expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
     if unary_types.include? loaded_type
-      @task_queue.push Hadope::Map.new(vector_type, :x, ["x = #{expression}"])
+      @task_queue.push Hadope::Map.new(loaded_type, :x, ["x = #{expression}"])
     else
       raise "#map not implemented for #{loaded_type.inspect}"
     end

@@ -236,11 +236,13 @@ void pinArrayForDevice(
     void* dataset,
     int dataset_length,
     size_t dataset_size,
-    HadopeMemoryBuffer* result
+    HadopeMemoryBuffer* result,
+    buffer_contents_type type
 ) {
 
     if (DEBUG) printf("pinArrayForDevice\n");
     cl_int ret;
+    result->type = type;
     result->buffer_entries = dataset_length;
     result->buffer = clCreateBuffer(
         env->context,                               // Context to use
@@ -389,7 +391,7 @@ void runTaskOnDataset(
   const HadopeTask* task
 ) {
     if (DEBUG) printf("runTaskOnDataset\n");
-  size_t g_work_size[1] = {ceil((float) mem_struct->buffer_entries / 4)};
+  size_t g_work_size[1] = {mem_struct->buffer_entries};
 
   /* Kernel's global data_array set to be the given device memory buffer */
   cl_int ret = clSetKernelArg(
@@ -398,7 +400,7 @@ void runTaskOnDataset(
     sizeof(cl_mem),    // Size of argument value
     &mem_struct->buffer // Argument value
   );
-  if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+  if (DEBUG || ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(
@@ -412,7 +414,9 @@ void runTaskOnDataset(
     NULL,        // Preceding events list
     NULL         // Event object destination
   );
-  if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
+  if (DEBUG || ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
+
+  if (DEBUG) printf("leaving runTaskOnDataset\n");
 }
 
 /* Enqueues a task to compute the presence array for a given dataset and filter kernel.
