@@ -2,7 +2,7 @@
 #include "prefix_sum/prescan.h"
 #include "oclerrorexplain.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 void releaseMemoryCallback(
     cl_event event,
@@ -718,10 +718,14 @@ void filterByScatteredWrites(
     switch (input_dataset->type) {
     case (INTEGER_BUFFER):
         filtered_buffer_size = filtered_entries * sizeof(int);
+        printf("Filtered int buffer with %d entries of size %zu\n", filtered_entries, filtered_buffer_size);
         break;
     case (DOUBLE_BUFFER):
         filtered_buffer_size = filtered_entries * sizeof(double);
+        printf("Filtered double buffer with %d entries of size %zu\n", filtered_entries, filtered_buffer_size);
+        break;
     }
+    printf("Based buffer is size %zu\n", filtered_buffer_size);
   cl_mem filtered_buffer = clCreateBuffer(
     env->context,
     CL_MEM_HOST_READ_ONLY,
