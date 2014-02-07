@@ -338,14 +338,14 @@ void buildTaskFromSource(
   const HadopeEnvironment* env,
   const char* kernel_source,
   const size_t source_size,
-  char* name,
+  const char* name,
   HadopeTask* result
 ) {
     if (DEBUG) printf("buildTaskFromSource\n");
 
   /* Create cl_program from given task/name and store inside HadopeTask struct. */
   cl_int ret;
-  result->name = name;
+  result->name = (char *) name;
   result->program = clCreateProgramWithSource(
     env->context,                    // Context
     1,                              // Number of parts that the source is in
@@ -681,7 +681,18 @@ void filterByScatteredWrites(
   if (ret != CL_SUCCESS) printf("clEnqueueReadBuffer %s\n", oclErrorString(ret));
 
   /* Build kernel whilst data is being fetched from device */
-  const char* scatter_filename = "./ext/lib/scatter_kernel.cl";
+    const char* scatter_filename;
+    const char* scatter_taskname;
+    switch (input_dataset->type) {
+    case (INTEGER_BUFFER):
+        scatter_filename = "./ext/lib/integer_scatter_kernel.cl";
+        scatter_taskname = "IntegerScatterFilterKernel";
+        break;
+    case (DOUBLE_BUFFER):
+        scatter_filename = "./ext/lib/double_scatter_kernel.cl";
+        scatter_taskname = "DoubleScatterFilterKernel";
+        break;
+    }
   char *source = LoadProgramSourceFromFile(scatter_filename);
   if (!source) printf("Error loading '%s' source.\n", scatter_filename);
 
@@ -690,7 +701,7 @@ void filterByScatteredWrites(
     env,
     source,
     strlen(source),
-    "ScatterFilterKernel",
+    scatter_taskname,
     &scatter_task
   );
 
@@ -698,11 +709,19 @@ void filterByScatteredWrites(
   ret = clFinish(env->queue);
   if (ret != CL_SUCCESS) printf("clFinish %s\n", oclErrorString(ret));
 
-  int filtered_entries = index_reduce + last_element_presence;
+    int filtered_entries = index_reduce + last_element_presence;
+    size_t filtered_buffer_size;
+    switch (input_dataset->type) {
+    case (INTEGER_BUFFER):
+        filtered_buffer_size = filtered_entries * sizeof(int);
+        break;
+    case (DOUBLE_BUFFER):
+        filtered_buffer_size = filtered_entries * sizeof(double);
+    }
   cl_mem filtered_buffer = clCreateBuffer(
     env->context,
     CL_MEM_HOST_READ_ONLY,
-    filtered_entries * sizeof(int),
+    filtered_buffer_size,
     NULL,
     NULL
   );

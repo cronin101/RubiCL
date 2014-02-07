@@ -22,7 +22,7 @@ typedef struct {
 
 typedef enum {
     INTEGER_BUFFER,
-    FLOAT_BUFFER
+    DOUBLE_BUFFER
 } buffer_contents_type;
 
 typedef struct {
@@ -53,7 +53,8 @@ void pinArrayForDevice(
 void buildTaskFromSource(
     const HadopeEnvironment* env,
     const char* kernel_source,
-    const size_t source_size, char* name,
+    const size_t source_size,
+    const char* name,
     HadopeTask* result
 );
 
