@@ -95,9 +95,9 @@ static VALUE methodPinIntDataset(
         dataset,
         array_length,
         array_size,
-        mem_struct
+        mem_struct,
+        INTEGER_BUFFER
     );
-    mem_struct->type = INTEGER_BUFFER;
 
     return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
 }
@@ -126,9 +126,9 @@ static VALUE methodPinDoubleDataset(
         dataset,
         array_length,
         array_size,
-        mem_struct
+        mem_struct,
+        DOUBLE_BUFFER
     );
-    mem_struct->type = DOUBLE_BUFFER;
 
     return Data_Wrap_Struct(memory_struct_object, NULL, &free, mem_struct);
 }

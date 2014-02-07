@@ -3,8 +3,8 @@ class Hadope::Device
   include Hadope::RequireType
   include Hadope::ChainableDecorator
 
-  FIX2INT = [:x, ['x = x >> 1']]
-  INT2FIX = [:x, ['x = (x << 1) | 0x01']]
+  FIX2INT = [:int, :x, ['x = x >> 1']]
+  INT2FIX = [:int, :x, ['x = (x << 1) | 0x01']]
 
 
   Cache = Struct.new(:dataset)
@@ -53,7 +53,7 @@ class Hadope::Device
     @cache.dataset = nil
     expression = Hadope::LambdaBytecodeParser.new(block).to_infix.first
     if unary_types.include? loaded_type
-      @task_queue.push Hadope::Map.new(vector_type, :x, ["x = #{expression}"])
+      @task_queue.push Hadope::Map.new(loaded_type, :x, ["x = #{expression}"])
     else
       raise "#map not implemented for #{loaded_type.inspect}"
     end
@@ -95,7 +95,7 @@ class Hadope::Device
   def count(needle)
     @task_queue.unshift Hadope::Map.new(*FIX2INT)
     run_tasks(do_conversions:false)
-    task = Hadope::Filter.new(:x, "x == #{needle}")
+    task = Hadope::Filter.new(loaded_type, :x, "x == #{needle}")
     kernel = task.to_kernel
     count_post_filter(kernel, kernel.length, task.name, @buffer)
   end

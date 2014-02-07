@@ -47,7 +47,8 @@ void pinArrayForDevice(
     void* dataset,
     int dataset_length,
     size_t dataset_size,
-    HadopeMemoryBuffer* result
+    HadopeMemoryBuffer* result,
+    buffer_contents_type type
 );
 
 void buildTaskFromSource(

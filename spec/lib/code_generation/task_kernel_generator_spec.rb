@@ -4,19 +4,19 @@ TASK_KERNEL_GENERATOR = Hadope::TaskKernelGenerator
 
 describe TASK_KERNEL_GENERATOR do
   it 'can be initialized with a task' do
-    expect { TASK_KERNEL_GENERATOR.new Hadope::Map.new(:i, ['i + 1']) }.to_not raise_error
+    expect { TASK_KERNEL_GENERATOR.new Hadope::Map.new(:footype, :i, ['i + 1']) }.to_not raise_error
   end
 
   context 'Map tasks' do
     it 'can generate the kernel from components and boilerplate' do
-      map = Hadope::Map.new(:i, ['i + 1'])
+      map = Hadope::Map.new(:footype, :i, ['i + 1'])
       expect { map.to_kernel }.to_not raise_error
     end
   end
 
   context 'Filter tasks' do
     it 'can generate the kernel from components and boilerplate' do
-      filter = Hadope::Filter.new(:i, 'i > 1')
+      filter = Hadope::Filter.new(:footype, :i, 'i > 1')
       expect { filter.to_kernel }.to_not raise_error
     end
   end
