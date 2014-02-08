@@ -48,6 +48,22 @@ void displayDeviceInfo(cl_uint num_devices, cl_device_id* devices) {
     }
 }
 
+void displayBuildFailureInfo(cl_program program, cl_device_id device_id) {
+        // Determine the size of the log
+        size_t log_size;
+        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+
+        // Allocate memory for the log
+        char *log = (char *) malloc(log_size);
+
+        // Get the log
+        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+
+        // Print the log
+        printf("%s\n", log);
+        free(log);
+}
+
 /* ~~ Init Methods ~~ */
 
 /* Selects target device then creates context and command queue, packages in HadopeEnvironment and returns.
@@ -367,6 +383,8 @@ void buildTaskFromSource(
   );
   if (ret != CL_SUCCESS) printf("clBuildProgram %s\n", oclErrorString(ret));
 
+    if (ret == CL_BUILD_PROGRAM_FAILURE) displayBuildFailureInfo(result->program, env->device_id);
+
   result->kernel = clCreateKernel(
     result->program, // Built program
     result->name,    // Entry point to kernel
@@ -519,6 +537,7 @@ void exclusivePrefixSum(
     NULL                     // Callback user data
   );
   if (ret != CL_SUCCESS) printf("clBuildProgram %s\n", oclErrorString(ret));
+    if (ret == CL_BUILD_PROGRAM_FAILURE) displayBuildFailureInfo(ComputeProgram, env->device_id);
 
   ComputeKernels = (cl_kernel*) calloc(KernelCount, sizeof(cl_kernel));
 
