@@ -2,7 +2,7 @@
 #include "prefix_sum/prescan.h"
 #include "oclerrorexplain.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 void releaseMemoryCallback(
     cl_event event,
@@ -396,7 +396,7 @@ void runTaskOnDataset(
     sizeof(cl_mem),    // Size of argument value
     &mem_struct->buffer // Argument value
   );
-  if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+  if (DEBUG || ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(
@@ -410,7 +410,7 @@ void runTaskOnDataset(
     NULL,        // Preceding events list
     NULL         // Event object destination
   );
-  if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
+  if (DEBUG || ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 }
 
 /* Enqueues a task to compute the presence array for a given dataset and filter kernel.
@@ -426,7 +426,7 @@ void computePresenceArrayForDataset(
   HadopeMemoryBuffer *presence
 ) {
     if (DEBUG) printf("computePresenceArrayForDataset\n");
-  size_t g_work_size[1] = {ceil((float)mem_struct->buffer_entries/4)};
+  size_t g_work_size[1] = {ceil((float)mem_struct->buffer_entries / 4)};
 
   /* Kernel's global data_array set to be the given device memory buffer */
   cl_int ret = clSetKernelArg(
@@ -435,7 +435,7 @@ void computePresenceArrayForDataset(
     sizeof(cl_mem),    // Size of argument value
     &mem_struct->buffer // Argument value
   );
-  if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+  if (DEBUG || ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   /* Output buffer created to be an int flag for each element in input dataset. */
   presence->buffer_entries = mem_struct->buffer_entries;

@@ -22,6 +22,13 @@ class Hadope::HybridDevice
     end
   end
 
+  def method_missing(method, *args, &block)
+    get_hybrid_devices.each do |device|
+      device.send method, *args, &block
+    end
+    self
+  end
+
   def [](type)
     send type.hadope_conversion
   end
