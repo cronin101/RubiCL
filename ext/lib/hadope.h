@@ -54,7 +54,6 @@ void pinArrayForDevice(
 void buildTaskFromSource(
     const HadopeEnvironment* env,
     const char* kernel_source,
-    const size_t source_size,
     const char* name,
     HadopeTask* result
 );
@@ -93,12 +92,14 @@ void computePresenceArrayForDataset(
 void exclusivePrefixSum(
     const HadopeEnvironment* env,
     const HadopeMemoryBuffer* presence,
+    char* source,
     HadopeMemoryBuffer* result
 );
 
 int sumIntegerDataset(
     const HadopeEnvironment* env,
-    HadopeMemoryBuffer* input_dataset
+    HadopeMemoryBuffer* input_dataset,
+    char* source
 );
 
 void braidBuffers(

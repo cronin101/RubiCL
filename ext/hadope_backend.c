@@ -243,6 +243,7 @@ static VALUE methodRetrievePinnedDoubleDataset(VALUE self, VALUE memory_struct_o
  * @memory_struct_object: Ruby object storing HadopeMemoryBuffer. */
 static VALUE methodSumIntegerBuffer(
     VALUE self,
+    VALUE scan_task_source_object,
     VALUE memory_struct_object
 ) {
     HadopeMemoryBuffer *mem_struct;
@@ -252,20 +253,18 @@ static VALUE methodSumIntegerBuffer(
     HadopeEnvironment *environment;
     Data_Get_Struct(environment_object, HadopeEnvironment, environment);
 
-    return INT2FIX(sumIntegerDataset(environment, mem_struct));
+    return INT2FIX(sumIntegerDataset(environment, mem_struct, StringValuePtr(scan_task_source_object)));
 }
 
 /* Takes a code-generated OpenCL kernel and builds it for the target ocl device
  * then enqueues its execution on a specified dataset.
  *
  * @task_source_object: Ruby object storing the kernel as a String.
- * @source_size_object: Ruby object specifying the size of the kernel String.
  * @task_name_object: Ruby object specifying the task within the source to enqueue.
  * @memory_struct_object: Ruby object containing HadopeMemoryBuffer to process. */
 static VALUE methodRunMapTask(
   VALUE self,
   VALUE task_source_object,
-  VALUE source_size_object,
   VALUE task_name_object,
   VALUE mem_struct_object
 ){
@@ -280,10 +279,9 @@ static VALUE methodRunMapTask(
 
     /* Convert Objects into C types and builds Kernel using environment ivar */
     char* task_source = StringValuePtr(task_source_object);
-    int source_size = FIX2INT(source_size_object);
     char* task_name = StringValuePtr(task_name_object);
     HadopeTask task;
-    buildTaskFromSource(environment, task_source, source_size, task_name, &task);
+    buildTaskFromSource(environment, task_source, task_name, &task);
 
     /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
     runTaskOnDataset(environment, mem_struct, &task);
@@ -295,14 +293,13 @@ static VALUE methodRunMapTask(
  * FIXME: Refactor pasted code from above method that is present here.
  *
  * @task_source_object: Ruby object storing the kernel as a String.
- * @source_size_object: Ruby object specifying the size of the kernel String.
  * @task_name_object: Ruby object specifying the task within the source to enqueue.
  * @memory_struct_object: Ruby object containing HadopeMemoryBuffer to process. */
 static VALUE methodRunFilterTask(
   VALUE self,
-  VALUE task_source_object,
-  VALUE source_size_object,
-  VALUE task_name_object,
+  VALUE filter_task_source_object,
+  VALUE filter_task_name_object,
+  VALUE scan_task_source_object,
   VALUE mem_struct_object
 ){
     HadopeMemoryBuffer *dataset;
@@ -311,21 +308,21 @@ static VALUE methodRunFilterTask(
     if (!dataset->buffer_entries) return self;
 
     /* Convert Objects into C types and build Kernel using environment ivar */
-    char* task_source = StringValuePtr(task_source_object);
-    int source_size = FIX2INT(source_size_object);
-    char* task_name = StringValuePtr(task_name_object);
+    char* filter_task_source = StringValuePtr(filter_task_source_object);
+    char* filter_task_name = StringValuePtr(filter_task_name_object);
+    char* scan_task_source = StringValuePtr(scan_task_source_object);
 
     HadopeEnvironment *environment;
     VALUE environment_object = rb_iv_get(self, "@environment");
     Data_Get_Struct(environment_object, HadopeEnvironment, environment);
 
-    HadopeTask task;
-    buildTaskFromSource(environment, task_source, source_size, task_name, &task);
+    HadopeTask filter_task;
+    buildTaskFromSource(environment, filter_task_source, filter_task_name, &filter_task);
 
     /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
     HadopeMemoryBuffer presence, prescan;
-    computePresenceArrayForDataset(environment, dataset, &task, &presence);
-    exclusivePrefixSum(environment, &presence, &prescan);
+    computePresenceArrayForDataset(environment, dataset, &filter_task, &presence);
+    exclusivePrefixSum(environment, &presence, scan_task_source, &prescan);
     filterByScatteredWrites(environment, dataset, &presence, &prescan);
     releaseTemporaryFilterBuffers(&presence, &prescan);
 
@@ -335,7 +332,6 @@ static VALUE methodRunFilterTask(
 static VALUE methodRunBraidTask(
     VALUE self,
     VALUE task_source_object,
-    VALUE source_size_object,
     VALUE task_name_object,
     VALUE fst_memstruct_object,
     VALUE snd_memstruct_object
@@ -351,7 +347,6 @@ static VALUE methodRunBraidTask(
     buildTaskFromSource(
         environment,
         task_source,
-        FIX2INT(source_size_object),
         task_name,
         &task
     );
@@ -373,8 +368,8 @@ static VALUE methodRunBraidTask(
 static VALUE methodCountFilteredBuffer(
     VALUE self,
     VALUE task_source_object,
-    VALUE source_size_object,
     VALUE task_name_object,
+    VALUE scan_task_source_object,
     VALUE mem_struct_object
     ) {
       HadopeMemoryBuffer *dataset;
@@ -382,18 +377,17 @@ static VALUE methodCountFilteredBuffer(
 
       /* Convert Objects into C types and builds Kernel using environment ivar */
       char* task_source = StringValuePtr(task_source_object);
-      int source_size = FIX2INT(source_size_object);
       char* task_name = StringValuePtr(task_name_object);
       VALUE environment_object = rb_iv_get(self, "@environment");
       Data_Get_Struct(environment_object, HadopeEnvironment, environment);
       HadopeTask task;
-      buildTaskFromSource(environment, task_source, source_size, task_name, &task);
+      buildTaskFromSource(environment, task_source, task_name, &task);
 
       /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
       HadopeMemoryBuffer presence, prescan;
       Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, dataset);
       computePresenceArrayForDataset(environment, dataset, &task, &presence);
-      exclusivePrefixSum(environment, &presence, &prescan);
+      exclusivePrefixSum(environment, &presence, StringValuePtr(scan_task_source_object), &prescan);
 
       VALUE result =  INT2FIX(filteredBufferLength(environment, &presence, &prescan));
       releaseTemporaryFilterBuffers(&presence, &prescan);
@@ -428,10 +422,10 @@ void Init_hadope_backend(){
   rb_define_private_method(HadopeBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
   rb_define_private_method(HadopeBackend, "retrieve_pinned_integer_dataset_from_buffer", methodRetrievePinnedIntDataset, 1);
   rb_define_private_method(HadopeBackend, "retrieve_pinned_double_dataset_from_buffer", methodRetrievePinnedDoubleDataset, 1);
-  rb_define_private_method(HadopeBackend, "sum_integer_buffer", methodSumIntegerBuffer, 1);
+  rb_define_private_method(HadopeBackend, "sum_integer_buffer", methodSumIntegerBuffer, 2);
   rb_define_private_method(HadopeBackend, "count_post_filter", methodCountFilteredBuffer, 4);
-  rb_define_private_method(HadopeBackend, "run_map_task", methodRunMapTask, 4);
+  rb_define_private_method(HadopeBackend, "run_map_task", methodRunMapTask, 3);
   rb_define_private_method(HadopeBackend, "run_filter_task", methodRunFilterTask, 4);
-  rb_define_private_method(HadopeBackend, "run_braid_task", methodRunBraidTask, 5);
+  rb_define_private_method(HadopeBackend, "run_braid_task", methodRunBraidTask, 4);
   rb_define_private_method(HadopeBackend, "clean_used_resources", methodCleanUsedResources, 1);
 }

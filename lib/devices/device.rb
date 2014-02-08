@@ -3,6 +3,14 @@ class Hadope::Device
   include Hadope::RequireType
   include Hadope::ChainableDecorator
 
+  class << self
+    attr_accessor :singleton
+
+    def get
+      @singleton ||= new
+    end
+  end
+
   FIX2INT = [:int, :x, ['x = x >> 1']]
   INT2FIX = [:int, :x, ['x = (x << 1) | 0x01']]
 
@@ -88,7 +96,8 @@ class Hadope::Device
   def sum
     @task_queue.unshift Hadope::Map.new(*FIX2INT)
     run_tasks(do_conversions:false)
-    sum_integer_buffer @buffer
+    scan_kernel = Hadope::Scan.new(type: :int, operator:'+').to_kernel
+    sum_integer_buffer scan_kernel, @buffer
   end
 
   def count(needle)
@@ -97,7 +106,8 @@ class Hadope::Device
     if unary_types.include? loaded_type
       task = Hadope::Filter.new(loaded_type, :x, "x == #{needle}")
       kernel = task.to_kernel
-      count_post_filter(kernel, kernel.length, task.name, @buffer)
+      scan_kernel = Hadope::Scan.new(type: :int, operator:'+').to_kernel
+      count_post_filter(kernel, task.name, scan_kernel, @buffer)
     else
       raise "#count not implemented for #{loaded_type.inspect}"
     end
@@ -112,25 +122,26 @@ class Hadope::Device
   def run_map(task)
     kernel = task.to_kernel
     @logger.log "Executing map kernel: #{kernel.inspect}"
-    run_map_task(kernel, kernel.length, task.name, @buffer)
+    run_map_task(kernel, task.name, @buffer)
   end
 
   def run_smap(task)
     kernel = task.to_kernel
     @logger.log "Executing smap kernel: #{kernel.inspect}"
-    run_map_task(kernel, kernel.length, task.name, @snds)
+    run_map_task(kernel, task.name, @snds)
   end
 
   def run_filter(task)
     kernel = task.to_kernel
     @logger.log "Executing filter kernel: #{kernel.inspect}"
-    run_filter_task(kernel, kernel.length, task.name, @buffer)
+    scan_kernel = Hadope::Scan.new(type: :int, operator:'+').to_kernel
+    run_filter_task(kernel, task.name, scan_kernel, @buffer)
   end
 
   def run_braid(task)
     kernel = task.to_kernel
     @logger.log "Executing braid kernel: #{kernel.inspect}"
-    @buffer = run_braid_task(kernel, kernel.length, task.name, @fsts, @snds)
+    @buffer = run_braid_task(kernel, task.name, @fsts, @snds)
   end
 
   def run_task(task)
