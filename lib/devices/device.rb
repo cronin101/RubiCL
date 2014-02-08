@@ -96,7 +96,7 @@ class Hadope::Device
   def sum
     @task_queue.unshift Hadope::Map.new(*FIX2INT)
     run_tasks(do_conversions:false)
-    scan_kernel = Hadope::Scan.new(type: :int, operator:'+').to_kernel
+    scan_kernel = Hadope::Scan.new(type: :int, operator: :+).to_kernel
     sum_integer_buffer scan_kernel, @buffer
   end
 
@@ -106,7 +106,7 @@ class Hadope::Device
     if unary_types.include? loaded_type
       task = Hadope::Filter.new(loaded_type, :x, "x == #{needle}")
       kernel = task.to_kernel
-      scan_kernel = Hadope::Scan.new(type: :int, operator:'+').to_kernel
+      scan_kernel = Hadope::Scan.new(type: :int, operator: :+).to_kernel
       count_post_filter(kernel, task.name, scan_kernel, @buffer)
     else
       raise "#count not implemented for #{loaded_type.inspect}"
@@ -134,7 +134,7 @@ class Hadope::Device
   def run_filter(task)
     kernel = task.to_kernel
     @logger.log "Executing filter kernel: #{kernel.inspect}"
-    scan_kernel = Hadope::Scan.new(type: :int, operator:'+').to_kernel
+    scan_kernel = Hadope::Scan.new(type: :int, operator: :+).to_kernel
     run_filter_task(kernel, task.name, scan_kernel, @buffer)
   end
 

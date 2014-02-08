@@ -1,7 +1,7 @@
 class Hadope::Scan
   attr_accessor :type
 
-  def initialize(type:(:int), banks:32, elim_conflicts:false, operator:'+')
+  def initialize(type: :int, banks:32, elim_conflicts:false, operator: :+)
     @type = type
     @op = operator
     @banks = banks
