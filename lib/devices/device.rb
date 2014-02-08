@@ -19,7 +19,7 @@ module Hadope
     Cache = Struct.new(:dataset)
 
     def initialize
-      raise 'Must be a subclass!' if self.class == Hadope::Device
+      raise 'Must be a subclass!' if self.class == Device
       initialize_task_queue
       @logger = Logger.get
       @cache = Cache.new(nil)
@@ -56,7 +56,7 @@ module Hadope
     def braid(&block)
       raise "Braid function has incorrect arity." unless block.arity == 2
       expression = LambdaBytecodeParser.new(block).to_infix.first
-      @task_queue.push Hadope::Braid.new(:x, :y, expression)
+      @task_queue.push Braid.new(:x, :y, expression)
     end)
 
     chainable def map(&block)
@@ -112,7 +112,7 @@ module Hadope
     end
 
     def count(needle)
-      @task_queue.unshift Hadope::Map.new(*FIX2INT) if loaded_type == :int
+      @task_queue.unshift Map.new(*FIX2INT) if loaded_type == :int
       run_tasks(do_conversions:false)
       if unary_types.include? loaded_type
         task = Filter.new(loaded_type, :x, "x == #{needle}")
