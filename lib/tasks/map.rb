@@ -5,7 +5,7 @@ module Hadope
 
     attr_reader :input_variable, :output_variable, :type
 
-    def initialize(type='int4', input_variable, statements)
+    def initialize(type, input_variable, statements)
       @type = type
       super()
       @output_variable = (@input_variable = input_variable)

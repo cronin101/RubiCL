@@ -5,7 +5,7 @@ module Hadope
 
     attr_reader :input_variable, :output_variable, :type
 
-    def initialize(type='int', input_variable, predicate)
+    def initialize(type, input_variable, predicate)
       @type = type
       super()
       add_variables @input_variable = input_variable
