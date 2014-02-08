@@ -339,7 +339,6 @@ void releaseDeviceDataset(
 void buildTaskFromSource(
   const HadopeEnvironment* env,
   const char* kernel_source,
-  const size_t source_size,
   const char* name,
   HadopeTask* result
 ) {
@@ -352,7 +351,7 @@ void buildTaskFromSource(
     env->context,                    // Context
     1,                              // Number of parts that the source is in
     (const char **) &kernel_source, // Array of program source code
-    &source_size,                   // Total size of source
+    NULL,                           // Total size of source
     &ret                            // Status destination
   );
   if (ret != CL_SUCCESS) printf("clCreateProgramWithSource %s\n", oclErrorString(ret));
@@ -400,7 +399,7 @@ void runTaskOnDataset(
     sizeof(cl_mem),    // Size of argument value
     &mem_struct->buffer // Argument value
   );
-  if (DEBUG || ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+  if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(
@@ -414,9 +413,7 @@ void runTaskOnDataset(
     NULL,        // Preceding events list
     NULL         // Event object destination
   );
-  if (DEBUG || ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
-
-  if (DEBUG) printf("leaving runTaskOnDataset\n");
+  if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 }
 
 /* Enqueues a task to compute the presence array for a given dataset and filter kernel.
@@ -478,6 +475,7 @@ void computePresenceArrayForDataset(
 void exclusivePrefixSum(
   const HadopeEnvironment* env,
   const HadopeMemoryBuffer* presence,
+  char* source,
   HadopeMemoryBuffer* result
 ) {
     if (DEBUG) printf("exclusivePrefixSum\n");
@@ -491,10 +489,6 @@ void exclusivePrefixSum(
     NULL,
     NULL
   );
-
-  const char* prescan_filename = "./ext/lib/prefix_sum/scan_kernel.cl";
-  char *source = LoadProgramSourceFromFile(prescan_filename);
-  if (!source) printf("Error loading '%s' source.\n", prescan_filename);
 
   ComputeProgram = clCreateProgramWithSource(
     env->context,
@@ -538,8 +532,6 @@ void exclusivePrefixSum(
     GROUP_SIZE = min(GROUP_SIZE, wgSize);
   }
 
-  free(source);
-
   CreatePartialSumBuffers(presence->buffer_entries, env->context);
   PreScanBuffer(env->queue, result->buffer, presence->buffer, GROUP_SIZE, GROUP_SIZE, presence->buffer_entries);
 
@@ -559,12 +551,13 @@ void exclusivePrefixSum(
  * @input_dataset: Struct containing cl_mem buffer / target dataset. */
 int sumIntegerDataset(
     const HadopeEnvironment* env,
-    HadopeMemoryBuffer* input_dataset
+    HadopeMemoryBuffer* input_dataset,
+    char* source
 ) {
     if (DEBUG) printf("sumIntegerDataset\n");
 
     HadopeMemoryBuffer prefixed;
-    exclusivePrefixSum(env, input_dataset, &prefixed);
+    exclusivePrefixSum(env, input_dataset, source, &prefixed);
 
     /* Sum is last element of input dataset added to last element of
      * exclusive prefix summed dataset */
@@ -704,7 +697,6 @@ void filterByScatteredWrites(
   buildTaskFromSource(
     env,
     source,
-    strlen(source),
     scatter_taskname,
     &scatter_task
   );
@@ -718,14 +710,11 @@ void filterByScatteredWrites(
     switch (input_dataset->type) {
     case (INTEGER_BUFFER):
         filtered_buffer_size = filtered_entries * sizeof(int);
-        printf("Filtered int buffer with %d entries of size %zu\n", filtered_entries, filtered_buffer_size);
         break;
     case (DOUBLE_BUFFER):
         filtered_buffer_size = filtered_entries * sizeof(double);
-        printf("Filtered double buffer with %d entries of size %zu\n", filtered_entries, filtered_buffer_size);
         break;
     }
-    printf("Based buffer is size %zu\n", filtered_buffer_size);
   cl_mem filtered_buffer = clCreateBuffer(
     env->context,
     CL_MEM_HOST_READ_ONLY,
