@@ -356,7 +356,68 @@ static VALUE methodRunBraidTask(
     Data_Get_Struct(snd_memstruct_object, HadopeMemoryBuffer, snds);
 
     braidBuffers(environment, &task, fsts, snds);
+    clReleaseMemObject(snds->buffer);
+    free(snds);
     return fst_memstruct_object;
+}
+
+static VALUE methodRunExclusiveScanTask(
+    VALUE self,
+    VALUE scan_task_source_object,
+    VALUE mem_struct_object
+) {
+    HadopeEnvironment* environment;
+    VALUE environment_object = rb_iv_get(self, "@environment");
+    Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+
+    char* scan_task_source = StringValuePtr(scan_task_source_object);
+
+    HadopeMemoryBuffer *mem_struct;
+    Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
+
+    HadopeMemoryBuffer* result = malloc(sizeof(HadopeMemoryBuffer));
+    exclusivePrefixSum(environment, mem_struct, scan_task_source, result);
+    clReleaseMemObject(mem_struct->buffer);
+    mem_struct->buffer = result->buffer;
+
+    return self;
+}
+
+static VALUE methodRunInclusiveScanTask(
+    VALUE self,
+    VALUE scan_task_source_object,
+    VALUE braid_task_source_object,
+    VALUE braid_task_name_object,
+    VALUE mem_struct_object
+) {
+    HadopeEnvironment* environment;
+    VALUE environment_object = rb_iv_get(self, "@environment");
+    Data_Get_Struct(environment_object, HadopeEnvironment, environment);
+
+    char* scan_task_source = StringValuePtr(scan_task_source_object);
+
+    HadopeMemoryBuffer *mem_struct;
+    Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
+
+    HadopeMemoryBuffer* result = malloc(sizeof(HadopeMemoryBuffer));
+    exclusivePrefixSum(environment, mem_struct, scan_task_source, result);
+
+    char* braid_task_source = StringValuePtr(braid_task_source_object);
+    char* braid_task_name = StringValuePtr(braid_task_name_object);
+
+    HadopeTask braid_task;
+    buildTaskFromSource(
+        environment,
+        braid_task_source,
+        braid_task_name,
+        &braid_task
+    );
+
+    braidBuffers(environment, &braid_task, result, mem_struct);
+    clReleaseMemObject(mem_struct->buffer);
+    mem_struct->buffer = result->buffer;
+
+    return self;
 }
 
 /* Returns the number of elements that would remain in the buffer after a given filter task.
@@ -427,5 +488,7 @@ void Init_hadope_backend(){
   rb_define_private_method(HadopeBackend, "run_map_task", methodRunMapTask, 3);
   rb_define_private_method(HadopeBackend, "run_filter_task", methodRunFilterTask, 4);
   rb_define_private_method(HadopeBackend, "run_braid_task", methodRunBraidTask, 4);
+  rb_define_private_method(HadopeBackend, "run_exclusive_scan_task", methodRunExclusiveScanTask, 2);
+  rb_define_private_method(HadopeBackend, "run_inclusive_scan_task", methodRunInclusiveScanTask, 4);
   rb_define_private_method(HadopeBackend, "clean_used_resources", methodCleanUsedResources, 1);
 }

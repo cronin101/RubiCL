@@ -42,11 +42,12 @@ class Hadope::Device
 
   chainable requires_type :int, (sets_type :int_tuple,
   def zip(array)
-    raise "Second dataset must be the same length as the first." unless @buffer.length == array.length
-    @cache.dataset = nil
-
+    # FIXME: Expose buffer length
+    #raise "Second dataset must be the same length as the first." unless @buffer.length == array.length
     @fsts = @buffer
-    @snds = create_pinned_buffer(array)
+    @snds = create_buffer_from_dataset :pinned_integer_buffer, array
+
+    @cache.dataset = nil
     @task_queue.push Hadope::SMap.new(*FIX2INT)
   end)
 
@@ -79,6 +80,15 @@ class Hadope::Device
 
   alias_method :collect, :map
   alias_method :select, :filter
+
+  chainable def scan(style=:inclusive, operator)
+    @cache.dataset = nil
+    if unary_types.include? loaded_type
+      @task_queue.push Hadope::Scan.new(style:style, type:loaded_type, operator:operator)
+    else
+      raise "#scan not implemented for #{loaded_type.inspect}"
+    end
+  end
 
   requires_type :int,
   def retrieve_pinned_integer_dataset
@@ -144,12 +154,28 @@ class Hadope::Device
     @buffer = run_braid_task(kernel, task.name, @fsts, @snds)
   end
 
+  def run_scan(task)
+    scan_kernel = task.to_kernel
+    @logger.log "Executing scan kernel: #{scan_kernel.inspect}"
+    case task.style
+    when :exclusive
+      run_exclusive_scan_task(scan_kernel, @buffer)
+    when :inclusive
+      braid_task = Hadope::Braid.new(:x, :y, 'x + y')
+      @logger.log "Executing braid kernel: #{braid_task.to_kernel.inspect}"
+      run_inclusive_scan_task(scan_kernel, braid_task.to_kernel, braid_task.name, @buffer)
+    else
+      raise "Don't understand scan type: #{task.style}"
+    end
+  end
+
   def run_task(task)
     case task
     when Hadope::SMap   then run_smap   task
     when Hadope::Map    then run_map    task
     when Hadope::Filter then run_filter task
     when Hadope::Braid  then run_braid  task
+    when Hadope::Scan   then run_scan   task
     else raise "Unknown task: #{task.inspect}"
     end
   end

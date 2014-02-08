@@ -1,12 +1,17 @@
 class Hadope::Scan
-  attr_accessor :type
+  attr_accessor :type, :style
 
-  def initialize(type: :int, banks:32, elim_conflicts:false, operator: :+)
+  def initialize(style: :exclusive, type: :int, banks:32, elim_conflicts:false, operator: :+)
+    @style = style
     @type = type
     @op = operator
     @banks = banks
     @elim_conflicts = elim_conflicts
     super()
+  end
+
+  def statements
+    ["r = r #@op e"]
   end
 
   def to_kernel
