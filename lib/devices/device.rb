@@ -161,7 +161,7 @@ class Hadope::Device
     when :exclusive
       run_exclusive_scan_task(scan_kernel, @buffer)
     when :inclusive
-      braid_task = Hadope::Braid.new(:x, :y, 'x + y')
+      braid_task = Hadope::Braid.new(loaded_type, :x, :y, 'x + y')
       @logger.log "Executing braid kernel: #{braid_task.to_kernel.inspect}"
       run_inclusive_scan_task(scan_kernel, braid_task.to_kernel, braid_task.name, @buffer)
     else

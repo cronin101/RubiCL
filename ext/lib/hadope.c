@@ -447,6 +447,7 @@ void computePresenceArrayForDataset(
     (presence->buffer_entries * sizeof(int)), // Size of buffer to create
     CL_MEM_HOST_READ_ONLY                     // Buffer flags set
   );
+  presence->type = INTEGER_BUFFER;
 
   /* Kernel's global presence_array set to be the newly created presence buffer */
   ret = clSetKernelArg(
@@ -474,7 +475,7 @@ void computePresenceArrayForDataset(
 
 void exclusivePrefixSum(
   const HadopeEnvironment* env,
-  const HadopeMemoryBuffer* presence,
+  const HadopeMemoryBuffer* input,
   char* source,
   HadopeMemoryBuffer* result
 ) {
@@ -482,10 +483,20 @@ void exclusivePrefixSum(
 
   cl_int ret;
 
+    size_t unit_size;
+    switch (input->type) {
+    case (INTEGER_BUFFER):
+        unit_size = sizeof(int);
+        break;
+    case (DOUBLE_BUFFER):
+        unit_size = sizeof(double);
+        break;
+    }
+
   result->buffer = clCreateBuffer(
     env->context,
     CL_MEM_HOST_READ_ONLY,
-    presence->buffer_entries * sizeof(int),
+    input->buffer_entries * unit_size,
     NULL,
     NULL
   );
@@ -532,8 +543,8 @@ void exclusivePrefixSum(
     GROUP_SIZE = min(GROUP_SIZE, wgSize);
   }
 
-  CreatePartialSumBuffers(presence->buffer_entries, env->context);
-  PreScanBuffer(env->queue, result->buffer, presence->buffer, GROUP_SIZE, GROUP_SIZE, presence->buffer_entries);
+  CreatePartialSumBuffers(input->buffer_entries, env->context, unit_size);
+  PreScanBuffer(env->queue, result->buffer, input->buffer, GROUP_SIZE, GROUP_SIZE, input->buffer_entries, unit_size);
 
   ret = clFinish(env->queue);
   if (ret != CL_SUCCESS) printf("clFinish %s\n", oclErrorString(ret));
@@ -542,7 +553,7 @@ void exclusivePrefixSum(
   for(int k = 0; k < KernelCount; ++k) clReleaseKernel(ComputeKernels[k]);
   clReleaseProgram(ComputeProgram);
 
-  result->buffer_entries = presence->buffer_entries;
+  result->buffer_entries = input->buffer_entries;
 }
 
 /* Returns the summation of a integer dataset.
@@ -803,7 +814,7 @@ void braidBuffers(
     if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
 
     /* Kernel enqueued to be executed on the environment's command queue */
-    size_t g_work_size[1] = {ceil((float) fsts->buffer_entries / 4)};
+    size_t g_work_size[1] = {fsts->buffer_entries};
     ret = clEnqueueNDRangeKernel(
         env->queue,   // Device's command queue
         task->kernel, // Kernel to enqueue

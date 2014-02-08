@@ -3,9 +3,10 @@ require_relative './task'
 module Hadope
   class Braid < Task
 
-    attr_reader :input_variable, :output_variable
+    attr_reader :input_variable, :output_variable, :type
 
-    def initialize(fst, snd, braid)
+    def initialize(type, fst, snd, braid)
+      @type = type
       super()
       add_variables (@output_variable = @fst = fst), (@snd = snd)
       add_statement braid
@@ -13,10 +14,6 @@ module Hadope
 
     def to_kernel
       TaskKernelGenerator.new(self).create_kernel
-    end
-
-    def type
-      'int4'
     end
 
     def setup_statements

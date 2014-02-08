@@ -271,10 +271,10 @@ __kernel void PreScanStoreSumKernel(
 }
 
 __kernel void PreScanStoreSumNonPowerOfTwoKernel(
-    __global int *output_data,
-    __global const int *input_data,
-    __global int *partial_sums,
-    __local int* shared_data,
+    __global #{type} *output_data,
+    __global const #{type} *input_data,
+    __global #{type} *partial_sums,
+    __local #{type}* shared_data,
     const uint group_index,
     const uint base_index,
     const uint n
@@ -292,9 +292,9 @@ __kernel void PreScanStoreSumNonPowerOfTwoKernel(
 }
 
 __kernel void PreScanNonPowerOfTwoKernel(
-    __global int *output_data,
-    __global const int *input_data,
-    __local int* shared_data,
+    __global #{type} *output_data,
+    __global const #{type} *input_data,
+    __local #{type}* shared_data,
     const uint group_index,
     const uint base_index,
     const uint n
@@ -314,9 +314,9 @@ __kernel void PreScanNonPowerOfTwoKernel(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 __kernel void UniformAddKernel(
-    __global int *output_data,
-    __global int *input_data,
-    __local int *shared_data,
+    __global #{type} *output_data,
+    __global #{type} *input_data,
+    __local #{type} *shared_data,
     const uint group_offset,
     const uint base_index,
     const uint n
