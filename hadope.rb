@@ -5,10 +5,12 @@ module Hadope
     attr_writer :opencl_device
   end
 
+  require_relative './lib/modules/cast_access.rb'
   require_relative './lib/modules/chainable_decorator.rb'
   require_relative './lib/modules/require_type.rb'
 
   require_relative './lib/types/array.rb'
+  require_relative './lib/types/file.rb'
   require_relative './lib/types/fixnum.rb'
   require_relative './lib/types/float.rb'
 
