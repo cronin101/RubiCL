@@ -98,6 +98,28 @@ static VALUE methodPinIntDataset(VALUE self, VALUE dataset_object) {
     return mem_struct_objectFromPtr(mem_struct);
 }
 
+static VALUE methodPinIntFile(VALUE self, VALUE filename_object) {
+    char* filename = StringValuePtr(filename_object);
+    FILE* fp;
+
+    int ary_length = 16, ints_read = 0, num;
+    int* dataset = malloc(ary_length * sizeof(int));
+    if (!(fp = fopen(filename, "r"))) rb_raise(rb_eIOError, "PinIntFile: File access error.");
+
+    while (fscanf(fp, "%d\n", &num) == 1) {
+        if (++ints_read > ary_length) dataset = realloc(dataset, (ary_length *= 2) * sizeof(int));
+        dataset[ints_read] = num;
+    }
+    dataset = realloc(dataset, ints_read * sizeof(int));
+
+    HadopeEnvironment* environment = environmentPtrFromIvar(self);
+
+    HadopeMemoryBuffer* mem_struct = malloc(sizeof(HadopeMemoryBuffer));
+    pinArrayForDevice(environment, dataset, ints_read, ints_read * sizeof(int),
+                        mem_struct, INTEGER_BUFFER);
+    return mem_struct_objectFromPtr(mem_struct);
+}
+
 /*  Creates a memory buffer object containing a device-accessible reference to the given FLOAT dataset.
  *
  *  @dataset_object: Ruby object containing an array of doubles. */
@@ -369,6 +391,7 @@ void Init_hadope_backend() {
     rb_define_private_method(HadopeBackend, "create_memory_buffer", methodCreateMemoryBuffer, 2);
     rb_define_private_method(HadopeBackend, "transfer_integer_dataset_to_buffer", methodLoadIntDataset, 2);
     rb_define_private_method(HadopeBackend, "create_pinned_integer_buffer", methodPinIntDataset, 1);
+    rb_define_private_method(HadopeBackend, "create_pinned_intfile_buffer", methodPinIntFile, 1);
     rb_define_private_method(HadopeBackend, "create_pinned_double_buffer", methodPinDoubleDataset, 1);
     rb_define_private_method(HadopeBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
     rb_define_private_method(HadopeBackend, "retrieve_pinned_integer_dataset_from_buffer", methodRetrievePinnedIntDataset, 1);
