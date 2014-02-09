@@ -2,29 +2,25 @@
 #include "lib/hadope.h"
 
 /* ~~ BEGIN Helpers ~~ */
-HadopeEnvironment*
-environmentPtrFromIvar(VALUE self) {
+HadopeEnvironment* environmentPtrFromIvar(VALUE self) {
     HadopeEnvironment* environment;
     VALUE environment_object = rb_iv_get(self, "@environment");
     Data_Get_Struct(environment_object, HadopeEnvironment, environment);
     return environment;
 }
 
-HadopeMemoryBuffer*
-mem_structPtrFromObj(VALUE mem_struct_object) {
+HadopeMemoryBuffer* mem_structPtrFromObj(VALUE mem_struct_object) {
     HadopeMemoryBuffer* mem_struct;
     Data_Get_Struct(mem_struct_object, HadopeMemoryBuffer, mem_struct);
     return mem_struct;
 }
 
-VALUE
-environmentObjFromPtr(HadopeEnvironment* environment) {
+VALUE environmentObjFromPtr(HadopeEnvironment* environment) {
     VALUE environment_object = rb_define_class("HadopeEnvironment", rb_cObject);
     return Data_Wrap_Struct(environment_object, NULL, &free, environment);
 }
 
-VALUE
-mem_struct_objectFromPtr(HadopeMemoryBuffer* mem_struct) {
+VALUE mem_struct_objectFromPtr(HadopeMemoryBuffer* mem_struct) {
     VALUE mem_struct_object = rb_define_class("HadopeMemoryBuffer", rb_cObject);
     return Data_Wrap_Struct(mem_struct_object, NULL, &free, mem_struct);
 }
@@ -36,8 +32,7 @@ mem_struct_objectFromPtr(HadopeMemoryBuffer* mem_struct) {
  * struct that records its device_id and newly created context/command queue
  *
  * @device_type: CL_DEVICE_TYPE_GPU / CL_DEVICE_TYPE_CPU */
-static VALUE
-initOpenCLenvironment(cl_device_type device_type) {
+static VALUE initOpenCLenvironment(cl_device_type device_type) {
     HadopeEnvironment* environment = malloc(sizeof(HadopeEnvironment));
     createHadopeEnvironment(device_type, environment);
     return environmentObjFromPtr(environment);
@@ -60,8 +55,7 @@ static VALUE methodInitCPUEnvironment(VALUE self){
  *
  * @num_entries_object: Ruby object containing the array size as an integer.
  * @type_string_object: Ruby object containing the C type of the entries as a string. */
-static VALUE /* ### THIS METHOD IS DEPRECATED ### */
-methodCreateMemoryBuffer(VALUE self, VALUE num_entries_object, VALUE type_string_object) {
+static VALUE /* ### THIS METHOD IS DEPRECATED ### */ methodCreateMemoryBuffer(VALUE self, VALUE num_entries_object, VALUE type_string_object) {
     rb_warn("create_memory_buffer is deprecated, use create_pinned_x_buffer instead");
     int unit_size;
 
@@ -89,8 +83,7 @@ methodCreateMemoryBuffer(VALUE self, VALUE num_entries_object, VALUE type_string
 /*  Creates a memory buffer object containing a device-accessible reference to the given FIXNUM dataset.
  *
  *  @dataset_object: Ruby object containing an array of integers. */
-static VALUE
-methodPinIntDataset(VALUE self, VALUE dataset_object) {
+static VALUE methodPinIntDataset(VALUE self, VALUE dataset_object) {
     Check_Type(dataset_object, T_ARRAY);
     int array_length = RARRAY_LEN(dataset_object);
     size_t array_size = array_length * sizeof(int);
@@ -108,8 +101,7 @@ methodPinIntDataset(VALUE self, VALUE dataset_object) {
 /*  Creates a memory buffer object containing a device-accessible reference to the given FLOAT dataset.
  *
  *  @dataset_object: Ruby object containing an array of doubles. */
-static VALUE
-methodPinDoubleDataset(VALUE self, VALUE dataset_object) {
+static VALUE methodPinDoubleDataset(VALUE self, VALUE dataset_object) {
     Check_Type(dataset_object, T_ARRAY);
     int array_length = RARRAY_LEN(dataset_object);
     size_t array_size = array_length * sizeof(double);
@@ -128,8 +120,7 @@ methodPinDoubleDataset(VALUE self, VALUE dataset_object) {
  *
  * @dataset_object: Ruby object containing an array of integers.
  * @memory_struct_object: Ruby object storing previously created HadopeMemoryBuffer. */
-static VALUE
-methodLoadIntDataset(VALUE self, VALUE dataset_object, VALUE memory_struct_object) {
+static VALUE methodLoadIntDataset(VALUE self, VALUE dataset_object, VALUE memory_struct_object) {
     Check_Type(dataset_object, T_ARRAY);
 
     HadopeMemoryBuffer *mem_struct;
@@ -152,8 +143,7 @@ methodLoadIntDataset(VALUE self, VALUE dataset_object, VALUE memory_struct_objec
  * into a Ruby array to be returned to the device class
  *
  * @memory_struct_object: Ruby object storing HadopeMemoryBuffer. */
-static VALUE
-methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object) {
+static VALUE methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(memory_struct_object);
 
@@ -175,8 +165,7 @@ methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object) {
  * converts it into a Ruby array to be returned to the device class.
  *
  * @memory_struct_object: Ruby object storing HadopeMemoryBuffer. */
-static VALUE
-methodRetrievePinnedIntDataset(VALUE self, VALUE memory_struct_object) {
+static VALUE methodRetrievePinnedIntDataset(VALUE self, VALUE memory_struct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(memory_struct_object);
 
@@ -195,8 +184,7 @@ methodRetrievePinnedIntDataset(VALUE self, VALUE memory_struct_object) {
  * converts it into a Ruby array to be returned to the device class.
  *
  * @memory_struct_object: Ruby object storing HadopeMemoryBuffer. */
-static VALUE
-methodRetrievePinnedDoubleDataset(VALUE self, VALUE memory_struct_object) {
+static VALUE methodRetrievePinnedDoubleDataset(VALUE self, VALUE memory_struct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(memory_struct_object);
 
@@ -218,8 +206,7 @@ methodRetrievePinnedDoubleDataset(VALUE self, VALUE memory_struct_object) {
 /* Returns the summation (fold with +) of a integer memory buffer.
  *
  * @memory_struct_object: Ruby object storing HadopeMemoryBuffer. */
-static VALUE
-methodSumIntegerBuffer(VALUE self, VALUE scan_task_source_object, VALUE memory_struct_object) {
+static VALUE methodSumIntegerBuffer(VALUE self, VALUE scan_task_source_object, VALUE memory_struct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(memory_struct_object);
 
@@ -232,8 +219,7 @@ methodSumIntegerBuffer(VALUE self, VALUE scan_task_source_object, VALUE memory_s
  * @task_source_object: Ruby object storing the kernel as a String.
  * @task_name_object: Ruby object specifying the task within the source to enqueue.
  * @memory_struct_object: Ruby object containing HadopeMemoryBuffer to process. */
-static VALUE
-methodRunMapTask(VALUE self, VALUE task_source_object, VALUE task_name_object, VALUE mem_struct_object) {
+static VALUE methodRunMapTask(VALUE self, VALUE task_source_object, VALUE task_name_object, VALUE mem_struct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(mem_struct_object);
     /* Early termination for empty buffer */
@@ -257,8 +243,7 @@ methodRunMapTask(VALUE self, VALUE task_source_object, VALUE task_name_object, V
  * @task_source_object: Ruby object storing the kernel as a String.
  * @task_name_object: Ruby object specifying the task within the source to enqueue.
  * @memory_struct_object: Ruby object containing HadopeMemoryBuffer to process. */
-static VALUE
-methodRunFilterTask(VALUE self, VALUE filter_task_source_object, VALUE filter_task_name_object,
+static VALUE methodRunFilterTask(VALUE self, VALUE filter_task_source_object, VALUE filter_task_name_object,
                     VALUE scan_task_source_object, VALUE mem_struct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* dataset = mem_structPtrFromObj(mem_struct_object);
@@ -282,8 +267,7 @@ methodRunFilterTask(VALUE self, VALUE filter_task_source_object, VALUE filter_ta
     return self;
 }
 
-static VALUE
-methodRunBraidTask(VALUE self, VALUE task_source_object, VALUE task_name_object,
+static VALUE methodRunBraidTask(VALUE self, VALUE task_source_object, VALUE task_name_object,
                     VALUE fst_memstruct_object, VALUE snd_memstruct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* fsts = mem_structPtrFromObj(fst_memstruct_object);
@@ -301,8 +285,7 @@ methodRunBraidTask(VALUE self, VALUE task_source_object, VALUE task_name_object,
     return fst_memstruct_object;
 }
 
-static VALUE
-methodRunExclusiveScanTask(VALUE self, VALUE scan_task_source_object, VALUE mem_struct_object) {
+static VALUE methodRunExclusiveScanTask(VALUE self, VALUE scan_task_source_object, VALUE mem_struct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(mem_struct_object);
 
@@ -316,8 +299,7 @@ methodRunExclusiveScanTask(VALUE self, VALUE scan_task_source_object, VALUE mem_
     return self;
 }
 
-static VALUE
-methodRunInclusiveScanTask(VALUE self, VALUE scan_task_source_object, VALUE braid_task_source_object,
+static VALUE methodRunInclusiveScanTask(VALUE self, VALUE scan_task_source_object, VALUE braid_task_source_object,
                             VALUE braid_task_name_object, VALUE mem_struct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(mem_struct_object);
@@ -346,8 +328,7 @@ methodRunInclusiveScanTask(VALUE self, VALUE scan_task_source_object, VALUE brai
  * @source_size_object: Ruby object containing the length of the filter kernel's source.
  * @task_name_object: Ruby object containing the name of the filter task to enqueue.
  * @mem_struct_object: Ruby object containing the HadopeMemoryBuffer to filter. */
-static VALUE
-methodCountFilteredBuffer(VALUE self, VALUE task_source_object, VALUE task_name_object,
+static VALUE methodCountFilteredBuffer(VALUE self, VALUE task_source_object, VALUE task_name_object,
                             VALUE scan_task_source_object, VALUE mem_struct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* dataset = mem_structPtrFromObj(mem_struct_object);
@@ -370,8 +351,7 @@ methodCountFilteredBuffer(VALUE self, VALUE task_source_object, VALUE task_name_
 
 /* ~~ END Task Dispatching Methods ~~ */
 
-static VALUE
-methodCleanUsedResources(VALUE self, VALUE mem_struct_object) {
+static VALUE methodCleanUsedResources(VALUE self, VALUE mem_struct_object) {
     HadopeEnvironment *environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* dataset = mem_structPtrFromObj(mem_struct_object);
     clFlush(environment->queue);
@@ -382,8 +362,7 @@ methodCleanUsedResources(VALUE self, VALUE mem_struct_object) {
 }
 
 /* Used to give extension methods defined above to device class when HadopeBackend module is included. */
-void
-Init_hadope_backend() {
+void Init_hadope_backend() {
     VALUE HadopeBackend = rb_define_module("HadopeBackend");
     rb_define_private_method(HadopeBackend, "initialize_GPU_environment", methodInitGPUEnvironment, 0);
     rb_define_private_method(HadopeBackend, "initialize_CPU_environment", methodInitCPUEnvironment, 0);
