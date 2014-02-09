@@ -108,7 +108,7 @@ static VALUE methodPinIntFile(VALUE self, VALUE filename_object) {
 
     while (fscanf(fp, "%d\n", &num) == 1) {
         if (++ints_read > ary_length) dataset = realloc(dataset, (ary_length *= 2) * sizeof(int));
-        dataset[ints_read] = num;
+        dataset[ints_read - 1] = INT2FIX(num);
     }
     dataset = realloc(dataset, ints_read * sizeof(int));
 

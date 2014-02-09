@@ -29,11 +29,28 @@ module Hadope
       send type.hadope_conversion
     end
 
+    def pin_integer_object obj
+      case obj
+      when Array
+        pin_integer_dataset obj
+      when File
+        pin_integer_file obj
+      else
+        raise "No idea how to pin #{obj.inspect}!"
+      end
+    end
+
     chainable sets_type :int,
     def pin_integer_dataset(array)
       @buffer = create_buffer_from_dataset :pinned_integer_buffer, array
     end
     alias_method :load_integer_dataset, :pin_integer_dataset
+
+    chainable sets_type :int,
+    def pin_integer_file file
+      @buffer = create_buffer_from_dataset :pinned_intfile_buffer, file.path
+      @cache.dataset = nil
+    end
 
     chainable sets_type :double,
     def pin_double_dataset(array)
