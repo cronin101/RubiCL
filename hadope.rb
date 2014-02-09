@@ -1,5 +1,4 @@
 require './ext/hadope_backend'
-require 'forwardable'
 
 module Hadope
   class << self
