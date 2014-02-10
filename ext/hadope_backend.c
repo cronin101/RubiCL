@@ -403,7 +403,6 @@ static VALUE methodRunIntSortTask(VALUE self, VALUE sort_task_source_object, VAL
             NULL                                        // Produced event object
         );
         clReleaseMemObject(padded_buffer_struct.buffer);
-        free(padded_buffer);
     /* If the dataset length is a power of two, no faff is needed. */
     } else {
         integerBitonicSort(environment, mem_struct, &task);

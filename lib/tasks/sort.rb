@@ -122,7 +122,7 @@ class Sort
    * has been explained in detail in the document mentioned above.
    */
 
-  __kernel void bitonicSort(__global #{type} * theArray, const uint stage,
+  __kernel void bitonicSort(__global #{type}* theArray, const uint stage,
                             const uint passOfStage, const uint width, const uint direction) {
       uint sortIncreasing = direction;
       uint threadId = get_global_id(0);
