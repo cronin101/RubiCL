@@ -58,6 +58,20 @@ module Hadope
     end
     alias_method :load_double_dataset, :pin_double_dataset
 
+    def sort
+      @cache.dataset = nil
+      case loaded_type
+      when :int then run_sort_int_buffer_task
+      else
+        raise "Not sure how to sort the type: #{loaded_type.inspect}"
+      end
+    end
+
+    chainable requires_type :int,
+    def run_sort_int_buffer_task
+      sort_integer_buffer Sort.new(type: :int).to_kernel, @buffer
+    end
+
     chainable requires_type :int, (sets_type :int_tuple,
     def zip(array)
       # FIXME: Expose buffer length

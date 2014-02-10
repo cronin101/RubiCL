@@ -30,6 +30,7 @@ module Hadope
   require_relative './lib/tasks/filter'
   require_relative './lib/tasks/braid'
   require_relative './lib/tasks/scan.rb'
+  require_relative './lib/tasks/sort.rb'
 
   def self.opencl_device
     @opencl_device.get

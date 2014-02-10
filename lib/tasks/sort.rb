@@ -1,7 +1,7 @@
 class Sort
   attr_accessor :type
 
-  def initialize(type)
+  def initialize(type: :int, order: :ascending)
     @type = type
   end
 

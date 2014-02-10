@@ -471,5 +471,6 @@ void Init_hadope_backend() {
     rb_define_private_method(HadopeBackend, "run_braid_task", methodRunBraidTask, 4);
     rb_define_private_method(HadopeBackend, "run_exclusive_scan_task", methodRunExclusiveScanTask, 2);
     rb_define_private_method(HadopeBackend, "run_inclusive_scan_task", methodRunInclusiveScanTask, 4);
+    rb_define_private_method(HadopeBackend, "sort_integer_buffer", methodRunIntSortTask, 2);
     rb_define_private_method(HadopeBackend, "clean_used_resources", methodCleanUsedResources, 1);
 }
