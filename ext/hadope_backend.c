@@ -396,7 +396,7 @@ static VALUE methodRunIntSortTask(VALUE self, VALUE sort_task_source_object, VAL
             padded_buffer_struct.buffer,                // Source buffer
             mem_struct->buffer,                         // Destination buffer
             0,                                          // Source offset
-            0,                                          // Destination offset (After padding)
+            0,                                          // Destination offset
             sizeof(int) * mem_struct->buffer_entries,   // Copied data size
             0,                                          // Preceding events
             NULL,                                       // Event list
