@@ -1,3 +1,5 @@
+#include <limits.h>
+
 #include "ruby.h"
 #include "lib/hadope.h"
 
@@ -340,6 +342,69 @@ static VALUE methodRunInclusiveScanTask(VALUE self, VALUE scan_task_source_objec
     braidBuffers(environment, &braid_task, result, mem_struct);
     clReleaseMemObject(mem_struct->buffer);
     mem_struct->buffer = result->buffer;
+
+    return self;
+}
+
+static VALUE methodRunIntSortTask(VALUE self, VALUE sort_task_source_object, VALUE mem_struct_object) {
+    HadopeEnvironment* environment = environmentPtrFromIvar(self);
+    HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(mem_struct_object);
+
+    int pow_two = 1;
+    while ((pow_two <<= 1) < mem_struct->buffer_entries);
+
+    char* sort_task_source = StringValuePtr(sort_task_source_object);
+    /* If the dataset is not a power of two, BEGIN faff. */
+    if (pow_two > mem_struct->buffer_entries) {
+        /* Create a buffer with power-of-two length to hold the dataset and required padding.
+         * Initialise the buffer with the padding:
+         *      [P, P, ... ] */
+        int padding_length = pow_two - mem_struct->buffer_entries;
+        int* padded_buffer = malloc(pow_two * sizeof(int));
+        for (int i = 0; i < padding_length; ++i) padded_buffer[i] = INT_MAX;
+
+        HadopeMemoryBuffer padded_buffer_struct;
+        pinArrayForDevice(environment, padded_buffer, pow_two, pow_two * sizeof(int), &padded_buffer_struct, INTEGER_BUFFER);
+        clFinish(environment->queue);
+
+        /* Append the dataset to the padded buffer as follows:
+         *      [P, P, 1, 2, 3, 4, 5, 6] */
+        clEnqueueCopyBuffer(
+            environment->queue,                         // Command queue
+            mem_struct->buffer,                         // Source buffer
+            padded_buffer_struct.buffer,                // Destination buffer
+            0,                                          // Source offset
+            sizeof(int) * padding_length,               // Destination offset (After padding)
+            sizeof(int) * mem_struct->buffer_entries,   // Copied data size
+            0,                                          // Preceding events
+            NULL,                                       // Event list
+            NULL                                        // Produced event object
+        );
+        clFinish(environment->queue);
+
+        /* Sort such that the padding propagates to the end:
+         *      [1, 2, 3, 4, 5, 6, P, P] */
+        /* doSort() */
+
+        /* Copy the first N elements of the sorted array back to the origin buffer:
+         *      [1, 2, 3, 4, 5, 6] // [P, P] */
+        clEnqueueCopyBuffer(
+            environment->queue,                         // Command queue
+            padded_buffer_struct.buffer,                // Source buffer
+            mem_struct->buffer,                         // Destination buffer
+            0,                                          // Source offset
+            0,                                          // Destination offset (After padding)
+            sizeof(int) * mem_struct->buffer_entries,   // Copied data size
+            0,                                          // Preceding events
+            NULL,                                       // Event list
+            NULL                                        // Produced event object
+        );
+        clReleaseMemObject(padded_buffer_struct.buffer);
+        free(padded_buffer);
+    /* If the dataset length is a power of two, no faff is needed. */
+    } else {
+        /* doSort() */
+    }
 
     return self;
 }
