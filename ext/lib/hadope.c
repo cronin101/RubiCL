@@ -575,6 +575,15 @@ void exclusivePrefixSum(
   result->buffer_entries = input->buffer_entries;
 }
 
+void integerBitonicSort(
+    const HadopeEnvironment* env,
+    HadopeMemoryBuffer* input_dataset,
+    char* source
+) {
+    /* num_stages = log_2(buffer_entries) */
+    unsigned int temp = input_dataset->buffer_entries, num_stages = 0;
+    while (temp >>= 1) ++num_stages;
+}
 /* Returns the summation of a integer dataset.
  *
  * @env: Struct containing device/context/queue variables.

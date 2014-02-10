@@ -96,6 +96,12 @@ void exclusivePrefixSum(
     HadopeMemoryBuffer* result
 );
 
+void integerBitonicSort(
+    const HadopeEnvironment* env,
+    HadopeMemoryBuffer* input_dataset,
+    char* source
+);
+
 int sumIntegerDataset(
     const HadopeEnvironment* env,
     HadopeMemoryBuffer* input_dataset,

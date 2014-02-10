@@ -384,7 +384,7 @@ static VALUE methodRunIntSortTask(VALUE self, VALUE sort_task_source_object, VAL
 
         /* Sort such that the padding propagates to the end:
          *      [1, 2, 3, 4, 5, 6, P, P] */
-        /* doSort() */
+        integerBitonicSort(environment, &padded_buffer_struct, sort_task_source);
 
         /* Copy the first N elements of the sorted array back to the origin buffer:
          *      [1, 2, 3, 4, 5, 6] // [P, P] */
@@ -403,7 +403,7 @@ static VALUE methodRunIntSortTask(VALUE self, VALUE sort_task_source_object, VAL
         free(padded_buffer);
     /* If the dataset length is a power of two, no faff is needed. */
     } else {
-        /* doSort() */
+        integerBitonicSort(environment, mem_struct, sort_task_source);
     }
 
     return self;
