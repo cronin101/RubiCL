@@ -578,11 +578,75 @@ void exclusivePrefixSum(
 void integerBitonicSort(
     const HadopeEnvironment* env,
     HadopeMemoryBuffer* input_dataset,
-    char* source
+    HadopeTask* task
 ) {
+    clFinish(env->queue);
+
     /* num_stages = log_2(buffer_entries) */
     unsigned int temp = input_dataset->buffer_entries, num_stages = 0;
     while (temp >>= 1) ++num_stages;
+
+    /* Dataset argument */
+    cl_int ret = clSetKernelArg(
+        task->kernel,          // Kernel concerned
+        0,                     // Index of argument to specify
+        sizeof(cl_mem),        // Size of argument value
+        &input_dataset->buffer // Argument value
+    );
+
+    /* Dataset length argument */
+    ret = clSetKernelArg(
+        task->kernel,                       // Kernel concerned
+        3,                                  // Index of argument to specify
+        sizeof(cl_uint),                    // Size of argument value
+        &input_dataset->buffer_entries      // Argument value
+    );
+
+    /* Sort order argument */
+    int ascending_sort = 1;
+    cl_uint sort_order = ascending_sort ? 1 : 0;
+    ret = clSetKernelArg(
+        task->kernel,          // Kernel concerned
+        4,                     // Index of argument to specify
+        sizeof(cl_uint),       // Size of argument value
+        &sort_order            // Argument value
+    );
+
+    for (unsigned int stage = 0; stage < num_stages; ++stage) {
+        /* Inform kernel of current stage. */
+        ret = clSetKernelArg(
+            task->kernel,          // Kernel concerned
+            1,                     // Index of argument to specify
+            sizeof(cl_uint),       // Size of argument value
+            &stage                 // Argument value
+        );
+
+        /* Each stage n : N involves (n + 1) passes. */
+        for (unsigned int pass = 0; pass < stage + 1; ++pass) {
+            /* Inform kernel of current pass. */
+            ret = clSetKernelArg(
+                task->kernel,          // Kernel concerned
+                2,                     // Index of argument to specify
+                sizeof(cl_uint),       // Size of argument value
+                &pass                  // Argument value
+            );
+
+            /* Perform pass. */
+            size_t g_work_size[1] = {input_dataset->buffer_entries / 2};
+            ret = clEnqueueNDRangeKernel(
+                env->queue,     // Device's command queue
+                task->kernel,   // Kernel to enqueue
+                1,              // Dimensionality of work
+                0,              // Global offset of work index
+                g_work_size,    // Array of work size in each dimension
+                NULL,           // Local work size, omitted so will be deduced by OpenCL platform
+                0,              // Number of preceding events
+                NULL,           // Preceding events list
+                NULL            // Event object destination
+            );
+            clFinish(env->queue);
+        }
+    }
 }
 /* Returns the summation of a integer dataset.
  *

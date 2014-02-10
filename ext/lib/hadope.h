@@ -99,7 +99,7 @@ void exclusivePrefixSum(
 void integerBitonicSort(
     const HadopeEnvironment* env,
     HadopeMemoryBuffer* input_dataset,
-    char* source
+    HadopeTask* task
 );
 
 int sumIntegerDataset(

@@ -354,6 +354,9 @@ static VALUE methodRunIntSortTask(VALUE self, VALUE sort_task_source_object, VAL
     while ((pow_two <<= 1) < mem_struct->buffer_entries);
 
     char* sort_task_source = StringValuePtr(sort_task_source_object);
+    HadopeTask task;
+    buildTaskFromSource(environment, sort_task_source, "bitonicSort", &task);
+
     /* If the dataset is not a power of two, BEGIN faff. */
     if (pow_two > mem_struct->buffer_entries) {
         /* Create a buffer with power-of-two length to hold the dataset and required padding.
@@ -384,7 +387,7 @@ static VALUE methodRunIntSortTask(VALUE self, VALUE sort_task_source_object, VAL
 
         /* Sort such that the padding propagates to the end:
          *      [1, 2, 3, 4, 5, 6, P, P] */
-        integerBitonicSort(environment, &padded_buffer_struct, sort_task_source);
+        integerBitonicSort(environment, &padded_buffer_struct, &task);
 
         /* Copy the first N elements of the sorted array back to the origin buffer:
          *      [1, 2, 3, 4, 5, 6] // [P, P] */
@@ -403,7 +406,7 @@ static VALUE methodRunIntSortTask(VALUE self, VALUE sort_task_source_object, VAL
         free(padded_buffer);
     /* If the dataset length is a power of two, no faff is needed. */
     } else {
-        integerBitonicSort(environment, mem_struct, sort_task_source);
+        integerBitonicSort(environment, mem_struct, &task);
     }
 
     return self;
