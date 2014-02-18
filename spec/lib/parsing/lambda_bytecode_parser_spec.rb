@@ -24,8 +24,8 @@ describe LAMBDA_BYTECODE_PARSER do
 
     it 'recognises when a bytecode operation is an object method call not currently defined' do
       expect do
-        LAMBDA_BYTECODE_PARSER.new(->(i){ i.even? }).to_infix
-      end.to raise_error(RuntimeError, /not implemented for :even\?/)
+        LAMBDA_BYTECODE_PARSER.new(->(i){ i.odd? }).to_infix
+      end.to raise_error(RuntimeError, /not implemented for :odd\?/)
     end
 
     it 'can handle negation' do

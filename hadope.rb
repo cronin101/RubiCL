@@ -13,6 +13,7 @@ module Hadope
   require_relative './lib/types/file.rb'
   require_relative './lib/types/fixnum.rb'
   require_relative './lib/types/float.rb'
+  require_relative './lib/types/range.rb'
 
   require_relative './lib/types/int.rb'
   require_relative './lib/types/double.rb'

@@ -55,6 +55,7 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
   def method_send(target, method)
     case method
     when :-@ then '-' << target
+    when :even? then "(#{target} % 2 == 0)"
     else raise "#method_send not implemented for #{method.inspect}"
     end
   end

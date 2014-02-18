@@ -35,6 +35,8 @@ module Hadope
         pin_integer_dataset obj
       when File
         pin_integer_file obj
+      when Range
+        pin_integer_dataset obj.to_a
       else
         raise "No idea how to pin #{obj.inspect}!"
       end
@@ -77,7 +79,7 @@ module Hadope
       # FIXME: Expose buffer length
       #raise "Second dataset must be the same length as the first." unless @buffer.length == array.length
       @fsts = @buffer
-      @snds = create_buffer_from_dataset :pinned_integer_buffer, array
+      @snds = create_buffer_from_dataset :pinned_integer_buffer, array.to_a
 
       @cache.dataset = nil
       @task_queue.push SMap.new(*FIX2INT)
@@ -87,7 +89,7 @@ module Hadope
     def braid(&block)
       raise "Braid function has incorrect arity." unless block.arity == 2
       expression = LambdaBytecodeParser.new(block).to_infix.first
-      @task_queue.push Braid.new(:x, :y, expression)
+      @task_queue.push Braid.new(:int, :x, :y, expression)
     end)
 
     chainable def map(&block)

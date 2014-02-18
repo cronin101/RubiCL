@@ -580,8 +580,6 @@ void integerBitonicSort(
     HadopeMemoryBuffer* input_dataset,
     HadopeTask* task
 ) {
-    clFinish(env->queue);
-
     /* num_stages = log_2(buffer_entries) */
     unsigned int temp = input_dataset->buffer_entries, num_stages = 0;
     while (temp >>= 1) ++num_stages;
@@ -644,7 +642,6 @@ void integerBitonicSort(
                 NULL,           // Preceding events list
                 NULL            // Event object destination
             );
-            clFinish(env->queue);
         }
     }
 }
