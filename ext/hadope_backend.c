@@ -329,8 +329,6 @@ static VALUE methodRunHybridMapTask(VALUE self, VALUE task_source_object, VALUE 
 
     /* Create proportional sub-buffers and run tasks */
     int cpu_slice_length = FIX2INT(cpu_slice_length_object), gpu_slice_length = FIX2INT(gpu_slice_length_object);
-    printf("CPU_SLICE_LENGTH: %d\n", cpu_slice_length);
-    printf("GPU_SLICE_LENGTH: %d\n", gpu_slice_length);
 
     HadopeMemoryBuffer cpu_subset, gpu_subset;
     cpu_subset.type = mem_struct->type;
@@ -342,10 +340,12 @@ static VALUE methodRunHybridMapTask(VALUE self, VALUE task_source_object, VALUE 
     cl_buffer_region gpu_region = { sizeof(int) * cpu_slice_length /* Origin */, sizeof(int) * gpu_slice_length };
     cpu_subset.buffer = clCreateSubBuffer(mem_struct->buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &cpu_region, NULL);
     gpu_subset.buffer = clCreateSubBuffer(mem_struct->buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &gpu_region, NULL);
-    printf("Subbuffers created!\n");
 
     runTaskOnDataset(&cpu_env, &cpu_subset, &cpu_task);
     runTaskOnDataset(&gpu_env, &gpu_subset, &gpu_task);
+
+    releaseDeviceDataset(&cpu_subset);
+    releaseDeviceDataset(&gpu_subset);
 
     return self;
 }

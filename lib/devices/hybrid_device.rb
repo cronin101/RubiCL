@@ -5,8 +5,8 @@ module Hadope
 
     BENCHMARKS = {
       map:        :map_test_benchmark,
-      filter:     :filter_task_benchmark,
-      mapfilter:  :mapfilter_task_benchmark,
+#      filter:     :filter_task_benchmark,
+#      mapfilter:  :mapfilter_task_benchmark,
     }
 
     def is_hybrid?
@@ -40,7 +40,7 @@ module Hadope
       run_hybrid_map_task(kernel, task.name, @buffer, *slice_sizes(buffer_length(@buffer), :map))
     end
 
-    TEST_ARRAY_LENGTH = 50
+    TEST_ARRAY_LENGTH = 5_000_000
     TEST_DATASET_1    = (1..TEST_ARRAY_LENGTH).to_a
 
     def map_test_benchmark
@@ -85,10 +85,7 @@ module Hadope
           block.call(d)
         end
       end
-
-      puts "CPU: #{cpu_time}, GPU: #{gpu_time}"
-      puts "CPU_RATIO: #{ratio = Rational(cpu_time, gpu_time).truncate(+1)}"
-      ratio
+      Rational(cpu_time, gpu_time).truncate(+1)
     end
 
   end
