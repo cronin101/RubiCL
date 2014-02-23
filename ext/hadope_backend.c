@@ -41,12 +41,20 @@ static VALUE initOpenCLenvironment(cl_device_type device_type) {
 }
 
 /* Following two methods do what they say on the tin. */
-static VALUE methodInitGPUEnvironment(VALUE self){
+static VALUE methodInitGPUEnvironment(VALUE self) {
     return initOpenCLenvironment(CL_DEVICE_TYPE_GPU);
 }
 
-static VALUE methodInitCPUEnvironment(VALUE self){
+static VALUE methodInitCPUEnvironment(VALUE self) {
     return initOpenCLenvironment(CL_DEVICE_TYPE_CPU);
+}
+
+static VALUE methodInitHybridEnvironment(VALUE self) {
+    HadopeHybridEnvironment* environment;
+    environment = malloc(sizeof(*environment));
+    createHadopeHybridEnvironment(environment);
+    VALUE hybrid_environment_object = rb_define_class("HadopeHybridEnvironment", rb_cObject);
+    return Data_Wrap_Struct(hybrid_environment_object, NULL, &free, environment);
 }
 
 /* ~~ END Init Methods ~~ */
@@ -466,6 +474,7 @@ void Init_hadope_backend() {
     VALUE HadopeBackend = rb_define_module("HadopeBackend");
     rb_define_private_method(HadopeBackend, "initialize_GPU_environment", methodInitGPUEnvironment, 0);
     rb_define_private_method(HadopeBackend, "initialize_CPU_environment", methodInitCPUEnvironment, 0);
+    rb_define_private_method(HadopeBackend, "initialize_hybrid_environment", methodInitHybridEnvironment, 0);
     rb_define_private_method(HadopeBackend, "create_memory_buffer", methodCreateMemoryBuffer, 2);
     rb_define_private_method(HadopeBackend, "transfer_integer_dataset_to_buffer", methodLoadIntDataset, 2);
     rb_define_private_method(HadopeBackend, "create_pinned_integer_buffer", methodPinIntDataset, 1);

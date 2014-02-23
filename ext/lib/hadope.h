@@ -44,6 +44,10 @@ void createHadopeEnvironment(
     HadopeEnvironment* env
 );
 
+void createHadopeHybridEnvironment(
+    HadopeHybridEnvironment* env
+);
+
 cl_mem createMemoryBuffer(
     const HadopeEnvironment* env,
     const size_t required_memory,
