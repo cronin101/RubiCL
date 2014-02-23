@@ -102,7 +102,6 @@ static VALUE methodPinIntRange(VALUE self, VALUE dataset_object, VALUE start, VA
     pinArrayForDevice(environment, dataset, array_length, array_size, mem_struct, INTEGER_BUFFER);
 
     return mem_struct_objectFromPtr(mem_struct);
-;
 }
 
 /*  Creates a memory buffer object containing a device-accessible reference to the given FIXNUM dataset.
