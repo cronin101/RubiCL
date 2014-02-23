@@ -310,7 +310,7 @@ void loadIntArrayIntoDevice(
  *
  * @Return: cl_mem reference for addressing pinned memory. */
 void pinArrayForDevice(
-    const HadopeEnvironment* env,
+    const cl_context* context,
     void* dataset,
     int dataset_length,
     size_t dataset_size,
@@ -323,7 +323,7 @@ void pinArrayForDevice(
     result->type = type;
     result->buffer_entries = dataset_length;
     result->buffer = clCreateBuffer(
-        env->context,                               // Context to use
+        *context,                                   // Context to use
         CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,    // cl_mem_flags set
         dataset_size,                               // Size of buffer
         dataset,                                    // Dataset to pin

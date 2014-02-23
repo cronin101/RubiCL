@@ -4,6 +4,10 @@ module Hadope
     include RequireType
     include ChainableDecorator
 
+    def is_hybrid?
+      false
+    end
+
     class << self
       attr_accessor :singleton
 

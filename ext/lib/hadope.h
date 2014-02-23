@@ -55,7 +55,7 @@ cl_mem createMemoryBuffer(
 );
 
 void pinArrayForDevice(
-    const HadopeEnvironment* env,
+    const cl_context* context,
     void* dataset,
     int dataset_length,
     size_t dataset_size,

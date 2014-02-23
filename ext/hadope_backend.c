@@ -95,7 +95,7 @@ static VALUE /* ### THIS METHOD IS DEPRECATED ### */ methodCreateMemoryBuffer(VA
  * @dataset_object: The Ruby object containing an array of integers.
  * @start: The index of the first element in the slice (FIXNUM).
  * @finish: The index of the last element in the slice (FIXNUM). */
-static VALUE methodPinIntRange(VALUE self, VALUE dataset_object, VALUE start, VALUE finish) {
+static VALUE methodPinIntRange(cl_context* context, VALUE dataset_object, VALUE start, VALUE finish) {
     Check_Type(dataset_object, T_ARRAY);
     int start_i = FIX2INT(start);
     int finish_i = FIX2INT(finish);
@@ -104,10 +104,8 @@ static VALUE methodPinIntRange(VALUE self, VALUE dataset_object, VALUE start, VA
     int* dataset = malloc(array_size);
     for (int i = 0; i < array_length; ++i) dataset[i] = rb_ary_entry(dataset_object, start_i + i);
 
-    HadopeEnvironment* environment = environmentPtrFromIvar(self);
-
     HadopeMemoryBuffer* mem_struct = malloc(sizeof(HadopeMemoryBuffer));
-    pinArrayForDevice(environment, dataset, array_length, array_size, mem_struct, INTEGER_BUFFER);
+    pinArrayForDevice(context, dataset, array_length, array_size, mem_struct, INTEGER_BUFFER);
 
     return mem_struct_objectFromPtr(mem_struct);
 }
@@ -116,7 +114,20 @@ static VALUE methodPinIntRange(VALUE self, VALUE dataset_object, VALUE start, VA
  *
  *  @dataset_object: Ruby object containing an array of integers. */
 static VALUE methodPinIntDataset(VALUE self, VALUE dataset_object) {
-    return methodPinIntRange(self, dataset_object, INT2FIX(0), INT2FIX(RARRAY_LEN(dataset_object) - 1));
+    cl_context* context;
+
+    // FIXME?: This is far too magic.
+    if (RTEST(rb_funcall(self, rb_intern("is_hybrid?"), 0))) {
+        HadopeHybridEnvironment* environment;
+        VALUE environment_object = rb_iv_get(self, "@environment");
+        Data_Get_Struct(environment_object, HadopeHybridEnvironment, environment);
+        context = &environment->context;
+    } else {
+        HadopeEnvironment* environment = environmentPtrFromIvar(self);
+        context = &environment->context;
+    }
+
+    return methodPinIntRange(context, dataset_object, INT2FIX(0), INT2FIX(RARRAY_LEN(dataset_object) - 1));
 }
 
 static VALUE methodPinIntFile(VALUE self, VALUE filename_object) {
@@ -136,7 +147,7 @@ static VALUE methodPinIntFile(VALUE self, VALUE filename_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
 
     HadopeMemoryBuffer* mem_struct = malloc(sizeof(HadopeMemoryBuffer));
-    pinArrayForDevice(environment, dataset, ints_read, ints_read * sizeof(int),
+    pinArrayForDevice(&environment->context, dataset, ints_read, ints_read * sizeof(int),
                         mem_struct, INTEGER_BUFFER);
     return mem_struct_objectFromPtr(mem_struct);
 }
@@ -155,7 +166,7 @@ static VALUE methodPinDoubleDataset(VALUE self, VALUE dataset_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
 
     HadopeMemoryBuffer* mem_struct = malloc(sizeof(HadopeMemoryBuffer));
-    pinArrayForDevice(environment, dataset, array_length, array_size, mem_struct, DOUBLE_BUFFER);
+    pinArrayForDevice(&environment->context, dataset, array_length, array_size, mem_struct, DOUBLE_BUFFER);
     return mem_struct_objectFromPtr(mem_struct);
 }
 
@@ -386,7 +397,7 @@ static VALUE methodRunIntSortTask(VALUE self, VALUE sort_task_source_object, VAL
         for (int i = 0; i < padding_length; ++i) padded_buffer[i] = INT_MAX;
 
         HadopeMemoryBuffer padded_buffer_struct;
-        pinArrayForDevice(environment, padded_buffer, pow_two, pow_two * sizeof(int), &padded_buffer_struct, INTEGER_BUFFER);
+        pinArrayForDevice(&environment->context, padded_buffer, pow_two, pow_two * sizeof(int), &padded_buffer_struct, INTEGER_BUFFER);
         clFinish(environment->queue);
 
         /* Append the dataset to the padded buffer as follows:
