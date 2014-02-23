@@ -18,7 +18,8 @@ typedef struct {
     cl_device_id cpu_device_id;
     cl_device_id gpu_device_id;
     cl_context context;
-    cl_command_queue queue;
+    cl_command_queue cpu_queue;
+    cl_command_queue gpu_queue;
 } HadopeHybridEnvironment;
 
 typedef struct {

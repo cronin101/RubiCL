@@ -122,7 +122,7 @@ cl_platform_id selectDefaultClPlatform() {
     return platform;
 }
 
-cl_device_id selectDefaultClDeviceOfType(cl_device_type device_type, cl_platform_id platform) {
+cl_device_id selectDefaultClDeviceOfType(cl_device_type device_type, cl_platform_id* platform) {
     if (DEBUG) printf("selectDefaultClDeviceOfType\n");
 
     cl_int ret;
@@ -130,7 +130,7 @@ cl_device_id selectDefaultClDeviceOfType(cl_device_type device_type, cl_platform
     cl_uint num_devices;
 
     ret = clGetDeviceIDs(
-        platform,    // Selected platform
+        *platform,    // Selected platform
         device_type, // Type of device (CPU/GPU)
         0,           // Limit
         NULL,        // Devices destination
@@ -139,7 +139,7 @@ cl_device_id selectDefaultClDeviceOfType(cl_device_type device_type, cl_platform
 
     cl_device_id* devices = calloc(sizeof(cl_device_id), num_devices);
     ret = clGetDeviceIDs(
-        platform,    // Selected platform
+        *platform,    // Selected platform
         device_type, // Type of device (CPU/GPU)
         num_devices, // Limit
         devices,     // Devices destination
@@ -171,7 +171,7 @@ void createHadopeEnvironment(const cl_device_type device_type, HadopeEnvironment
     cl_platform_id platform = selectDefaultClPlatform();
 
     /* Selecting a device */
-    env->device_id = selectDefaultClDeviceOfType(device_type, platform);
+    env->device_id = selectDefaultClDeviceOfType(device_type, &platform);
 
     /* Create OpenCL context for target device and store in environment*/
     env->context = clCreateContext(
@@ -200,9 +200,43 @@ void createHadopeEnvironment(const cl_device_type device_type, HadopeEnvironment
 void createHadopeHybridEnvironment(HadopeHybridEnvironment* env) {
     if (DEBUG) printf("createHadopeHybridEnvironment\n");
 
-    cl_platform_id platform;
     cl_int ret;
 
+    cl_platform_id platform = selectDefaultClPlatform();
+
+    env->cpu_device_id = selectDefaultClDeviceOfType(CL_DEVICE_TYPE_CPU, &platform);
+    env->gpu_device_id = selectDefaultClDeviceOfType(CL_DEVICE_TYPE_GPU, &platform);
+
+    cl_device_id devices[2] = { env->cpu_device_id, env->gpu_device_id };
+
+    env->context = clCreateContext(
+        NULL,           // Properties
+        2,              // Number of devices specified
+        devices,        // Devices specified
+        NULL,           // Error callback Fn
+        NULL,           // User data for Fn
+        &ret            // Status destination
+    );
+    if (ret != CL_SUCCESS) printf("clCreateContext %s\n", oclErrorString(ret));
+
+    env->cpu_queue = clCreateCommandQueue(
+        env->context,
+        env->cpu_device_id,
+        0,
+        &ret
+    );
+    if (ret != CL_SUCCESS) printf("clCreateCommandQueue (CPU) %s\n", oclErrorString(ret));
+
+
+    env->gpu_queue = clCreateCommandQueue(
+        env->context,
+        env->gpu_device_id,
+        0,
+        &ret
+    );
+    if (ret != CL_SUCCESS) printf("clCreateCommandQueue (GPU) %s\n", oclErrorString(ret));
+
+    //FIXME: Set GroupSize or something.
 }
 
 /* ~~ END Init Methods ~~ */
