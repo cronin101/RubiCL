@@ -64,117 +64,145 @@ void displayBuildFailureInfo(cl_program program, cl_device_id device_id) {
         free(log);
 }
 
+cl_platform_id selectDefaultClPlatform() {
+    if (DEBUG) printf("selectDefaultClPlatform\n");
+    cl_platform_id platform;
+    cl_int ret;
+
+    cl_uint num_platforms, i;
+    ret = clGetPlatformIDs(
+        0,             // Limit
+        NULL,          // Value destination
+        &num_platforms // Count destination
+    );
+    cl_platform_id* platforms = calloc(sizeof(cl_platform_id), num_platforms);
+        ret = clGetPlatformIDs(
+        num_platforms, // Limit
+        platforms,     // Value destination
+        NULL           // Count destination
+    );
+    if (ret != CL_SUCCESS) printf("clGetPlatformIDs %s\n", oclErrorString(ret));
+
+    if (DEBUG) {
+        char buf [128];
+        for (i = 0; i < num_platforms; i++) {
+            ret = clGetPlatformInfo(
+                platforms[i],        // Platform
+                CL_PLATFORM_VERSION, // OpenCL version
+                sizeof(buf),         // Buffer size
+                buf,                 // Destination buffer
+                NULL                 // Size destination
+            );
+            printf("* Platform %d: %s", (i + 1), buf);
+
+            ret = clGetPlatformInfo(
+                platforms[i],        // Platform
+                CL_PLATFORM_NAME,    // Platform name
+                sizeof(buf),         // Buffer size
+                buf,                 // Destination buffer
+                NULL                 // Size destination
+            );
+            printf(" %s", buf);
+
+            ret = clGetPlatformInfo(
+                platforms[i],        // Platform
+                CL_PLATFORM_VENDOR,  // Platform vendor
+                sizeof(buf),         // Buffer size
+                buf,                 // Destination buffer
+                NULL                 // Size destination
+            );
+            printf(" %s\n", buf);
+        }
+    }
+
+    if (DEBUG) printf("Selecting Platform 1.\n");
+    platform = platforms[0];
+    free(platforms);
+
+    return platform;
+}
+
+cl_device_id selectDefaultClDeviceOfType(cl_device_type device_type, cl_platform_id platform) {
+    if (DEBUG) printf("selectDefaultClDeviceOfType\n");
+
+    cl_int ret;
+    cl_device_id device_id;
+    cl_uint num_devices;
+
+    ret = clGetDeviceIDs(
+        platform,    // Selected platform
+        device_type, // Type of device (CPU/GPU)
+        0,           // Limit
+        NULL,        // Devices destination
+        &num_devices // Count destination
+    );
+
+    cl_device_id* devices = calloc(sizeof(cl_device_id), num_devices);
+    ret = clGetDeviceIDs(
+        platform,    // Selected platform
+        device_type, // Type of device (CPU/GPU)
+        num_devices, // Limit
+        devices,     // Devices destination
+        NULL         // Count destination
+    );
+    if (ret != CL_SUCCESS) printf("clGetDeviceIDs %s\n", oclErrorString(ret));
+
+    if (DEBUG) {
+        displayDeviceInfo(num_devices, devices);
+        printf("Selecting Device 1.\n");
+    }
+    device_id = devices[0];
+    free(devices);
+
+    return device_id;
+}
+
 /* ~~ Init Methods ~~ */
 
 /* Selects target device then creates context and command queue, packages in HadopeEnvironment and returns.
  *
  * @device_type: CL_DEVICE_TYPE_GPU / CL_DEVICE_TYPE_CPU */
 void createHadopeEnvironment(const cl_device_type device_type, HadopeEnvironment* env) {
-
     if (DEBUG) printf("createHadopeEnvironment\n");
-  cl_platform_id platform;
-  cl_int ret;
 
-  /* Selecting an OpenCL platform */
-  cl_uint num_platforms, i;
-  ret = clGetPlatformIDs(
-    0,             // Limit
-    NULL,          // Value destination
-    &num_platforms // Count destination
-  );
-  cl_platform_id* platforms = calloc(sizeof(cl_platform_id), num_platforms);
-  ret = clGetPlatformIDs(
-    num_platforms, // Limit
-    platforms,     // Value destination
-    NULL           // Count destination
-  );
-  if (ret != CL_SUCCESS) printf("clGetPlatformIDs %s\n", oclErrorString(ret));
+    cl_int ret;
 
-  if (DEBUG) {
-    char buf [128];
-    for (i = 0; i < num_platforms; i++) {
-      ret = clGetPlatformInfo(
-        platforms[i],        // Platform
-        CL_PLATFORM_VERSION, // OpenCL version
-        sizeof(buf),         // Buffer size
-        buf,                 // Destination buffer
-        NULL                 // Size destination
-      );
-      printf("* Platform %d: %s", (i + 1), buf);
+    /* Selecting an OpenCL platform */
+    cl_platform_id platform = selectDefaultClPlatform();
 
-      ret = clGetPlatformInfo(
-        platforms[i],        // Platform
-        CL_PLATFORM_NAME,    // Platform name
-        sizeof(buf),         // Buffer size
-        buf,                 // Destination buffer
-        NULL                 // Size destination
-      );
-      printf(" %s", buf);
+    /* Selecting a device */
+    env->device_id = selectDefaultClDeviceOfType(device_type, platform);
 
-      ret = clGetPlatformInfo(
-        platforms[i],        // Platform
-        CL_PLATFORM_VENDOR,  // Platform vendor
-        sizeof(buf),         // Buffer size
-        buf,                 // Destination buffer
-        NULL                 // Size destination
-      );
-      printf(" %s\n", buf);
-    }
-  }
+    /* Create OpenCL context for target device and store in environment*/
+    env->context = clCreateContext(
+        NULL,           // Context properties to set
+        1,              // Number of devices specified
+        &env->device_id,// Device specified
+        NULL,           // Error callback function
+        NULL,           // User data specified
+        &ret            // Status destination
+    );
+    if (ret != CL_SUCCESS) printf("clCreateContext %s\n", oclErrorString(ret));
 
-  if (DEBUG) printf("Selecting Platform 1.\n");
-  platform = platforms[0];
-  free(platforms);
+    /* Create command queue for context/target-device and store in environment */
+    env->queue = clCreateCommandQueue(
+        env->context,   // Context to use
+        env->device_id, // Device to send commands to
+        0,              // Queue properties bitfield, neither out_of_order nor profiling flags set.
+        &ret            // Status destination
+    );
+    if (ret != CL_SUCCESS) printf("clCreateCommandQueue %s\n", oclErrorString(ret));
 
-  /* Selecting a device */
-  cl_uint num_devices;
-  ret = clGetDeviceIDs(
-    platform,    // Selected platform
-    device_type, // Type of device (CPU/GPU)
-    0,           // Limit
-    NULL,        // Devices destination
-    &num_devices // Count destination
-  );
+    /* Record the maximum supported group size. */
+    setGroupSize(env);
+}
 
-  cl_device_id* devices = calloc(sizeof(cl_device_id), num_devices);
-  ret = clGetDeviceIDs(
-    platform,    // Selected platform
-    device_type, // Type of device (CPU/GPU)
-    num_devices, // Limit
-    devices,     // Devices destination
-    NULL         // Count destination
-  );
-  if (ret != CL_SUCCESS) printf("clGetDeviceIDs %s\n", oclErrorString(ret));
+void createHadopeHybridEnvironment(HadopeHybridEnvironment* env) {
+    if (DEBUG) printf("createHadopeHybridEnvironment\n");
 
-  if (DEBUG) {
-    displayDeviceInfo(num_devices, devices);
-    printf("Selecting Device 1.\n");
-  }
-  env->device_id = devices[0];
-  free(devices);
+    cl_platform_id platform;
+    cl_int ret;
 
-  /* Create OpenCL context for target device and store in environment*/
-  env->context = clCreateContext(
-    NULL,           // Context properties to set
-    1,              // Number of devices specified
-    &env->device_id,// Device specified
-    NULL,           // Error callback function
-    NULL,           // User data specified
-    &ret            // Status destination
-  );
-  if (ret != CL_SUCCESS) printf("clCreateContext %s\n", oclErrorString(ret));
-
-  /* Create command queue for context/target-device and store in environment */
-  env->queue = clCreateCommandQueue(
-    env->context,   // Context to use
-    env->device_id, // Device to send commands to
-    0,              // Queue properties bitfield, neither out_of_order nor profiling flags set.
-    &ret            // Status destination
-  );
-  if (ret != CL_SUCCESS) printf("clCreateCommandQueue %s\n", oclErrorString(ret));
-
-  /* Record the maximum supported group size. */
-  setGroupSize(env);
 }
 
 /* ~~ END Init Methods ~~ */

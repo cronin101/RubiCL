@@ -15,6 +15,13 @@ typedef struct {
 } HadopeEnvironment;
 
 typedef struct {
+    cl_device_id cpu_device_id;
+    cl_device_id gpu_device_id;
+    cl_context context;
+    cl_command_queue queue;
+} HadopeHybridEnvironment;
+
+typedef struct {
     cl_kernel kernel;
     cl_program program;
     char* name;
