@@ -26,6 +26,10 @@ VALUE mem_struct_objectFromPtr(HadopeMemoryBuffer* mem_struct) {
     VALUE mem_struct_object = rb_define_class("HadopeMemoryBuffer", rb_cObject);
     return Data_Wrap_Struct(mem_struct_object, NULL, &free, mem_struct);
 }
+
+VALUE methodBufferLength(VALUE self, VALUE mem_struct_object) {
+    return(INT2FIX(mem_structPtrFromObj(mem_struct_object)->buffer_entries));
+}
 /* ~~ END Helpers ~~ */
 
 /* ~~ Init Methods ~~ */
@@ -220,10 +224,22 @@ static VALUE methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object) {
  *
  * @memory_struct_object: Ruby object storing HadopeMemoryBuffer. */
 static VALUE methodRetrievePinnedIntDataset(VALUE self, VALUE memory_struct_object) {
-    HadopeEnvironment* environment = environmentPtrFromIvar(self);
+    cl_command_queue* queue;
+
+    /* The magic is back with a vengeance. */
+    if (RTEST(rb_funcall(self, rb_intern("is_hybrid?"), 0))) {
+        HadopeHybridEnvironment* environment;
+        VALUE environment_object = rb_iv_get(self, "@environment");
+        Data_Get_Struct(environment_object, HadopeHybridEnvironment, environment);
+        queue = &environment->cpu_queue;
+    } else {
+        HadopeEnvironment* environment = environmentPtrFromIvar(self);
+        queue = &environment->queue;
+    }
+
     HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(memory_struct_object);
 
-    int* dataset = getPinnedArrayFromDevice(environment, mem_struct, sizeof(int));
+    int* dataset = getPinnedArrayFromDevice(queue, mem_struct, sizeof(int));
 
     int entries = mem_struct->buffer_entries;
     VALUE output_array = rb_ary_new2(entries);
@@ -242,7 +258,7 @@ static VALUE methodRetrievePinnedDoubleDataset(VALUE self, VALUE memory_struct_o
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(memory_struct_object);
 
-    double* dataset = getPinnedArrayFromDevice(environment, mem_struct, sizeof(double));
+    double* dataset = getPinnedArrayFromDevice(&environment->queue, mem_struct, sizeof(double));
 
     int entries = mem_struct->buffer_entries;
     VALUE output_array = rb_ary_new2(entries);
@@ -287,6 +303,49 @@ static VALUE methodRunMapTask(VALUE self, VALUE task_source_object, VALUE task_n
 
     /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
     runTaskOnDataset(environment, mem_struct, &task);
+
+    return self;
+}
+
+static VALUE methodRunHybridMapTask(VALUE self, VALUE task_source_object, VALUE task_name_object, VALUE memory_struct_object, VALUE cpu_slice_length_object, VALUE gpu_slice_length_object) {
+    HadopeHybridEnvironment* environment;
+    VALUE environment_object = rb_iv_get(self, "@environment");
+    Data_Get_Struct(environment_object, HadopeHybridEnvironment, environment);
+
+    HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(memory_struct_object);
+    /* Early termination for empty buffer */
+    if (!mem_struct->buffer_entries) return self;
+
+    /* Dummy env for each individual device */
+    HadopeEnvironment cpu_env = { environment->cpu_device_id, environment->context, environment->cpu_queue };
+    HadopeEnvironment gpu_env = { environment->gpu_device_id, environment->context, environment->gpu_queue };
+
+    /* FIXME: Building the task twice is stupid... Maybe. */
+    HadopeTask cpu_task, gpu_task;
+    char* task_source = StringValuePtr(task_source_object);
+    char* task_name = StringValuePtr(task_name_object);
+    buildTaskFromSource(&cpu_env, task_source, task_name, &cpu_task);
+    buildTaskFromSource(&gpu_env, task_source, task_name, &gpu_task);
+
+    /* Create proportional sub-buffers and run tasks */
+    int cpu_slice_length = FIX2INT(cpu_slice_length_object), gpu_slice_length = FIX2INT(gpu_slice_length_object);
+    printf("CPU_SLICE_LENGTH: %d\n", cpu_slice_length);
+    printf("GPU_SLICE_LENGTH: %d\n", gpu_slice_length);
+
+    HadopeMemoryBuffer cpu_subset, gpu_subset;
+    cpu_subset.type = mem_struct->type;
+    gpu_subset.type = mem_struct->type;
+    cpu_subset.buffer_entries = cpu_slice_length;
+    gpu_subset.buffer_entries = gpu_slice_length;
+    /* FIXME: Don't assume Integers here */
+    cl_buffer_region cpu_region = { 0 /* Origin */, sizeof(int) * cpu_slice_length /* Region size */ };
+    cl_buffer_region gpu_region = { sizeof(int) * cpu_slice_length /* Origin */, sizeof(int) * gpu_slice_length };
+    cpu_subset.buffer = clCreateSubBuffer(mem_struct->buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &cpu_region, NULL);
+    gpu_subset.buffer = clCreateSubBuffer(mem_struct->buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &gpu_region, NULL);
+    printf("Subbuffers created!\n");
+
+    runTaskOnDataset(&cpu_env, &cpu_subset, &cpu_task);
+    runTaskOnDataset(&gpu_env, &gpu_subset, &gpu_task);
 
     return self;
 }
@@ -497,10 +556,12 @@ void Init_hadope_backend() {
     rb_define_private_method(HadopeBackend, "sum_integer_buffer", methodSumIntegerBuffer, 2);
     rb_define_private_method(HadopeBackend, "count_post_filter", methodCountFilteredBuffer, 4);
     rb_define_private_method(HadopeBackend, "run_map_task", methodRunMapTask, 3);
+    rb_define_private_method(HadopeBackend, "run_hybrid_map_task", methodRunHybridMapTask, 5);
     rb_define_private_method(HadopeBackend, "run_filter_task", methodRunFilterTask, 4);
     rb_define_private_method(HadopeBackend, "run_braid_task", methodRunBraidTask, 4);
     rb_define_private_method(HadopeBackend, "run_exclusive_scan_task", methodRunExclusiveScanTask, 2);
     rb_define_private_method(HadopeBackend, "run_inclusive_scan_task", methodRunInclusiveScanTask, 4);
     rb_define_private_method(HadopeBackend, "sort_integer_buffer", methodRunIntSortTask, 2);
+    rb_define_private_method(HadopeBackend, "buffer_length", methodBufferLength, 1);
     rb_define_private_method(HadopeBackend, "clean_used_resources", methodCleanUsedResources, 1);
 }

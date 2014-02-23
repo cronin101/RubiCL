@@ -83,7 +83,7 @@ void getIntArrayFromDevice(
 );
 
 void* getPinnedArrayFromDevice(
-    const HadopeEnvironment* env,
+    cl_command_queue* queue,
     const HadopeMemoryBuffer* mem_struct,
     const size_t unit_size
 );

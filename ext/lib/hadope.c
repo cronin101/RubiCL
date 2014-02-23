@@ -2,7 +2,7 @@
 #include "prefix_sum/prescan.h"
 #include "oclerrorexplain.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 void releaseMemoryCallback(
     cl_event event,
@@ -365,17 +365,17 @@ void getIntArrayFromDevice(
  *  @env: Struct containing device/context/queue variables.*
  *  @mem_struct Struct containing cl_mem buffer referencing dataset. */
 void* getPinnedArrayFromDevice(
-    const HadopeEnvironment* env,
+    cl_command_queue* queue,
     const HadopeMemoryBuffer* mem_struct,
     const size_t unit_size
 ){
     if (DEBUG) printf("getPinnedArrayFromDevice\n");
     /* Wait for pending actions */
-    clFinish(env->queue);
+    clFinish(*queue);
 
     cl_int ret;
     return clEnqueueMapBuffer(
-        env->queue,
+        *queue,
         mem_struct->buffer,
         CL_TRUE,
         CL_MAP_READ,

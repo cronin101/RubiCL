@@ -34,6 +34,12 @@ module Hadope
 
     private
 
+    def run_map(task)
+      kernel = task.to_kernel
+      @logger.log "Executing hybrid map kernel: #{kernel.inspect}"
+      run_hybrid_map_task(kernel, task.name, @buffer, *slice_sizes(buffer_length(@buffer), :map))
+    end
+
     TEST_ARRAY_LENGTH = 50
     TEST_DATASET_1    = (1..TEST_ARRAY_LENGTH).to_a
 
@@ -61,6 +67,14 @@ module Hadope
 
     def individual_devices
       return Hadope::CPU.get, Hadope::GPU.get
+    end
+
+    def slice_sizes(length, action)
+      ratio = @ratio[action]
+      parts = ratio.numerator + ratio.denominator
+      num_cpu = ((length / parts.to_f) * ratio.denominator).round
+      num_gpu = length - num_cpu
+      return num_cpu, num_gpu
     end
 
     def benchmark_action(&block)
