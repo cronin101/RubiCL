@@ -30,6 +30,7 @@ module Hadope
   require_relative './lib/tasks/taskqueue'
   require_relative './lib/tasks/map'
   require_relative './lib/tasks/filter'
+  require_relative './lib/tasks/mappingfilter'
   require_relative './lib/tasks/braid'
   require_relative './lib/tasks/scan.rb'
   require_relative './lib/tasks/sort.rb'

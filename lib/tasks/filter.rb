@@ -16,8 +16,12 @@ module Hadope
       TaskKernelGenerator.new(self).create_kernel
     end
 
+    def predicate
+      @statements.first
+    end
+
     def body
-      "int flag = #{@statements.first} ? 1 : 0;"
+      "int flag = #{predicate} ? 1 : 0;"
     end
 
     def return_statements

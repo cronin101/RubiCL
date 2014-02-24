@@ -14,6 +14,10 @@ class Hadope::Task
     @logger.log "Created Task: #{name.inspect}."
   end
 
+  def variables
+    @required_variables
+  end
+
   chainable def add_variables(*variables)
     before = @required_variables.dup
     @required_variables.push(variables).flatten!.uniq!

@@ -17,12 +17,13 @@ describe TASK_QUEUE do
       class SomeTask < Hadope::Task; end
       not_map = SomeTask.new
       map = Hadope::Map.new :footype, :i, ['i + 1']
+      map2 = Hadope::Map.new :footype, :i, ['i + 1']
 
       queue = TASK_QUEUE.new
       expect do
         queue.push not_map
         queue.push map
-        queue.push map
+        queue.push map2
         queue.simplify!
       end.to_not raise_error
 

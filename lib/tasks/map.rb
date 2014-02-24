@@ -14,12 +14,11 @@ module Hadope
     end
 
     def fuse!(next_map)
+      add_variables next_map.variables
       conversion =  if next_map.input_variable == output_variable
                       [] # No variable pipelining required!
                     else
-                      pipeline_variable = output_variable
-                      @output_variable = next_map.output_variable
-                      add_variables next_map.input_variable
+                      pipeline_variable, @output_variable = @output_variable, next_map.output_variable
                       ["#{next_map.input_variable} = #{pipeline_variable}"]
                     end
       add_statements(conversion + next_map.statements)

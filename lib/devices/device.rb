@@ -177,38 +177,38 @@ module Hadope
 
     def run_map(task)
       kernel = task.to_kernel
-      @logger.log "Executing map kernel: #{kernel.inspect}"
+      @logger.log "Executing map kernel:\n #{kernel}"
       run_map_task(kernel, task.name, @buffer)
     end
 
     def run_smap(task)
       kernel = task.to_kernel
-      @logger.log "Executing smap kernel: #{kernel.inspect}"
+      @logger.log "Executing smap kernel:\n #{kernel}"
       run_map_task(kernel, task.name, @snds)
     end
 
     def run_filter(task)
       kernel = task.to_kernel
-      @logger.log "Executing filter kernel: #{kernel.inspect}"
+      @logger.log "Executing filter kernel:\n #{kernel}"
       scan_kernel = Scan.new(type: :int, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
       run_filter_task(kernel, task.name, scan_kernel, @buffer)
     end
 
     def run_braid(task)
       kernel = task.to_kernel
-      @logger.log "Executing braid kernel: #{kernel.inspect}"
+      @logger.log "Executing braid kernel:\n #{kernel}"
       @buffer = run_braid_task(kernel, task.name, @fsts, @snds)
     end
 
     def run_scan(task)
       scan_kernel = task.to_kernel
-      @logger.log "Executing scan kernel: #{scan_kernel.inspect}"
+      @logger.log "Executing scan kernel:\n #{scan_kernel}"
       case task.style
       when :exclusive
         run_exclusive_scan_task(scan_kernel, @buffer)
       when :inclusive
         braid_task = Braid.new(loaded_type, :x, :y, 'x + y')
-        @logger.log "Executing braid kernel: #{braid_task.to_kernel.inspect}"
+        @logger.log "Executing braid kernel:\n #{braid_task.to_kernel}"
         run_inclusive_scan_task(scan_kernel, braid_task.to_kernel, braid_task.name, @buffer)
       else
         raise "Don't understand scan type: #{task.style}"
