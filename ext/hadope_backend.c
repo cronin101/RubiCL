@@ -243,8 +243,8 @@ static VALUE methodRetrievePinnedIntDataset(VALUE self, VALUE memory_struct_obje
 
     int entries = mem_struct->buffer_entries;
     VALUE output_array = rb_ary_new2(entries);
-    for (int i = 0; i < entries; ++i) rb_ary_store(output_array, i, dataset[i]);
 
+    for (int i = 0; i < entries; ++i) rb_ary_store(output_array, i, dataset[i]);
     releaseDeviceDataset(mem_struct);
 
     return output_array;
@@ -344,6 +344,9 @@ static VALUE methodRunHybridMapTask(VALUE self, VALUE task_source_object, VALUE 
     runTaskOnDataset(&cpu_env, &cpu_subset, &cpu_task);
     runTaskOnDataset(&gpu_env, &gpu_subset, &gpu_task);
 
+    clFinish(cpu_env.queue);
+    clFinish(gpu_env.queue);
+
     releaseDeviceDataset(&cpu_subset);
     releaseDeviceDataset(&gpu_subset);
 
@@ -376,6 +379,111 @@ static VALUE methodRunFilterTask(VALUE self, VALUE filter_task_source_object, VA
     exclusivePrefixSum(environment, &presence, scan_task_source, &prescan);
     filterByScatteredWrites(environment, dataset, &presence, &prescan);
     releaseTemporaryFilterBuffers(&presence, &prescan);
+
+    return self;
+}
+
+static VALUE methodRunHybridFilterTask(VALUE self, VALUE filter_task_source_object, VALUE filter_task_name_object, VALUE cpu_scan_source,
+        VALUE gpu_scan_source, VALUE memory_struct_object, VALUE cpu_slice_length_object, VALUE gpu_slice_length_object) {
+    cl_int ret;
+
+    HadopeHybridEnvironment* environment;
+    VALUE environment_object = rb_iv_get(self, "@environment");
+    Data_Get_Struct(environment_object, HadopeHybridEnvironment, environment);
+
+    HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(memory_struct_object);
+    /* Early termination for empty buffer */
+    if (!mem_struct->buffer_entries) return self;
+
+    /* Dummy env for each individual device */
+    HadopeEnvironment cpu_env = { environment->cpu_device_id, environment->context, environment->cpu_queue };
+    HadopeEnvironment gpu_env = { environment->gpu_device_id, environment->context, environment->gpu_queue };
+
+    HadopeTask cpu_filter_task, gpu_filter_task;
+    char* filter_task_source = StringValuePtr(filter_task_source_object);
+    char* filter_task_name = StringValuePtr(filter_task_name_object);
+    buildTaskFromSource(&cpu_env, filter_task_source, filter_task_name, &cpu_filter_task);
+    buildTaskFromSource(&gpu_env, filter_task_source, filter_task_name, &gpu_filter_task);
+
+    /* Create proportional sub-buffers and run tasks */
+    int cpu_slice_length = FIX2INT(cpu_slice_length_object), gpu_slice_length = FIX2INT(gpu_slice_length_object);
+
+
+    HadopeMemoryBuffer cpu_subset, gpu_subset;
+    cpu_subset.type = mem_struct->type;
+    gpu_subset.type = mem_struct->type;
+    cpu_subset.buffer_entries = cpu_slice_length;
+    gpu_subset.buffer_entries = gpu_slice_length;
+    /* FIXME: Don't assume Integers here */
+    cl_buffer_region cpu_region = { 0 /* Origin */, sizeof(int) * cpu_slice_length /* Region size */ };
+    cl_buffer_region gpu_region = { sizeof(int) * cpu_slice_length /* Origin */, sizeof(int) * gpu_slice_length };
+    cpu_subset.buffer = clCreateSubBuffer(mem_struct->buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &cpu_region, NULL);
+    gpu_subset.buffer = clCreateSubBuffer(mem_struct->buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &gpu_region, NULL);
+
+    HadopeMemoryBuffer cpu_presence, gpu_presence,  cpu_prescan, gpu_prescan;
+
+    /* I swear I'm seeing double... */
+
+    computePresenceArrayForDataset(&cpu_env, &cpu_subset, &cpu_filter_task, &cpu_presence);
+    computePresenceArrayForDataset(&gpu_env, &gpu_subset, &gpu_filter_task, &gpu_presence);
+
+    exclusivePrefixSum(&cpu_env, &cpu_presence, StringValuePtr(cpu_scan_source), &cpu_prescan);
+    exclusivePrefixSum(&gpu_env, &gpu_presence, StringValuePtr(gpu_scan_source), &gpu_prescan);
+
+    filterByScatteredWrites(&cpu_env, &cpu_subset, &cpu_presence, &cpu_prescan);
+    filterByScatteredWrites(&gpu_env, &gpu_subset, &gpu_presence, &gpu_prescan);
+
+    clFinish(cpu_env.queue);
+    clFinish(gpu_env.queue);
+
+    releaseTemporaryFilterBuffers(&cpu_presence, &cpu_prescan);
+    releaseTemporaryFilterBuffers(&gpu_presence, &gpu_prescan);
+
+    mem_struct->buffer_entries = cpu_subset.buffer_entries + gpu_subset.buffer_entries;
+
+    /* New concatenated cl_mem buffer.
+     * FIXME: Assuming integers again... */
+    cl_mem old_buffer = mem_struct->buffer;
+    clFinish(environment->cpu_queue);
+
+    mem_struct->buffer = clCreateBuffer(
+        cpu_env.context,                            // Context
+        CL_MEM_READ_WRITE,                          // Flags
+        mem_struct->buffer_entries * sizeof(int),   // Size
+        NULL,                                    // Host Ptr
+        &ret                                        // Ret
+    );
+
+    /* Copy CPU Segment into new buffer... */
+    clEnqueueCopyBuffer(
+        environment->cpu_queue,                     // Command queue
+        cpu_subset.buffer,                          // Source buffer
+        mem_struct->buffer,                         // Destination buffer
+        0,                                          // Source offset
+        0,                                          // Destination offset
+        sizeof(int) * cpu_subset.buffer_entries,    // Copied data size
+        0,                                          // Preceding events
+        NULL,                                       // Event list
+        NULL                                        // Produced event object
+    );
+    /* ... and the GPU segment */
+    clEnqueueCopyBuffer(
+        environment->cpu_queue,                     // Command queue
+        gpu_subset.buffer,                          // Source buffer
+        mem_struct->buffer,                         // Destination buffer
+        0,                                          // Source offset
+        sizeof(int) * cpu_subset.buffer_entries,    // Destination offset
+        sizeof(int) * gpu_subset.buffer_entries,    // Copied data size
+        0,                                          // Preceding events
+        NULL,                                       // Event list
+        NULL                                        // Produced event object
+    );
+    clFinish(environment->cpu_queue);
+
+    releaseDeviceDataset(&cpu_subset);
+    releaseDeviceDataset(&gpu_subset);
+    clReleaseMemObject(old_buffer);
+
 
     return self;
 }
@@ -558,6 +666,7 @@ void Init_hadope_backend() {
     rb_define_private_method(HadopeBackend, "run_map_task", methodRunMapTask, 3);
     rb_define_private_method(HadopeBackend, "run_hybrid_map_task", methodRunHybridMapTask, 5);
     rb_define_private_method(HadopeBackend, "run_filter_task", methodRunFilterTask, 4);
+    rb_define_private_method(HadopeBackend, "run_hybrid_filter_task", methodRunHybridFilterTask, 7);
     rb_define_private_method(HadopeBackend, "run_braid_task", methodRunBraidTask, 4);
     rb_define_private_method(HadopeBackend, "run_exclusive_scan_task", methodRunExclusiveScanTask, 2);
     rb_define_private_method(HadopeBackend, "run_inclusive_scan_task", methodRunInclusiveScanTask, 4);

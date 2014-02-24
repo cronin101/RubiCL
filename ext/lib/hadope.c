@@ -401,7 +401,7 @@ void releaseDeviceDataset(
   HadopeMemoryBuffer* dataset
 ) {
     if (DEBUG) printf("releaseDeviceDataset\n");
-  clReleaseMemObject(dataset->buffer);
+    clReleaseMemObject(dataset->buffer);
 }
 /* ~~ END Memory Management Methods ~~ */
 

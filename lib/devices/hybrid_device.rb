@@ -5,7 +5,7 @@ module Hadope
 
     BENCHMARKS = {
       map:        :map_test_benchmark,
-#      filter:     :filter_task_benchmark,
+      filter:     :filter_task_benchmark,
 #      mapfilter:  :mapfilter_task_benchmark,
     }
 
@@ -40,7 +40,17 @@ module Hadope
       run_hybrid_map_task(kernel, task.name, @buffer, *slice_sizes(buffer_length(@buffer), :map))
     end
 
-    TEST_ARRAY_LENGTH = 5_000_000
+    def run_filter(task)
+      kernel = task.to_kernel
+      @logger.log "Executing hybrid filter kernel: #{kernel.inspect}"
+      cpu_scan_kernel = Scan.new(type: :int, operator: :+, elim_conflicts: false).to_kernel
+      gpu_scan_kernel = Scan.new(type: :int, operator: :+, elim_conflicts: true).to_kernel
+      scan_kernels = [cpu_scan_kernel, gpu_scan_kernel]
+      run_hybrid_filter_task(kernel, task.name, *scan_kernels, @buffer,
+                             *slice_sizes(buffer_length(@buffer), :filter))
+    end
+
+    TEST_ARRAY_LENGTH = 50_000_000
     TEST_DATASET_1    = (1..TEST_ARRAY_LENGTH).to_a
 
     def map_test_benchmark
