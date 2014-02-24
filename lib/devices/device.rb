@@ -33,16 +33,24 @@ module Hadope
       send type.hadope_conversion
     end
 
-    def pin_integer_object obj
+    def load_integer_object obj
       case obj
       when Array
-        pin_integer_dataset obj
+        load_integer_dataset obj
       when File
         pin_integer_file obj
       when Range
-        pin_integer_dataset obj.to_a
+        load_integer_dataset obj.to_a
       else
         raise "No idea how to pin #{obj.inspect}!"
+      end
+    end
+
+    def load_integer_dataset d
+      case self
+      when CPU then pin_integer_dataset d
+      else
+        pin_integer_dataset d
       end
     end
 
