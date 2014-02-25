@@ -17,6 +17,10 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
     RubyVM::InstructionSequence.disassemble function
   end
 
+  def locals_table
+    eval('local_variables', function.binding)
+  end
+
   def parsed_operations
     operations.map { |o| translate(o) }
   end
@@ -40,16 +44,46 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
 
   def translate(operation)
     case operation
+    # First function argument
     when /getlocal_OP__WC__0 #{function.arity + 1}/ then 'x'
+
+    # Second function argument
     when /getlocal_OP__WC__0 #{function.arity}/     then 'y'
+
+    # Indexed bound variable
+    when /getlocal_OP__WC__1 \d+/
+      id = /WC__1 (?<i>\d+)/.match(operation)[:i].to_i
+      index = locals_table.length - (id - 1)
+      beta_reduction locals_table[index]
+
+    # Named bound variable
+    when /getlocal\s+\w+,\s\d+/
+      name = /getlocal\s+(?<name>\w+),/.match(operation)[:name].to_sym
+      beta_reduction name
+
+    # Literal Zero
     when /putobject_OP_INT2FIX_O_0_C_/              then 0
+
+    # Literal One
     when /putobject_OP_INT2FIX_O_1_C_/              then 1
+
+    # Floating-Point Literal
     when /putobject\s+-?\d+\.\d+/                   then operation.split(' ').last.to_f
+
+    # Integer Literal
     when /putobject\s+-?\d+/                        then operation.split(' ').last.to_i
-    when /opt_send_simple/                          then operation.scan(/(?:mid:(.*?),)/)[0][0].to_sym
+
+    # Method Sending
+    when /opt_send_simple/                          then /mid:(?<method>.*?),/.match(operation)[:method].to_sym
+
+    # Built-in Operator
     when /opt_/                                     then LOOKUP_TABLE.fetch operation[/opt_\w+/].to_sym
-    else raise "Could not parse: #{operation}"
+    else raise "Could not parse: #{operation} in #{bytecode}"
     end
+  end
+
+  def beta_reduction variable_name
+    function.binding.local_variable_get variable_name
   end
 
   def method_send(target, method)

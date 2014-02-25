@@ -18,6 +18,11 @@ describe LAMBDA_BYTECODE_PARSER do
       LAMBDA_BYTECODE_PARSER.new(->{ -1 }).parsed_operations.should == [-1]
     end
 
+    it 'can beta-reduce bound variables referenced within closure' do
+      foo = 10
+      LAMBDA_BYTECODE_PARSER.new(Proc.new { |x| x + foo }).parsed_operations.should == ['x', 10, '+']
+    end
+
     it 'recognises when a bytecode operation is not currently defined' do
       expect { LAMBDA_BYTECODE_PARSER.new(->{ }).send(:translate, 'A_NONEXISTENT_OPERATION') }.to raise_error
     end
