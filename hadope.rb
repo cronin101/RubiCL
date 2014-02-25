@@ -1,5 +1,7 @@
 require './ext/hadope_backend'
 
+require 'forwardable'
+
 module Hadope
   class << self
     attr_writer :opencl_device
