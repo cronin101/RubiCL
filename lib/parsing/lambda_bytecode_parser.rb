@@ -30,10 +30,14 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
     stack = []
     while tokens.length > 0
       case token = tokens.shift
-      when Fixnum then stack.push token
-      when Float  then stack.push token
+      when Fixnum, Float then stack.push token
       when Symbol then stack.push method_send(stack.pop, token)
-      when String then ['x', 'y'].include?(token) ? stack.push(token) : stack.push(combine(token, stack.pop, stack.pop))
+      when String
+        if ['x', 'y'].include?(token)
+          stack.push(token)
+        else
+          stack.push(combine(token, stack.pop, stack.pop))
+        end
       end
     end
 
