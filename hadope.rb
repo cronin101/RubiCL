@@ -43,3 +43,5 @@ end
 
 # Sensible default for now
 Hadope.opencl_device = Hadope::CPU
+
+#Hadope::Logger.get.loud_mode

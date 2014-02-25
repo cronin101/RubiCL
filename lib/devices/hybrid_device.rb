@@ -50,7 +50,7 @@ module Hadope
                              *slice_sizes(buffer_length(@buffer), :filter))
     end
 
-    TEST_ARRAY_LENGTH = 50_000_000
+    TEST_ARRAY_LENGTH = 5_000_000
     TEST_DATASET_1    = (1..TEST_ARRAY_LENGTH).to_a
 
     def map_test_benchmark

@@ -136,12 +136,18 @@ module Hadope
       end
     end
 
+    def retrieve_integer_dataset
+      case self
+      when CPU then retrieve_pinned_integer_dataset
+      else
+        retrieve_pinned_integer_dataset
+      end
+    end
+
     requires_type :int,
     def retrieve_pinned_integer_dataset
       retrieve_from_device :pinned_integer_dataset
     end
-
-    alias_method :retrieve_integer_dataset, :retrieve_pinned_integer_dataset
 
     requires_type :double,
     def retrieve_pinned_double_dataset
