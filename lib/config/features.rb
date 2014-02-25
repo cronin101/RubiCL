@@ -2,7 +2,8 @@ module Hadope
   module Config
 
     class FeatureSwitcher
-      attr_accessor :task_fusion
+      attr_accessor :task_fusion,
+        :use_host_mem
 
       def initialize
         set_defaults
@@ -11,7 +12,8 @@ module Hadope
       private
 
       def set_defaults
-        @task_fusion = true
+        @task_fusion  = true
+        @use_host_mem = true
       end
 
     end

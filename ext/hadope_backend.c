@@ -76,13 +76,16 @@ static VALUE /* ### THIS METHOD IS DEPRECATED ### */ methodCreateMemoryBuffer(VA
     /* Pulling string out of Ruby object and strcmp to set unit size of array
     * FIXME Make this less hacky, it feels bad.*/
     char* type_string = StringValuePtr(type_string_object);
+    HadopeMemoryBuffer* mem_struct = malloc(sizeof(HadopeMemoryBuffer));
+
     if (!strcmp(type_string, "int")){
         unit_size = INT2FIX(sizeof(int));
+        mem_struct->type = INTEGER_BUFFER;
     } else {
+        free(mem_struct);
         rb_raise(rb_eTypeError, "Provided type not understood by size_of");
     }
 
-    HadopeMemoryBuffer* mem_struct = malloc(sizeof(HadopeMemoryBuffer));
     mem_struct->buffer_entries = FIX2INT(num_entries_object);
 
     HadopeEnvironment* environment = environmentPtrFromIvar(self);

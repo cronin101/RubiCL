@@ -47,18 +47,23 @@ module Hadope
     end
 
     def load_integer_dataset d
-      case self
-      when CPU then pin_integer_dataset d
-      else
+      if Hadope::Config::Features.use_host_mem
         pin_integer_dataset d
+      else
+        create_integer_buffer_from_dataset d
       end
+    end
+
+    chainable sets_type :int,
+    def create_integer_buffer_from_dataset(array)
+      @buffer = create_memory_buffer array.length, 'int'
+      transfer_integer_dataset_to_buffer array, @buffer
     end
 
     chainable sets_type :int,
     def pin_integer_dataset(array)
       @buffer = create_buffer_from_dataset :pinned_integer_buffer, array
     end
-    alias_method :load_integer_dataset, :pin_integer_dataset
 
     chainable sets_type :int,
     def pin_integer_file file
@@ -137,16 +142,21 @@ module Hadope
     end
 
     def retrieve_integer_dataset
-      case self
-      when CPU then retrieve_pinned_integer_dataset
-      else
+      if Hadope::Config::Features.use_host_mem
         retrieve_pinned_integer_dataset
+      else
+        retrieve_integer_dataset
       end
     end
 
     requires_type :int,
     def retrieve_pinned_integer_dataset
       retrieve_from_device :pinned_integer_dataset
+    end
+
+    requires_type :int,
+    def retrieve_integer_dataset
+      retrieve_from_device :integer_dataset
     end
 
     requires_type :double,
