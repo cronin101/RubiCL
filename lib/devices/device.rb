@@ -145,7 +145,7 @@ module Hadope
       if Hadope::Config::Features.use_host_mem
         retrieve_pinned_integer_dataset
       else
-        retrieve_integer_dataset
+        retrieve_integer_dataset_from_device
       end
     end
 
@@ -155,7 +155,7 @@ module Hadope
     end
 
     requires_type :int,
-    def retrieve_integer_dataset
+    def retrieve_integer_dataset_from_device
       retrieve_from_device :integer_dataset
     end
 
