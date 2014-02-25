@@ -104,9 +104,7 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
 
   def is_value?(token)
     case token
-    when Fixnum       then true
-    when Float        then true
-    when *['x', 'y']  then true
+    when Fixnum, Float, *['x', 'y'] then true
     else false
     end
   end
