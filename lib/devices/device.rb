@@ -237,7 +237,7 @@ module Hadope
         @task_queue.unshift Map.new(*FIX2INT)
         @task_queue.push Map.new(*INT2FIX)
       end
-      @task_queue.simplify!
+      @task_queue.simplify! if Hadope::Config::Features.task_fusion
       run_task @task_queue.shift until @task_queue.empty?
     end
 
