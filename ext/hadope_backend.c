@@ -30,6 +30,23 @@ VALUE mem_struct_objectFromPtr(HadopeMemoryBuffer* mem_struct) {
 VALUE methodBufferLength(VALUE self, VALUE mem_struct_object) {
     return(INT2FIX(mem_structPtrFromObj(mem_struct_object)->buffer_entries));
 }
+
+VALUE methodLastMemoryDuration(VALUE self) {
+    HadopeEnvironment* env = environmentPtrFromIvar(self);
+    return DBL2NUM((float) env->timings.memory_total * 1000 / CLOCKS_PER_SEC);
+}
+
+VALUE methodLastComputationDuration(VALUE self) {
+    HadopeEnvironment* env = environmentPtrFromIvar(self);
+    return DBL2NUM((float) env->timings.computation_total * 1000 / CLOCKS_PER_SEC);
+}
+
+VALUE methodLastPipelineDuration(VALUE self) {
+    HadopeEnvironment* env = environmentPtrFromIvar(self);
+    return DBL2NUM(((float) env->timings.pipeline_total * 1000 / CLOCKS_PER_SEC));
+}
+
+
 /* ~~ END Helpers ~~ */
 
 /* ~~ Init Methods ~~ */
@@ -122,19 +139,32 @@ static VALUE methodPinIntRange(cl_context* context, VALUE dataset_object, VALUE 
  *  @dataset_object: Ruby object containing an array of integers. */
 static VALUE methodPinIntDataset(VALUE self, VALUE dataset_object) {
     cl_context* context;
+    HadopeTimings* bm;
+
+    float start_time = getTime("Started Pinning");
 
     // FIXME?: This is far too magic.
-    if (RTEST(rb_funcall(self, rb_intern("is_hybrid?"), 0))) {
+    int is_hybrid = RTEST(rb_funcall(self, rb_intern("is_hybrid?"), 0));
+    if (is_hybrid) {
         HadopeHybridEnvironment* environment;
         VALUE environment_object = rb_iv_get(self, "@environment");
         Data_Get_Struct(environment_object, HadopeHybridEnvironment, environment);
         context = &environment->context;
+        bm = &environment->timings;
     } else {
         HadopeEnvironment* environment = environmentPtrFromIvar(self);
-        context = &environment->context;
+        context = &((HadopeEnvironment*)environment)->context;
+        bm = &environment->timings;
     }
 
-    return methodPinIntRange(context, dataset_object, INT2FIX(0), INT2FIX(RARRAY_LEN(dataset_object) - 1));
+    VALUE pinned_buffer =  methodPinIntRange(context, dataset_object, INT2FIX(0), INT2FIX(RARRAY_LEN(dataset_object) - 1));
+
+    float finish_time = getTime("Finished Pinning");
+
+    bm->memory_total = finish_time - start_time;
+    bm->pipeline_start = start_time;
+
+    return pinned_buffer;
 }
 
 static VALUE methodPinIntFile(VALUE self, VALUE filename_object) {
@@ -227,28 +257,38 @@ static VALUE methodRetrieveIntDataset(VALUE self, VALUE memory_struct_object) {
  *
  * @memory_struct_object: Ruby object storing HadopeMemoryBuffer. */
 static VALUE methodRetrievePinnedIntDataset(VALUE self, VALUE memory_struct_object) {
+    HadopeTimings* bm;
     cl_command_queue* queue;
 
+
     /* The magic is back with a vengeance. */
-    if (RTEST(rb_funcall(self, rb_intern("is_hybrid?"), 0))) {
+    int is_hybrid = RTEST(rb_funcall(self, rb_intern("is_hybrid?"), 0));
+    if (is_hybrid) {
         HadopeHybridEnvironment* environment;
         VALUE environment_object = rb_iv_get(self, "@environment");
         Data_Get_Struct(environment_object, HadopeHybridEnvironment, environment);
         queue = &environment->cpu_queue;
+        bm = &environment->timings;
     } else {
         HadopeEnvironment* environment = environmentPtrFromIvar(self);
         queue = &environment->queue;
+        bm = &environment->timings;
     }
 
     HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(memory_struct_object);
 
-    int* dataset = getPinnedArrayFromDevice(queue, mem_struct, sizeof(int));
+    int* dataset = getPinnedArrayFromDevice(queue, mem_struct, sizeof(int), bm);
 
     int entries = mem_struct->buffer_entries;
     VALUE output_array = rb_ary_new2(entries);
 
     for (int i = 0; i < entries; ++i) rb_ary_store(output_array, i, dataset[i]);
     releaseDeviceDataset(mem_struct);
+
+    bm->memory_total = getTime("Finished Retrieving") - bm->memory_start;
+
+    int finish_pipeline = getTime("Pipeline Complete");
+    bm->pipeline_total = finish_pipeline - bm->pipeline_start;
 
     return output_array;
 }
@@ -260,8 +300,9 @@ static VALUE methodRetrievePinnedIntDataset(VALUE self, VALUE memory_struct_obje
 static VALUE methodRetrievePinnedDoubleDataset(VALUE self, VALUE memory_struct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(memory_struct_object);
+    HadopeTimings* bm = &environment->timings;
 
-    double* dataset = getPinnedArrayFromDevice(&environment->queue, mem_struct, sizeof(double));
+    double* dataset = getPinnedArrayFromDevice(&environment->queue, mem_struct, sizeof(double), bm);
 
     int entries = mem_struct->buffer_entries;
     VALUE output_array = rb_ary_new2(entries);
@@ -295,7 +336,10 @@ static VALUE methodSumIntegerBuffer(VALUE self, VALUE scan_task_source_object, V
 static VALUE methodRunMapTask(VALUE self, VALUE task_source_object, VALUE task_name_object, VALUE mem_struct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(mem_struct_object);
+    environment->timings.computation_start = getTime("Map Enqueue Started");
+
     /* Early termination for empty buffer */
+    environment->timings.computation_total = 0;
     if (!mem_struct->buffer_entries) return self;
 
     /* Convert Objects into C types and builds Kernel using environment ivar */
@@ -306,6 +350,8 @@ static VALUE methodRunMapTask(VALUE self, VALUE task_source_object, VALUE task_n
 
     /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
     runTaskOnDataset(environment, mem_struct, &task);
+    environment->timings.computation_total = getTime("Map Enqueue Finished") - environment->timings.computation_start;
+
 
     return self;
 }
@@ -366,7 +412,10 @@ static VALUE methodRunFilterTask(VALUE self, VALUE filter_task_source_object, VA
                     VALUE scan_task_source_object, VALUE mem_struct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* dataset = mem_structPtrFromObj(mem_struct_object);
+    environment->timings.computation_start = getTime("Filter Enqueue Started");
+
     /* Early termination for empty buffer */
+    environment->timings.computation_total = 0;
     if (!dataset->buffer_entries) return self;
 
     /* Convert Objects into C types and build Kernel using environment ivar */
@@ -383,6 +432,7 @@ static VALUE methodRunFilterTask(VALUE self, VALUE filter_task_source_object, VA
     filterByScatteredWrites(environment, dataset, &presence, &prescan);
     releaseTemporaryFilterBuffers(&presence, &prescan);
 
+    environment->timings.computation_total = getTime("Filter Enqueue Finished") - environment->timings.computation_start;
     return self;
 }
 
@@ -675,5 +725,8 @@ void Init_hadope_backend() {
     rb_define_private_method(HadopeBackend, "run_inclusive_scan_task", methodRunInclusiveScanTask, 4);
     rb_define_private_method(HadopeBackend, "sort_integer_buffer", methodRunIntSortTask, 2);
     rb_define_private_method(HadopeBackend, "buffer_length", methodBufferLength, 1);
+    rb_define_private_method(HadopeBackend, "last_memory_duration", methodLastMemoryDuration, 0);
+    rb_define_private_method(HadopeBackend, "last_computation_duration", methodLastComputationDuration, 0);
+    rb_define_private_method(HadopeBackend, "last_pipeline_duration", methodLastPipelineDuration, 0);
     rb_define_private_method(HadopeBackend, "clean_used_resources", methodCleanUsedResources, 1);
 }

@@ -31,7 +31,7 @@ module Hadope
     end
 
     def statements
-      (@before + @filter + @after).flatten
+      (@before + @filter.map { |f| "?{#{f}}?"} + @after).flatten
     end
 
     def pre_fuse!(map)

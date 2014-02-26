@@ -1,5 +1,7 @@
 module Hadope
   class Device
+    require 'colored'
+
     include HadopeBackend
     include RequireType
     include ChainableDecorator
@@ -19,13 +21,29 @@ module Hadope
     FIX2INT = [:int, :x, ['x = x >> 1']]
     INT2FIX = [:int, :x, ['x = (x << 1) | 0x01']]
 
+  # Decorators for start/end of computation callbacks
+  def self.pipeline_start method
+    method_body = instance_method method
+    define_method method do |*arg, &block|
+      Logger.timing_info "Pipeline Started".red
+      method_body.bind(self).(*arg, &block)
+    end
+  end
+
+  def self.pipeline_stop method
+    method_body = instance_method method
+    define_method method do |*arg, &block|
+      result = method_body.bind(self).(*arg, &block)
+      Logger.timing_info "Pipeline Complete".green + " in #{last_pipeline_duration.round(3).to_s.green} ms"
+      result
+    end
+  end
 
     Cache = Struct.new(:dataset)
 
     def initialize
       raise 'Must be a subclass!' if self.class == Device
       initialize_task_queue
-      @logger = Logger.get
       @cache = Cache.new(nil)
     end
 
@@ -33,8 +51,10 @@ module Hadope
       send type.hadope_conversion
     end
 
-    def load_integer_object obj
-      case obj
+    pipeline_start def load_integer_object obj
+      result = nil
+
+      result = case obj
       when Array
         load_integer_dataset obj
       when File
@@ -44,6 +64,10 @@ module Hadope
       else
         raise "No idea how to pin #{obj.inspect}!"
       end
+      technique = Hadope::Config::Features.use_host_mem ? 'Pinned' : 'Loaded'
+      Logger.timing_info "#{technique} #{("Integer " << obj.class.to_s).yellow} in #{last_memory_duration.round(3).to_s.green} ms"
+
+      result
     end
 
     def load_integer_dataset d
@@ -141,12 +165,16 @@ module Hadope
       end
     end
 
-    def retrieve_integer_dataset
-      if Hadope::Config::Features.use_host_mem
+    pipeline_stop def retrieve_integer_dataset
+      result = if Hadope::Config::Features.use_host_mem
         retrieve_pinned_integer_dataset
       else
         retrieve_integer_dataset_from_device
       end
+
+      Logger.timing_info "Waiting for in-progress tasks ".yellow << "took #{last_computation_duration.round(3).to_s.green} ms"
+      Logger.timing_info "Retrieved " + "#{buffer_length(@buffer)} Integers".yellow + " in #{last_memory_duration.round(3).to_s.green} ms"
+      result
     end
 
     requires_type :int,
@@ -193,38 +221,38 @@ module Hadope
 
     def run_map(task)
       kernel = task.to_kernel
-      @logger.log "Executing map kernel:\n #{kernel}"
+      Logger.log "Executing map kernel:\n #{kernel}"
       run_map_task(kernel, task.name, @buffer)
     end
 
     def run_smap(task)
       kernel = task.to_kernel
-      @logger.log "Executing smap kernel:\n #{kernel}"
+      Logger.log "Executing smap kernel:\n #{kernel}"
       run_map_task(kernel, task.name, @snds)
     end
 
     def run_filter(task)
       kernel = task.to_kernel
-      @logger.log "Executing filter kernel:\n #{kernel}"
+      Logger.log "Executing filter kernel:\n #{kernel}"
       scan_kernel = Scan.new(type: :int, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
       run_filter_task(kernel, task.name, scan_kernel, @buffer)
     end
 
     def run_braid(task)
       kernel = task.to_kernel
-      @logger.log "Executing braid kernel:\n #{kernel}"
+      Logger.log "Executing braid kernel:\n #{kernel}"
       @buffer = run_braid_task(kernel, task.name, @fsts, @snds)
     end
 
     def run_scan(task)
       scan_kernel = task.to_kernel
-      @logger.log "Executing scan kernel:\n #{scan_kernel}"
+      Logger.log "Executing scan kernel:\n #{scan_kernel}"
       case task.style
       when :exclusive
         run_exclusive_scan_task(scan_kernel, @buffer)
       when :inclusive
         braid_task = Braid.new(loaded_type, :x, :y, 'x + y')
-        @logger.log "Executing braid kernel:\n #{braid_task.to_kernel}"
+        Logger.log "Executing braid kernel:\n #{braid_task.to_kernel}"
         run_inclusive_scan_task(scan_kernel, braid_task.to_kernel, braid_task.name, @buffer)
       else
         raise "Don't understand scan type: #{task.style}"
@@ -240,6 +268,8 @@ module Hadope
       when Scan   then run_scan   task
       else raise "Unknown task: #{task.inspect}"
       end
+
+      Logger.timing_info "Enqueued #{task.descriptor.yellow} in #{last_computation_duration.round(3).to_s.green} ms"
     end
 
     def run_tasks(do_conversions:(loaded_type == :int))
@@ -266,4 +296,5 @@ module Hadope
     end
 
   end
+
 end

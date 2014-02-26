@@ -9,7 +9,6 @@ module Hadope
 
     def initialize
       @tasks = []
-      @logger = Hadope::Logger.get
     end
 
     chainable def simplify!
@@ -39,7 +38,7 @@ module Hadope
           end
         end
       end
-      @logger.log "Simplify!: Simplified from #{before.inspect}, to #{@tasks.map(&:statements).inspect}."
+      Logger.log "Simplify!: Simplified from #{before.inspect}, to #{@tasks.map(&:statements).inspect}."
     end
 
   end

@@ -4,6 +4,12 @@
 
 #define DEBUG 0
 
+clock_t getTime(char* description) {
+    clock_t clock_time = clock();
+    if (DEBUG) printf("%s at %zu\n", description, clock_time);
+    return clock_time;
+}
+
 void releaseMemoryCallback(
     cl_event event,
     cl_int event_command_exec_status,
@@ -195,6 +201,9 @@ void createHadopeEnvironment(const cl_device_type device_type, HadopeEnvironment
 
     /* Record the maximum supported group size. */
     setGroupSize(env);
+
+    /* Init timings struct */
+    env->timings = (HadopeTimings) { 0, 0 };
 }
 
 void createHadopeHybridEnvironment(HadopeHybridEnvironment* env) {
@@ -367,11 +376,17 @@ void getIntArrayFromDevice(
 void* getPinnedArrayFromDevice(
     cl_command_queue* queue,
     const HadopeMemoryBuffer* mem_struct,
-    const size_t unit_size
+    const size_t unit_size,
+    HadopeTimings* bm
 ){
     if (DEBUG) printf("getPinnedArrayFromDevice\n");
+
     /* Wait for pending actions */
+    bm->computation_start = getTime("Waiting For Completion Started");
     clFinish(*queue);
+    bm->computation_total = getTime("Waiting For Completion Finished") - bm->computation_start;
+
+    bm->memory_start = getTime("Retrieving Data Started");
 
     cl_int ret;
     return clEnqueueMapBuffer(

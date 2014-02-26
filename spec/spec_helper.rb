@@ -3,4 +3,4 @@ SimpleCov.start
 
 require_relative '../hadope.rb'
 
-Hadope::Logger.get.quiet_mode
+Hadope::Logger.quiet_mode

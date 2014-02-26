@@ -2,16 +2,30 @@
 #define HADOPE_H
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
 #ifdef __APPLE__
   #include <OpenCL/opencl.h>
 #else
   #include <CL/cl.h>
 #endif
 
+clock_t getTime(char* description);
+
+typedef struct {
+    clock_t pipeline_start;
+    clock_t pipeline_total;
+    clock_t memory_start;
+    clock_t memory_total;
+    clock_t computation_start;
+    clock_t computation_total;
+} HadopeTimings;
+
 typedef struct {
     cl_device_id device_id;
     cl_context context;
     cl_command_queue queue;
+    HadopeTimings timings;
 } HadopeEnvironment;
 
 typedef struct {
@@ -20,6 +34,7 @@ typedef struct {
     cl_context context;
     cl_command_queue cpu_queue;
     cl_command_queue gpu_queue;
+    HadopeTimings timings;
 } HadopeHybridEnvironment;
 
 typedef struct {
@@ -85,7 +100,8 @@ void getIntArrayFromDevice(
 void* getPinnedArrayFromDevice(
     cl_command_queue* queue,
     const HadopeMemoryBuffer* mem_struct,
-    const size_t unit_size
+    const size_t unit_size,
+    HadopeTimings* bm
 );
 
 void runTaskOnDataset(
