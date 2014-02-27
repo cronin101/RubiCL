@@ -32,7 +32,13 @@ describe TASK_KERNEL_GENERATOR do
       braid = Hadope::Braid.new(:footype, :i, :j, ['i = i + j'])
       expect { braid.to_kernel }.to_not raise_error
     end
+  end
 
+  context 'Sort tasks' do
+    it 'can generate the kernel from components and boilerplate' do
+      sort = Hadope::Sort.new
+      expect { sort.to_kernel }.to_not raise_error
+    end
   end
 
   context 'Undefined tasks' do
