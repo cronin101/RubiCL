@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-GPU = Hadope::CPU
+GPU = Hadope::GPU
 
 describe GPU do
   it 'is a singleton if accessed using ::get' do
