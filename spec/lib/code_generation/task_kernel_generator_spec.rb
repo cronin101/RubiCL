@@ -21,6 +21,20 @@ describe TASK_KERNEL_GENERATOR do
     end
   end
 
+  context 'Scan tasks' do
+    it 'can generate the kernel from components and boilerplate' do
+      expect { Hadope::Scan.new.to_kernel }.to_not raise_error
+    end
+  end
+
+  context 'Braid tasks' do
+    it 'can generate the kernel from components and boilerplate' do
+      braid = Hadope::Braid.new(:footype, :i, :j, ['i = i + j'])
+      expect { braid.to_kernel }.to_not raise_error
+    end
+
+  end
+
   context 'Undefined tasks' do
     it 'should raise an error when asked to generate the kernel for an undefined task type' do
       class Sometask < Hadope::Task; end
