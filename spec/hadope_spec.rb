@@ -49,6 +49,10 @@ describe Hadope do
         .filter { |j| j > 2.5 }[Float]
         .should == [3.1, 4.1]
     end
+
+    it 'can #zip and #braid' do
+      (1..10)[Int].zip(1..10).braid { |x, y| x - y }[Fixnum].should == (1..10).map { 0 }
+    end
   end
 
   context 'Top level namespace' do
