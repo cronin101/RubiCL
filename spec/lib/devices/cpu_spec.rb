@@ -28,7 +28,7 @@ describe CPU do
   end
 
   it 'allows loading and retrieving via square-bracket syntax' do
-    Hadope.opencl_device = Hadope::CPU
+    Hadope.opencl_device = CPU
     [1, 2, 3][Int][Fixnum].should == [1, 2, 3]
   end
 end
