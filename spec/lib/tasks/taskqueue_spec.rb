@@ -5,7 +5,7 @@ TASK_QUEUE = Hadope::TaskQueue
 describe TASK_QUEUE do
   it 'initializes with an empty queue of tasks' do
     queue = TASK_QUEUE.new
-    queue.size.should == 0
+    queue.size.should be 0
   end
 
   context '#simplify!' do
@@ -27,7 +27,7 @@ describe TASK_QUEUE do
         queue.simplify!
       end.to_not raise_error
 
-      queue.size.should == 2
+      queue.size.should be 2
     end
 
     it 'can be called when there is only one task' do
@@ -53,9 +53,9 @@ describe TASK_QUEUE do
         queue.size.should be 1
         task = queue.tasks.first
         task.class.should be Hadope::Map
-        task.statements.size.should == 3
-        task.input_variable.should == :i
-        task.output_variable.should == :j
+        task.statements.size.should be 3
+        task.input_variable.should be :i
+        task.output_variable.should be :j
       end
     end
 
@@ -93,9 +93,9 @@ describe TASK_QUEUE do
         queue.size.should be 1
         task = queue.tasks.first
         task.class.should be Hadope::MappingFilter
-        task.statements.size.should == 3
-        task.input_variable.should == :j
-        task.output_variable.should == :i
+        task.statements.size.should be 3
+        task.input_variable.should be :j
+        task.output_variable.should be :i
       end
     end
   end
