@@ -26,8 +26,8 @@ module Hadope
         end
       end
 
-      @map_input_variable  = (pre_map || post_map).input_variable
-      @map_output_variable = (post_map || pre_map).output_variable
+      @input_variable  = (pre_map || filter).input_variable
+      @output_variable = (post_map || pre_map).output_variable
     end
 
     def statements
@@ -36,10 +36,10 @@ module Hadope
 
     def pre_fuse!(map)
       add_variables map.variables
-      conversion =  if map.output_variable == @map_input_variable
+      conversion =  if map.output_variable == @input_variable
                       []
                     else
-                      pipeline_variable, @map_input_variable = @map_input_variable, map.input_variable
+                      pipeline_variable, @input_variable = @input_variable, map.input_variable
                       ["#{pipeline_variable} = #{map.output_variable}"]
                     end
       @before.unshift(map.statements + conversion)
@@ -48,10 +48,10 @@ module Hadope
 
     def post_fuse!(map)
       add_variables map.variables
-      conversion =  if map.input_variable == @map_output_variable
+      conversion =  if map.input_variable == @output_variable
                       []
                     else
-                      pipeline_variable, @map_output_variable = @map_output_variable, map.output_variable
+                      pipeline_variable, @output_variable = @output_variable, map.output_variable
                       ["#{map.input_variable} = #{pipeline_variable}"]
                     end
       @after.push(conversion + map.statements)
@@ -65,7 +65,7 @@ module Hadope
     def return_statements
 <<CL
     presence_array[global_id] = flag;
-    data_array[global_id] = #@map_output_variable;
+    data_array[global_id] = #@output_variable;
 CL
     end
 
