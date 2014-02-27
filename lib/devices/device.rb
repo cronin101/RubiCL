@@ -21,23 +21,23 @@ module Hadope
     FIX2INT = [:int, :x, ['x = x >> 1']]
     INT2FIX = [:int, :x, ['x = (x << 1) | 0x01']]
 
-  # Decorators for start/end of computation callbacks
-  def self.pipeline_start method
-    method_body = instance_method method
-    define_method method do |*arg, &block|
-      Logger.timing_info "Pipeline Started".red
-      method_body.bind(self).(*arg, &block)
+    # Decorators for start/end of computation callbacks
+    def self.pipeline_start method
+      method_body = instance_method method
+      define_method method do |*arg, &block|
+        Logger.timing_info "Pipeline Started".red
+        method_body.bind(self).(*arg, &block)
+      end
     end
-  end
 
-  def self.pipeline_stop method
-    method_body = instance_method method
-    define_method method do |*arg, &block|
-      result = method_body.bind(self).(*arg, &block)
-      Logger.timing_info "Pipeline Complete".green + " in #{last_pipeline_duration.round(3).to_s.green} ms"
-      result
+    def self.pipeline_stop method
+      method_body = instance_method method
+      define_method method do |*arg, &block|
+        result = method_body.bind(self).(*arg, &block)
+        Logger.timing_info "Pipeline Complete".green + " in #{last_pipeline_duration.round(3).to_s.green} ms"
+        result
+      end
     end
-  end
 
     Cache = Struct.new(:dataset)
 
