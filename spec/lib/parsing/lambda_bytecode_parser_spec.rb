@@ -40,6 +40,12 @@ describe LAMBDA_BYTECODE_PARSER do
 
       LAMBDA_BYTECODE_PARSER.new(->(i){ -((-i) - (-1) - (-2)) }).to_infix.should == ['-((-x) - -1) - -2']
     end
+
+    it 'can handle method-sending #even?' do
+      parsed = LAMBDA_BYTECODE_PARSER.new ->(i){ i.even? }
+      parsed.parsed_operations.should eq ['x', :even?]
+      parsed.to_infix.should eq ['(x % 2 == 0)']
+    end
   end
 
   it 'extracts the performed arithmetic operations in Reverse Polish Notation' do
