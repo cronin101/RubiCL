@@ -6,8 +6,6 @@ module Hadope
       include HadopeBufferBackend
       include RequireType
 
-      attr_accessor :cache
-
       Cache = Struct.new(:dataset)
 
       def initialize(env)
