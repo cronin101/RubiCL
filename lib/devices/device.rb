@@ -64,10 +64,10 @@ module Hadope
     end
 
     chainable cache_invalidator def sort
-      type = @buffer_type
+      type = @buffer.type
       task = Sort.new(type: type)
       case type
-      when :int then sort_integer_buffer task.to_kernel, @buffer.access(type: int)
+      when :int then sort_integer_buffer task.to_kernel, @buffer.access(type: :int)
       else
         raise "Not sure how to sort the type: #{loaded_type.inspect}"
       end
@@ -192,8 +192,7 @@ module Hadope
     def run_braid(task)
       kernel = task.to_kernel
       Logger.log "Executing braid kernel:\n #{kernel}"
-      fst, snd = @buffer.zip_retrieve
-      fsts = run_braid_task(kernel, task.name, fst, snd)
+      run_braid_task(kernel, task.name, *@buffer.zip_retrieve)
     end
 
     def run_scan(task)

@@ -555,7 +555,6 @@ static VALUE methodRunBraidTask(VALUE self, VALUE task_source_object, VALUE task
 
     braidBuffers(environment, &task, fsts, snds);
     clReleaseMemObject(snds->buffer);
-    free(snds);
     return fst_memstruct_object;
 }
 
