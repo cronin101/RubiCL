@@ -6,7 +6,7 @@ describe File do
     cpu = Hadope::CPU.get
 
     File.new('numbers.txt')[Int].class.should == cpu.class
-    cpu.retrieve_integer_dataset.should == File.open('numbers.txt').lines.map(&:to_i)
+    cpu.retrieve_integers.should == File.open('numbers.txt').readlines.map(&:to_i)
   end
 
 end

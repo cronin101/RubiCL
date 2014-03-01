@@ -8,23 +8,27 @@ describe CPU do
   end
 
   it 'can succesfully load an integer dataset' do
-    expect { CPU.get.load_integer_dataset [1, 2, 3] }.to_not raise_error
+    Hadope::Config::Features.use_host_mem = false
+    expect { CPU.get.load_object :int, [1, 2, 3] }.to_not raise_error
   end
 
   it 'can successfully pin an integer dataset' do
-    expect { CPU.get.pin_integer_dataset [1, 2, 3] }.to_not raise_error
+    Hadope::Config::Features.use_host_mem = true
+    expect { CPU.get.load_object :int, [1, 2, 3] }.to_not raise_error
   end
 
   it 'can succesfully retrieve an integer dataset' do
-    CPU.get.load_integer_dataset [1, 2, 3]
-    CPU.get.instance_eval { @cache.dataset = nil }
-    CPU.get.retrieve_integer_dataset.should == [1, 2, 3]
+    Hadope::Config::Features.use_host_mem = false
+    CPU.get.load_object :int, [1, 2, 3]
+    CPU.get.instance_eval { @buffer.invalidate_cache }
+    CPU.get.retrieve_integers.should == [1, 2, 3]
   end
 
   it 'can successfully retrieve a pinned integer dataset' do
-    CPU.get.pin_integer_dataset [1, 2, 3]
-    CPU.get.instance_eval { @cache.dataset = nil }
-    CPU.get.retrieve_pinned_integer_dataset.should == [1, 2, 3]
+    Hadope::Config::Features.use_host_mem = true
+    CPU.get.load_object :int, [1, 2, 3]
+    CPU.get.instance_eval { @buffer.invalidate_cache }
+    CPU.get.retrieve_integers.should == [1, 2, 3]
   end
 
   it 'allows loading and retrieving via square-bracket syntax' do

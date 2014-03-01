@@ -8,23 +8,27 @@ describe GPU do
   end
 
   it 'can succesfully load an integer dataset' do
-    expect { GPU.get.load_integer_dataset [1, 2, 3] }.to_not raise_error
+    Hadope::Config::Features.use_host_mem = false
+    expect { GPU.get.load_object :int, [1, 2, 3] }.to_not raise_error
   end
 
   it 'can successfully pin an integer dataset' do
-    expect { GPU.get.pin_integer_dataset [1, 2, 3] }.to_not raise_error
+    Hadope::Config::Features.use_host_mem = true
+    expect { GPU.get.load_object :int, [1, 2, 3] }.to_not raise_error
   end
 
   it 'can succesfully retrieve an integer dataset' do
-    GPU.get.load_integer_dataset [1, 2, 3]
-    GPU.get.instance_eval { @cache.dataset = nil }
-    GPU.get.retrieve_integer_dataset.should == [1, 2, 3]
+    Hadope::Config::Features.use_host_mem = false
+    GPU.get.load_object :int, [1, 2, 3]
+    GPU.get.instance_eval { @buffer.invalidate_cache }
+    GPU.get.retrieve_integers.should == [1, 2, 3]
   end
 
   it 'can successfully retrieve a pinned integer dataset' do
-    GPU.get.pin_integer_dataset [1, 2, 3]
-    GPU.get.instance_eval { @cache.dataset = nil }
-    GPU.get.retrieve_pinned_integer_dataset.should == [1, 2, 3]
+    Hadope::Config::Features.use_host_mem = true
+    GPU.get.load_object :int, [1, 2, 3]
+    GPU.get.instance_eval { @buffer.invalidate_cache }
+    GPU.get.retrieve_integers.should == [1, 2, 3]
   end
 
   it 'allows loading and retrieving via square-bracket syntax' do

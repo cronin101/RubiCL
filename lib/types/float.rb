@@ -1,5 +1,5 @@
 class Float
   def self.hadope_conversion
-    :retrieve_pinned_double_dataset
+    :retrieve_doubles
   end
 end

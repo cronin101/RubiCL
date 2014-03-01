@@ -1,5 +1,5 @@
 class Double
   def self.hadope_conversion
-    :load_double_dataset
+    [:load_object, :double]
   end
 end

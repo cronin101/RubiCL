@@ -2,8 +2,9 @@ module Hadope
   class Device
     require 'colored'
 
-    include HadopeBackend
-    include RequireType
+    include HadopeDeviceBackend
+    include HadopeTaskBackend
+
     include ChainableDecorator
 
     def is_hybrid?
@@ -21,7 +22,7 @@ module Hadope
     FIX2INT = [:int, :x, ['x = x >> 1']]
     INT2FIX = [:int, :x, ['x = (x << 1) | 0x01']]
 
-    # Decorators for start/end of computation callbacks
+    # Decorators for start/during/end of computation callbacks
     def self.pipeline_start method
       method_body = instance_method method
       define_method method do |*arg, &block|
@@ -30,186 +31,134 @@ module Hadope
       end
     end
 
+    def self.cache_invalidator method
+      method_body = instance_method method
+      define_method method do |*arg, &block|
+        @buffer.invalidate_cache
+        method_body.bind(self).(*arg, &block)
+      end
+    end
+
     def self.pipeline_stop method
       method_body = instance_method method
       define_method method do |*arg, &block|
+        run_tasks
         result = method_body.bind(self).(*arg, &block)
         Logger.timing_info "Pipeline Complete".green + " in #{last_pipeline_duration.round(3).to_s.green} ms"
         result
       end
     end
 
-    Cache = Struct.new(:dataset)
-
     def initialize
       raise 'Must be a subclass!' if self.class == Device
       initialize_task_queue
-      @cache = Cache.new(nil)
+      @buffer = Hadope::DeviceService::BufferManager.new(@environment)
     end
 
     def [](type)
       send type.hadope_conversion
     end
 
-    pipeline_start def load_integer_object obj
-      result = nil
-
-      result = case obj
-      when Array
-        load_integer_dataset obj
-      when File
-        pin_integer_file obj
-      when Range
-        load_integer_dataset obj.to_a
-      else
-        raise "No idea how to pin #{obj.inspect}!"
-      end
-      technique = Hadope::Config::Features.use_host_mem ? 'Pinned' : 'Loaded'
-      Logger.timing_info "#{technique} #{("Integer " << obj.class.to_s).yellow} in #{last_memory_duration.round(3).to_s.green} ms"
-
-      result
+    chainable pipeline_start def load_object(type, object)
+      @buffer.load(type: type, object: object)
     end
 
-    def load_integer_dataset d
-      if Hadope::Config::Features.use_host_mem
-        pin_integer_dataset d
-      else
-        create_integer_buffer_from_dataset d
-      end
-    end
-
-    chainable sets_type :int,
-    def create_integer_buffer_from_dataset(array)
-      @buffer = create_memory_buffer array.length, 'int'
-      transfer_integer_dataset_to_buffer array, @buffer
-    end
-
-    chainable sets_type :int,
-    def pin_integer_dataset(array)
-      @buffer = create_buffer_from_dataset :pinned_integer_buffer, array
-    end
-
-    chainable sets_type :int,
-    def pin_integer_file file
-      @buffer = create_buffer_from_dataset :pinned_intfile_buffer, file.path
-      @cache.dataset = nil
-    end
-
-    chainable sets_type :double,
-    def pin_double_dataset(array)
-      @buffer = create_buffer_from_dataset :pinned_double_buffer, array
-    end
-    alias_method :load_double_dataset, :pin_double_dataset
-
-    def sort
-      @cache.dataset = nil
-      case loaded_type
-      when :int then run_sort_int_buffer_task
+    chainable cache_invalidator def sort
+      type = @buffer_type
+      task = Sort.new(type: type)
+      case type
+      when :int then sort_integer_buffer task.to_kernel, @buffer.access(type: int)
       else
         raise "Not sure how to sort the type: #{loaded_type.inspect}"
       end
     end
 
-    chainable requires_type :int,
-    def run_sort_int_buffer_task
-      sort_integer_buffer Sort.new(type: :int).to_kernel, @buffer
+    chainable cache_invalidator def zip(array)
+      run_tasks
+      @buffer.zip_load(snd: array)
+      @task_queue.push SMap.new(*FIX2INT)
     end
 
-    chainable requires_type :int, (sets_type :int_tuple,
-    def zip(array)
-      # FIXME: Expose buffer length
-      #raise "Second dataset must be the same length as the first." unless @buffer.length == array.length
-      @fsts = @buffer
-      @snds = create_buffer_from_dataset :pinned_integer_buffer, array.to_a
+    chainable cache_invalidator def fsts
+      run_tasks
+      @buffer.zipped_choose :fst
+    end
 
-      @cache.dataset = nil
-      @task_queue.push SMap.new(*FIX2INT)
-    end)
+    chainable cache_invalidator def snds
+      @task_queue.push SMap.new(*INT2FIX)
+      run_tasks(do_conversions: false)
+      @buffer.zipped_choose :snd
+    end
 
-    chainable requires_type :int_tuple, (sets_type :int,
-    def braid(&block)
+    chainable def braid(&block)
       raise "Braid function has incorrect arity." unless block.arity == 2
       expression = LambdaBytecodeParser.new(block).to_infix.first
       @task_queue.push Braid.new(:int, :x, :y, expression)
-    end)
+      @buffer.type = :int
+    end
 
-    chainable def map(&block)
-      @cache.dataset = nil
+    chainable cache_invalidator def map(&block)
       expression = LambdaBytecodeParser.new(block).to_infix.first
-      if unary_types.include? loaded_type
-        @task_queue.push Map.new(loaded_type, :x, ["x = #{expression}"])
+      if @buffer.unary_type?
+        @task_queue.push Map.new(@buffer.type, :x, ["x = #{expression}"])
       else
-        raise "#map not implemented for #{loaded_type.inspect}"
+        raise "#map not implemented for non-unary types"
       end
     end
 
-    chainable def filter(&block)
-      @cache.dataset = nil
+    chainable cache_invalidator def filter(&block)
       predicate = LambdaBytecodeParser.new(block).to_infix.first
-      if unary_types.include? loaded_type
-        @task_queue.push Filter.new(loaded_type, :x, predicate)
+      if @buffer.unary_type?
+        @task_queue.push Filter.new(@buffer.type, :x, predicate)
       else
-        raise "#filter not implemented for #{loaded_type.inspect}"
+        raise "#filter not implemented for non-unary types"
       end
     end
 
     alias_method :collect, :map
     alias_method :select, :filter
 
-    chainable def scan(style=:inclusive, operator)
-      @cache.dataset = nil
-      if unary_types.include? loaded_type
-        @task_queue.push Scan.new(style:style, type:loaded_type, operator:operator, elim_conflicts: self.is_a?(GPU))
+    chainable cache_invalidator def scan(style=:inclusive, operator)
+      if @buffer.unary_type?
+        @task_queue.push Scan.new(
+          style: style, type: @buffer.type, operator:operator, elim_conflicts: self.is_a?(GPU)
+        )
       else
-        raise "#scan not implemented for #{loaded_type.inspect}"
+        raise "#scan not implemented for non-unary types"
       end
     end
 
-    pipeline_stop def retrieve_integer_dataset
-      result = if Hadope::Config::Features.use_host_mem
-        retrieve_pinned_integer_dataset
-      else
-        retrieve_integer_dataset_from_device
-      end
-
-      Logger.timing_info "Waiting for in-progress tasks ".yellow << "took #{last_computation_duration.round(3).to_s.green} ms"
-      Logger.timing_info "Retrieved " + "#{buffer_length(@buffer)} Integers".yellow + " in #{last_memory_duration.round(3).to_s.green} ms"
-      result
+    pipeline_stop def retrieve_integers
+      @buffer.retrieve(type: :int)
     end
 
-    requires_type :int,
-    def retrieve_pinned_integer_dataset
-      retrieve_from_device :pinned_integer_dataset
+    pipeline_stop def retrieve_doubles
+      @buffer.retrieve(type: :double)
     end
 
-    requires_type :int,
-    def retrieve_integer_dataset_from_device
-      retrieve_from_device :integer_dataset
-    end
-
-    requires_type :double,
-    def retrieve_pinned_double_dataset
-      retrieve_from_device :pinned_double_dataset
-    end
-
-    requires_type :int,
     def sum
-      @task_queue.unshift Map.new(*FIX2INT)
-      run_tasks(do_conversions:false)
-      scan_kernel = Scan.new(type: :int, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
-      sum_integer_buffer scan_kernel, @buffer
+      case @buffer.type
+      when :int
+        @task_queue.unshift Map.new(*FIX2INT)
+        run_tasks(do_conversions: false)
+        scan_kernel = Scan.new(type: @buffer.type, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
+        sum_integer_buffer scan_kernel, @buffer.access(type: :int)
+      else
+        raise "Cannot sum currently loaded type: #{@buffer.type}"
+      end
     end
 
     def count(needle)
-      @task_queue.unshift Map.new(*FIX2INT) if loaded_type == :int
-      run_tasks(do_conversions:false)
-      if unary_types.include? loaded_type
-        task = Filter.new(loaded_type, :x, "x == #{needle}")
+      @task_queue.unshift Map.new(*FIX2INT) if @buffer.type == :int
+      run_tasks(do_conversions: false)
+
+      if @buffer.unary_type?
+        task = Filter.new(@buffer.type, :x, "x == #{needle}")
         kernel = task.to_kernel
-        scan_kernel = Scan.new(type: :int, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
-        count_post_filter(kernel, task.name, scan_kernel, @buffer)
+        scan_kernel = Scan.new(type: @buffer.type, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
+        count_post_filter(kernel, task.name, scan_kernel, @buffer.access(type: @buffer.type))
       else
-        raise "#count not implemented for #{loaded_type.inspect}"
+        raise "#count not implemented for non-unary types"
       end
     end
 
@@ -222,38 +171,42 @@ module Hadope
     def run_map(task)
       kernel = task.to_kernel
       Logger.log "Executing map kernel:\n #{kernel}"
-      run_map_task(kernel, task.name, @buffer)
+      run_map_task(kernel, task.name, @buffer.access(type: task.type))
     end
 
     def run_smap(task)
       kernel = task.to_kernel
       Logger.log "Executing smap kernel:\n #{kernel}"
-      run_map_task(kernel, task.name, @snds)
+      _, snd = @buffer.zip_retrieve
+      run_map_task(kernel, task.name, snd)
     end
 
     def run_filter(task)
+      type = task.type
       kernel = task.to_kernel
       Logger.log "Executing filter kernel:\n #{kernel}"
       scan_kernel = Scan.new(type: :int, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
-      run_filter_task(kernel, task.name, scan_kernel, @buffer)
+      run_filter_task(kernel, task.name, scan_kernel, @buffer.access(type: type))
     end
 
     def run_braid(task)
       kernel = task.to_kernel
       Logger.log "Executing braid kernel:\n #{kernel}"
-      @buffer = run_braid_task(kernel, task.name, @fsts, @snds)
+      fst, snd = @buffer.zip_retrieve
+      fsts = run_braid_task(kernel, task.name, fst, snd)
     end
 
     def run_scan(task)
       scan_kernel = task.to_kernel
+      type = task.type
       Logger.log "Executing scan kernel:\n #{scan_kernel}"
       case task.style
       when :exclusive
-        run_exclusive_scan_task(scan_kernel, @buffer)
+        run_exclusive_scan_task(scan_kernel, @buffer.access(type: type))
       when :inclusive
-        braid_task = Braid.new(loaded_type, :x, :y, 'x + y')
+        braid_task = Braid.new(type, :x, :y, 'x + y')
         Logger.log "Executing braid kernel:\n #{braid_task.to_kernel}"
-        run_inclusive_scan_task(scan_kernel, braid_task.to_kernel, braid_task.name, @buffer)
+        run_inclusive_scan_task(scan_kernel, braid_task.to_kernel, braid_task.name, @buffer.access(type: type))
       else
         raise "Don't understand scan type: #{task.style}"
       end
@@ -272,27 +225,13 @@ module Hadope
       Logger.timing_info "Enqueued #{task.descriptor.yellow} in #{last_computation_duration.round(3).to_s.green} ms"
     end
 
-    def run_tasks(do_conversions:(loaded_type == :int))
+    def run_tasks(do_conversions:(@buffer.type == :int))
       if do_conversions
         @task_queue.unshift Map.new(*FIX2INT)
         @task_queue.push Map.new(*INT2FIX)
       end
       @task_queue.simplify! if Hadope::Config::Features.task_fusion
       run_task @task_queue.shift until @task_queue.empty?
-    end
-
-    def create_buffer_from_dataset(buffer_type, dataset)
-      @task_queue.clear
-      send("create_#{buffer_type}", @cache.dataset = dataset)
-    end
-
-    def retrieve_from_device dataset_type
-      if @cache.dataset
-        @cache.dataset
-      else
-        run_tasks unless @task_queue.empty?
-        @cache.dataset = send("retrieve_#{dataset_type}_from_buffer", @buffer)
-      end
     end
 
   end

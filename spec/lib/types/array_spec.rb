@@ -6,7 +6,7 @@ describe Array do
     cpu = Hadope::CPU.get
 
     [1, 2, 3][Int].class.should == cpu.class
-    cpu.retrieve_integer_dataset.should == [1, 2, 3]
+    cpu.retrieve_integers.should == [1, 2, 3]
   end
 
   it "doesn't allow classes without a conversion method defined to be cast" do

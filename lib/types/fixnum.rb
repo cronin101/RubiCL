@@ -1,5 +1,5 @@
 class Fixnum
   def self.hadope_conversion
-    :retrieve_integer_dataset
+    :retrieve_integers
   end
 end

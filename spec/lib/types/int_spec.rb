@@ -5,7 +5,7 @@ describe Int do
     Int.respond_to?(:hadope_conversion).should be true
     dataset = [1, 2, 3]
     Hadope::CPU.get
-      .send(Int.hadope_conversion, dataset)[Fixnum]
+      .send(*Int.hadope_conversion, dataset)[Fixnum]
       .should == dataset
   end
 end

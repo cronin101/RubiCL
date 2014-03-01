@@ -27,6 +27,7 @@ module Hadope
 
   require_relative './lib/logging/logger'
 
+  require_relative './lib/devices/services/buffer_manager.rb'
   require_relative './lib/devices/cpu'
   require_relative './lib/devices/gpu'
   require_relative './lib/devices/hybrid_device'

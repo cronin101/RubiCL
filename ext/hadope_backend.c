@@ -87,7 +87,7 @@ static VALUE methodInitHybridEnvironment(VALUE self) {
  * @num_entries_object: Ruby object containing the array size as an integer.
  * @type_string_object: Ruby object containing the C type of the entries as a string. */
 static VALUE /* ### THIS METHOD IS DEPRECATED ### */ methodCreateMemoryBuffer(VALUE self, VALUE num_entries_object, VALUE type_string_object) {
-    rb_warn("create_memory_buffer is deprecated, use create_pinned_x_buffer instead");
+    //rb_warn("create_memory_buffer is deprecated, use create_pinned_x_buffer instead");
     int unit_size;
 
     /* Pulling string out of Ruby object and strcmp to set unit size of array
@@ -702,31 +702,36 @@ static VALUE methodCleanUsedResources(VALUE self, VALUE mem_struct_object) {
 
 /* Used to give extension methods defined above to device class when HadopeBackend module is included. */
 void Init_hadope_backend() {
-    VALUE HadopeBackend = rb_define_module("HadopeBackend");
-    rb_define_private_method(HadopeBackend, "initialize_GPU_environment", methodInitGPUEnvironment, 0);
-    rb_define_private_method(HadopeBackend, "initialize_CPU_environment", methodInitCPUEnvironment, 0);
-    rb_define_private_method(HadopeBackend, "initialize_hybrid_environment", methodInitHybridEnvironment, 0);
-    rb_define_private_method(HadopeBackend, "create_memory_buffer", methodCreateMemoryBuffer, 2);
-    rb_define_private_method(HadopeBackend, "transfer_integer_dataset_to_buffer", methodLoadIntDataset, 2);
-    rb_define_private_method(HadopeBackend, "create_pinned_integer_buffer", methodPinIntDataset, 1);
-    rb_define_private_method(HadopeBackend, "create_pinned_intfile_buffer", methodPinIntFile, 1);
-    rb_define_private_method(HadopeBackend, "create_pinned_double_buffer", methodPinDoubleDataset, 1);
-    rb_define_private_method(HadopeBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
-    rb_define_private_method(HadopeBackend, "retrieve_pinned_integer_dataset_from_buffer", methodRetrievePinnedIntDataset, 1);
-    rb_define_private_method(HadopeBackend, "retrieve_pinned_double_dataset_from_buffer", methodRetrievePinnedDoubleDataset, 1);
-    rb_define_private_method(HadopeBackend, "sum_integer_buffer", methodSumIntegerBuffer, 2);
-    rb_define_private_method(HadopeBackend, "count_post_filter", methodCountFilteredBuffer, 4);
-    rb_define_private_method(HadopeBackend, "run_map_task", methodRunMapTask, 3);
-    rb_define_private_method(HadopeBackend, "run_hybrid_map_task", methodRunHybridMapTask, 5);
-    rb_define_private_method(HadopeBackend, "run_filter_task", methodRunFilterTask, 4);
-    rb_define_private_method(HadopeBackend, "run_hybrid_filter_task", methodRunHybridFilterTask, 7);
-    rb_define_private_method(HadopeBackend, "run_braid_task", methodRunBraidTask, 4);
-    rb_define_private_method(HadopeBackend, "run_exclusive_scan_task", methodRunExclusiveScanTask, 2);
-    rb_define_private_method(HadopeBackend, "run_inclusive_scan_task", methodRunInclusiveScanTask, 4);
-    rb_define_private_method(HadopeBackend, "sort_integer_buffer", methodRunIntSortTask, 2);
-    rb_define_private_method(HadopeBackend, "buffer_length", methodBufferLength, 1);
-    rb_define_private_method(HadopeBackend, "last_memory_duration", methodLastMemoryDuration, 0);
-    rb_define_private_method(HadopeBackend, "last_computation_duration", methodLastComputationDuration, 0);
-    rb_define_private_method(HadopeBackend, "last_pipeline_duration", methodLastPipelineDuration, 0);
-    rb_define_private_method(HadopeBackend, "clean_used_resources", methodCleanUsedResources, 1);
+    VALUE HadopeDeviceBackend = rb_define_module("HadopeDeviceBackend");
+    rb_define_private_method(HadopeDeviceBackend, "initialize_GPU_environment", methodInitGPUEnvironment, 0);
+    rb_define_private_method(HadopeDeviceBackend, "initialize_CPU_environment", methodInitCPUEnvironment, 0);
+    rb_define_private_method(HadopeDeviceBackend, "initialize_hybrid_environment", methodInitHybridEnvironment, 0);
+    rb_define_private_method(HadopeDeviceBackend, "clean_used_resources", methodCleanUsedResources, 1);
+
+    VALUE HadopeBufferBackend = rb_define_module("HadopeBufferBackend");
+    rb_define_private_method(HadopeBufferBackend, "create_memory_buffer", methodCreateMemoryBuffer, 2);
+    rb_define_private_method(HadopeBufferBackend, "transfer_integer_dataset_to_buffer", methodLoadIntDataset, 2);
+    rb_define_private_method(HadopeBufferBackend, "create_pinned_integer_buffer", methodPinIntDataset, 1);
+    rb_define_private_method(HadopeBufferBackend, "create_pinned_intfile_buffer", methodPinIntFile, 1);
+    rb_define_private_method(HadopeBufferBackend, "create_pinned_double_buffer", methodPinDoubleDataset, 1);
+    rb_define_private_method(HadopeBufferBackend, "retrieve_integer_dataset_from_buffer", methodRetrieveIntDataset, 1);
+    rb_define_private_method(HadopeBufferBackend, "retrieve_pinned_integer_dataset_from_buffer", methodRetrievePinnedIntDataset, 1);
+    rb_define_private_method(HadopeBufferBackend, "retrieve_pinned_double_dataset_from_buffer", methodRetrievePinnedDoubleDataset, 1);
+    rb_define_private_method(HadopeBufferBackend, "buffer_length", methodBufferLength, 1);
+    rb_define_private_method(HadopeBufferBackend, "last_memory_duration", methodLastMemoryDuration, 0);
+    rb_define_private_method(HadopeBufferBackend, "last_computation_duration", methodLastComputationDuration, 0);
+
+    VALUE HadopeTaskBackend = rb_define_module("HadopeTaskBackend");
+    rb_define_private_method(HadopeTaskBackend, "sum_integer_buffer", methodSumIntegerBuffer, 2);
+    rb_define_private_method(HadopeTaskBackend, "count_post_filter", methodCountFilteredBuffer, 4);
+    rb_define_private_method(HadopeTaskBackend, "run_map_task", methodRunMapTask, 3);
+    rb_define_private_method(HadopeTaskBackend, "run_hybrid_map_task", methodRunHybridMapTask, 5);
+    rb_define_private_method(HadopeTaskBackend, "run_filter_task", methodRunFilterTask, 4);
+    rb_define_private_method(HadopeTaskBackend, "run_hybrid_filter_task", methodRunHybridFilterTask, 7);
+    rb_define_private_method(HadopeTaskBackend, "run_braid_task", methodRunBraidTask, 4);
+    rb_define_private_method(HadopeTaskBackend, "run_exclusive_scan_task", methodRunExclusiveScanTask, 2);
+    rb_define_private_method(HadopeTaskBackend, "run_inclusive_scan_task", methodRunInclusiveScanTask, 4);
+    rb_define_private_method(HadopeTaskBackend, "sort_integer_buffer", methodRunIntSortTask, 2);
+    rb_define_private_method(HadopeTaskBackend, "last_computation_duration", methodLastComputationDuration, 0);
+    rb_define_private_method(HadopeTaskBackend, "last_pipeline_duration", methodLastPipelineDuration, 0);
 }

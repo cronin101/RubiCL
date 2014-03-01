@@ -1,5 +1,5 @@
 class Int
   def self.hadope_conversion
-    :load_integer_object
+    [:load_object, :int]
   end
 end

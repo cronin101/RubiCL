@@ -10,6 +10,10 @@ class Hadope::Scan
     super()
   end
 
+  def descriptor
+    self.inspect
+  end
+
   def statements
     ["r = r #@op e"]
   end

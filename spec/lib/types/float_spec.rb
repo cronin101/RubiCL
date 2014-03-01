@@ -5,7 +5,7 @@ describe Float do
     Float.respond_to?(:hadope_conversion).should be true
     dataset = [1.0, 2.0, 3.0]
     Hadope::CPU.get
-      .load_double_dataset(dataset)
+      .load_object(:double, dataset)
       .send(Float.hadope_conversion)
       .should == dataset
   end
