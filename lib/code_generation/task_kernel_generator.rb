@@ -14,13 +14,22 @@ class Hadope::TaskKernelGenerator < Struct.new(:task)
 
   def map_kernel
     <<KERNEL
-__kernel void #{task.name}(__global #{task.type} *data_array) {
+__kernel void #{task.name}(__global #{task.type} *data_array, const uint width, const uint elements) {
   #{task.variable_declarations}
-  #{task.setup_statements}
 
-  #{task.body}
+  int global_id, loop_start, loop_finish, next_start, num_elements;
+  global_id = get_global_id(0);
+  loop_start = global_id * width;
+  next_start = ((global_id + 1) * width);
+  num_elements = elements;
+  loop_finish = min(next_start, num_elements) - 1;
 
-  #{task.return_statements}
+  for(global_id = loop_start; global_id <= loop_finish; ++global_id) {
+    #{task.setup_statements}
+    #{task.body}
+    #{task.return_statements}
+  }
+
 }
 KERNEL
   end

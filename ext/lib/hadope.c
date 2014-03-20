@@ -20,7 +20,7 @@ void releaseMemoryCallback(
 }
 
 void setGroupSize(
-  const HadopeEnvironment* env
+  HadopeEnvironment* env
 ) {
     if (DEBUG) printf("setGroupSize\n");
     size_t max_workgroup_size = 0;
@@ -30,6 +30,14 @@ void setGroupSize(
         CL_DEVICE_MAX_WORK_GROUP_SIZE,
         sizeof(size_t),
         &max_workgroup_size,
+        &returned_size
+    );
+
+    ret = clGetDeviceInfo(
+        env->device_id,
+        CL_DEVICE_MAX_COMPUTE_UNITS,
+        sizeof(size_t),
+        &(env->compute_units),
         &returned_size
     );
 
@@ -485,7 +493,7 @@ void runTaskOnDataset(
   const HadopeTask* task
 ) {
     if (DEBUG) printf("runTaskOnDataset\n");
-  size_t g_work_size[1] = {mem_struct->buffer_entries};
+  size_t g_work_size[1] = { env->compute_units <= mem_struct->buffer_entries ? env->compute_units : mem_struct->buffer_entries };
 
   /* Kernel's global data_array set to be the given device memory buffer */
   cl_int ret = clSetKernelArg(
@@ -494,7 +502,28 @@ void runTaskOnDataset(
     sizeof(cl_mem),    // Size of argument value
     &mem_struct->buffer // Argument value
   );
+
+  /* Width of inner loop set */
+  cl_uint loop_width = (mem_struct->buffer_entries + g_work_size[0] - 1) / g_work_size[0]; /* Ceiling */
+  printf("Loop width:%u\n", loop_width);
+  ret = clSetKernelArg(
+    task->kernel,       // Kernel concerned
+    1,                  // Index of argument to specify
+    sizeof(cl_uint),    // Size of argument value
+    &loop_width         // Argument value
+  );
+
+  /* Total number of buffer elements provided */
+  ret = clSetKernelArg(
+    task->kernel,                   // Kernel concerned
+    2,                              // Index of argument to specify
+    sizeof(cl_uint),                // Size of argument value
+    &(mem_struct->buffer_entries)   // Argument value
+  );
+
   if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+
+  printf("GW_size: %lu,\tGROUP:%d,\tCU:%u\n", g_work_size[0], GROUP_SIZE, env->compute_units);
 
   /* Kernel enqueued to be executed on the environment's command queue */
   ret = clEnqueueNDRangeKernel(

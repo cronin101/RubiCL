@@ -26,6 +26,7 @@ typedef struct {
     cl_context context;
     cl_command_queue queue;
     HadopeTimings timings;
+    cl_uint compute_units;
 } HadopeEnvironment;
 
 typedef struct {

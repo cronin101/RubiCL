@@ -24,6 +24,10 @@ module Hadope
       add_statements(conversion + next_map.statements)
     end
 
+    def setup_statements
+      "#@input_variable = data_array[global_id];"
+    end
+
     def to_kernel
       TaskKernelGenerator.new(self).create_kernel
     end
