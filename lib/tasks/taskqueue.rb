@@ -18,7 +18,7 @@ module Hadope
         else
           *fixed_queue, previous = queue
           case [previous.class, task.class]
-          when [Hadope::Map] * 2
+          when ([Hadope::Map] * 2), ([Hadope::Filter] * 2)
             fixed_queue << previous.fuse!(task)
 
           when [Hadope::Map, Hadope::Filter]
@@ -32,6 +32,13 @@ module Hadope
 
           when [Hadope::MappingFilter, Hadope::Map]
             fixed_queue << previous.post_fuse!(task)
+
+          when [Hadope::MappingFilter, Hadope::Filter]
+            if previous.has_post_map?
+              fixed_queue << previous << task
+            else
+              fixed_queue << previous.filter_fuse!(task)
+            end
 
           else
             fixed_queue << previous << task

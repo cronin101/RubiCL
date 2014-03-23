@@ -10,7 +10,7 @@ module Hadope
       @filter = filter.statements
       @after  = !(post_map.nil?) ? post_map.statements : []
 
-      if !(pre_map.nil?)
+      unless pre_map.nil?
         add_variables pre_map.input_variable
         unless filter.input_variable == pre_map.output_variable
           add_variables pre_map.output_variable
@@ -18,7 +18,7 @@ module Hadope
         end
       end
 
-      if !(post_map.nil?)
+      unless post_map.nil?
         add_variables post_map.output_variable
         unless post_map.input_variable == filter.input_variable
           add_variables post_map.input_variable
@@ -32,6 +32,20 @@ module Hadope
 
     def statements
       (@before + @filter.map { |f| "?{#{f}}?"} + @after).flatten
+    end
+
+    def has_post_map?
+      !(@after.empty?)
+    end
+
+    def filter_fuse!(filter)
+      add_variables filter.variables
+      predicate = @filter.pop
+      unless filter.input_variable == @output_variable
+        @filter.push "#{filter.input_variable = @output_variable}"
+      end
+      @filter.push "(#{predicate}) && (#{filter.predicate})"
+      self
     end
 
     def pre_fuse!(map)
@@ -59,7 +73,8 @@ module Hadope
     end
 
     def body
-      @before.join(";\n ") << ";\nint flag = #{@filter.first} ? 1 : 0;" << @after.join(";\n ") << ';'
+      @before.join(";\n ") << ";\n" << @filter[0..-2].join(";\n") << ";\n" <<
+          "int flag = #{@filter.last} ? 1 : 0;" << @after.join(";\n ") << ';'
     end
 
     def return_statements
