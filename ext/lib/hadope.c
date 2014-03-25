@@ -955,13 +955,13 @@ void filterByScatteredWrites(
   *input_dataset = filtered_dataset;
 }
 
-void braidBuffers(
+void runTaskOnTupDataset(
     const HadopeEnvironment* env,
     const HadopeTask* task,
     HadopeMemoryBuffer* fsts,
     HadopeMemoryBuffer* snds
 ) {
-    if (DEBUG) printf("braidBuffers\n");
+    if (DEBUG) printf("runTaskOnTupDataset\n");
 
     cl_int ret = clSetKernelArg(
         task->kernel,   // Kernel concerned

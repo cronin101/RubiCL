@@ -136,7 +136,7 @@ int sumIntegerDataset(
     char* source
 );
 
-void braidBuffers(
+void runTaskOnTupDataset(
     const HadopeEnvironment* env,
     const HadopeTask* task,
     HadopeMemoryBuffer* fsts,

@@ -32,7 +32,7 @@ module Hadope
         invalidate_cache
       end)
 
-      def zipped_choose(which)
+      requires_type :int_tuple, (sets_type :int, def zipped_choose(which)
         case which
         when :fst
           @buffer = @double_buffer.first
@@ -41,7 +41,7 @@ module Hadope
         else
           raise "Must choose fst or snd"
         end
-      end
+      end)
 
       def retrieve(type:nil)
         return @cache.dataset if @cache.dataset

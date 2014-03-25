@@ -26,6 +26,7 @@ module Hadope
     def self.pipeline_start method
       method_body = instance_method method
       define_method method do |*arg, &block|
+        @converted = false
         Logger.timing_info "Pipeline Started".red
         method_body.bind(self).(*arg, &block)
       end
@@ -74,20 +75,23 @@ module Hadope
     end
 
     chainable cache_invalidator def zip(array)
-      run_tasks
+      @task_queue.push Map.new(*FIX2INT) unless @converted
+      run_tasks(do_conversions: false)
       @buffer.zip_load(snd: array)
       @task_queue.push SMap.new(*FIX2INT)
+      @converted = true
     end
 
     chainable cache_invalidator def fsts
-      run_tasks
+      run_tasks(do_conversions: false)
       @buffer.zipped_choose :fst
+      @converted = true
     end
 
     chainable cache_invalidator def snds
-      @task_queue.push SMap.new(*INT2FIX)
       run_tasks(do_conversions: false)
       @buffer.zipped_choose :snd
+      @converted = true
     end
 
     chainable def braid(&block)
@@ -97,18 +101,19 @@ module Hadope
       @buffer.type = :int
     end
 
-    chainable cache_invalidator def map(&block)
-      expression = LambdaBytecodeParser.new(block).to_infix.first
+    chainable cache_invalidator def map(fst:->(x, y){ x }, snd:->(x, y){ y }, &block)
       if @buffer.unary_type?
+        expression = LambdaBytecodeParser.new(block).to_infix.first
         @task_queue.push Map.new(@buffer.type, :x, ["x = #{expression}"])
       else
-        raise "#map not implemented for non-unary types"
+        fst_exp, snd_exp = [fst, snd].map { |ex| LambdaBytecodeParser.new(ex).to_infix.first }
+        @task_queue.push TupMap.new(:int, [:x, :y], ["x = #{fst_exp}", "y = #{snd_exp}"])
       end
     end
 
     chainable cache_invalidator def filter(&block)
-      predicate = LambdaBytecodeParser.new(block).to_infix.first
       if @buffer.unary_type?
+        predicate = LambdaBytecodeParser.new(block).to_infix.first
         @task_queue.push Filter.new(@buffer.type, :x, predicate)
       else
         raise "#filter not implemented for non-unary types"
@@ -195,6 +200,12 @@ module Hadope
       run_braid_task(kernel, task.name, *@buffer.zip_retrieve)
     end
 
+    def run_tupmap(task)
+      kernel = task.to_kernel
+      Logger.log "Executing tupmap kernel:\n #{kernel}"
+      run_tupmap_task(kernel, task.name, *@buffer.zip_retrieve)
+    end
+
     def run_scan(task)
       scan_kernel = task.to_kernel
       type = task.type
@@ -215,6 +226,7 @@ module Hadope
       case task
       when SMap   then run_smap   task
       when Map    then run_map    task
+      when TupMap then run_tupmap task
       when Filter then run_filter task
       when Braid  then run_braid  task
       when Scan   then run_scan   task
@@ -226,8 +238,9 @@ module Hadope
 
     def run_tasks(do_conversions:(@buffer.type == :int))
       if do_conversions
-        @task_queue.unshift Map.new(*FIX2INT)
+        @task_queue.unshift Map.new(*FIX2INT) unless @converted
         @task_queue.push Map.new(*INT2FIX)
+      else
       end
       @task_queue.simplify! if Hadope::Config::Features.task_fusion
       run_task @task_queue.shift until @task_queue.empty?

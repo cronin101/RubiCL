@@ -29,7 +29,7 @@ module Hadope
     end
 
     def body
-      @statements.join(";\n  ") << ';'
+      statement_code
     end
 
     def return_statements

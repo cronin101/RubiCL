@@ -3,6 +3,7 @@ class Hadope::TaskKernelGenerator < Struct.new(:task)
   def create_kernel
     case task
     when Hadope::Map    then map_kernel
+    when Hadope::TupMap then tupmap_kernel
     when Hadope::Filter then filter_kernel
     when Hadope::Braid  then braid_kernel
     else
@@ -36,6 +37,24 @@ __kernel void #{task.name}(__global #{task.type} *data_array, __global int *pres
   #{task.return_statements}
 }
 KERNEL
+  end
+
+  def tupmap_kernel
+    task.instance_eval do
+<<KERNEL
+__kernel void #{name}(
+  __global #{type} *fsts,
+  __global #{type} *snds
+) {
+  #{variable_declarations}
+  #{setup_statements}
+
+  #{body}
+
+  #{return_statements}
+}
+KERNEL
+    end
   end
 
   def braid_kernel

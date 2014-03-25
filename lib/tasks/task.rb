@@ -51,6 +51,10 @@ module Hadope
       "int global_id = get_global_id(0);\n  #{@input_variable} = data_array[global_id];"
     end
 
+    def statement_code
+      @statements.join(";\n") << ";"
+    end
+
   end
 
 end
