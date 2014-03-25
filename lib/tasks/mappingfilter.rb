@@ -74,7 +74,9 @@ module Hadope
 
     def body
       @before.join(";\n ") << ";\n" << @filter[0..-2].join(";\n") << ";\n" <<
-          "int flag = #{@filter.last} ? 1 : 0;" << @after.join(";\n ") << ';'
+          "int flag = #{@filter.last} ? 1 : 0;\n" << "if (flag) { \n" <<
+          @after.join(";\n ") << ";\n" <<
+          "}"
     end
 
     def return_statements
