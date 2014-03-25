@@ -10,12 +10,22 @@ module Hadope
       @type = type
       super()
       @fst_input, @snd_input = input_variables
+      add_variables :tmp
       add_variables input_variables
       add_statements statements.flatten
     end
 
     def to_kernel
       TaskKernelGenerator.new(self).create_kernel
+    end
+
+    def statements
+      [ @statements.first,
+        "tmp = #@fst_input",
+        "#@fst_input = fsts[global_id]",
+        @statements.last,
+        "#@fst_input = tmp"
+      ]
     end
 
     def body

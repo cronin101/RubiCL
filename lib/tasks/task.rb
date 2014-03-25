@@ -52,7 +52,7 @@ module Hadope
     end
 
     def statement_code
-      @statements.join(";\n") << ";"
+      statements.join(";\n") << ";"
     end
 
   end
