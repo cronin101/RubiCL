@@ -574,6 +574,34 @@ static VALUE methodRunTupMapTask(VALUE self, VALUE task_source_object, VALUE tas
     return self;
 }
 
+static VALUE methodRunTupFilterTask(VALUE self, VALUE filter_task_source_object, VALUE filter_task_name_object,
+                    VALUE scan_task_source_object, VALUE fst_memstruct_object, VALUE snd_memstruct_object) {
+    HadopeEnvironment* environment = environmentPtrFromIvar(self);
+    HadopeMemoryBuffer* fsts = mem_structPtrFromObj(fst_memstruct_object);
+    HadopeMemoryBuffer* snds = mem_structPtrFromObj(snd_memstruct_object);
+
+    /* Early termination for empty buffer */
+    if (!fsts->buffer_entries) return self;
+
+    /* Convert Objects into C types and build Kernel using environment ivar */
+    HadopeTask filter_task;
+    char* filter_task_source = StringValuePtr(filter_task_source_object);
+    char* filter_task_name = StringValuePtr(filter_task_name_object);
+    char* scan_task_source = StringValuePtr(scan_task_source_object);
+    buildTaskFromSource(environment, filter_task_source, filter_task_name, &filter_task);
+
+    /* Enqueues the task to run on the dataset specified by the HadopeMemoryBuffer */
+    HadopeMemoryBuffer presence, prescan;
+    computePresenceArrayForTupDataset(environment, fsts, snds, &filter_task, &presence);
+    exclusivePrefixSum(environment, &presence, scan_task_source, &prescan);
+    filterByScatteredWrites(environment, fsts, &presence, &prescan);
+    filterByScatteredWrites(environment, snds, &presence, &prescan);
+    releaseTemporaryFilterBuffers(&presence, &prescan);
+
+    return self;
+}
+
+
 static VALUE methodRunExclusiveScanTask(VALUE self, VALUE scan_task_source_object, VALUE mem_struct_object) {
     HadopeEnvironment* environment = environmentPtrFromIvar(self);
     HadopeMemoryBuffer* mem_struct = mem_structPtrFromObj(mem_struct_object);
@@ -745,6 +773,7 @@ void Init_hadope_backend() {
     rb_define_private_method(HadopeTaskBackend, "run_hybrid_filter_task", methodRunHybridFilterTask, 7);
     rb_define_private_method(HadopeTaskBackend, "run_braid_task", methodRunBraidTask, 4);
     rb_define_private_method(HadopeTaskBackend, "run_tupmap_task", methodRunTupMapTask, 4);
+    rb_define_private_method(HadopeTaskBackend, "run_tupfilter_task", methodRunTupFilterTask, 5);
     rb_define_private_method(HadopeTaskBackend, "run_exclusive_scan_task", methodRunExclusiveScanTask, 2);
     rb_define_private_method(HadopeTaskBackend, "run_inclusive_scan_task", methodRunInclusiveScanTask, 4);
     rb_define_private_method(HadopeTaskBackend, "sort_integer_buffer", methodRunIntSortTask, 2);

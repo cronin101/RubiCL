@@ -40,15 +40,15 @@ describe LAMBDA_BYTECODE_PARSER do
     it 'can handle negation' do
       parsed = LAMBDA_BYTECODE_PARSER.new ->(i){ -i  }
       parsed.parsed_operations.should == ['x', :-@]
-      parsed.to_infix.should == ['-x']
+      parsed.to_infix.should == '-x'
 
-      LAMBDA_BYTECODE_PARSER.new(->(i){ -((-i) - (-1) - (-2)) }).to_infix.should == ['-((-x) - -1) - -2']
+      LAMBDA_BYTECODE_PARSER.new(->(i){ -((-i) - (-1) - (-2)) }).to_infix.should == '-((-x) - -1) - -2'
     end
 
     it 'can handle method-sending #even?' do
       parsed = LAMBDA_BYTECODE_PARSER.new ->(i){ i.even? }
       parsed.parsed_operations.should eq ['x', :even?]
-      parsed.to_infix.should eq ['(x % 2 == 0)']
+      parsed.to_infix.should eq '(x % 2 == 0)'
     end
   end
 
@@ -60,9 +60,9 @@ describe LAMBDA_BYTECODE_PARSER do
   end
 
   it 'converts anonymous functions into C expressions using Infix Notation' do
-    LAMBDA_BYTECODE_PARSER.new(->{ 0 }).to_infix.should == [0]
-    LAMBDA_BYTECODE_PARSER.new(->{ 1 + 2 - 3 }).to_infix.should == ['(1 + 2) - 3']
-    LAMBDA_BYTECODE_PARSER.new(->(i){ i * (2 + i / 4) }).to_infix.should == ['x * (2 + (x / 4))']
+    LAMBDA_BYTECODE_PARSER.new(->{ 0 }).to_infix.should == '0'
+    LAMBDA_BYTECODE_PARSER.new(->{ 1 + 2 - 3 }).to_infix.should == '(1 + 2) - 3'
+    LAMBDA_BYTECODE_PARSER.new(->(i){ i * (2 + i / 4) }).to_infix.should == 'x * (2 + (x / 4))'
   end
 
 end

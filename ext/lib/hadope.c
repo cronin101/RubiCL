@@ -568,6 +568,67 @@ void computePresenceArrayForDataset(
   if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
 }
 
+void computePresenceArrayForTupDataset(
+  const HadopeEnvironment* env,
+  const HadopeMemoryBuffer* fst_mem_struct,
+  const HadopeMemoryBuffer* snd_mem_struct,
+  const HadopeTask* task,
+  HadopeMemoryBuffer *presence
+) {
+    if (DEBUG) printf("computePresenceArrayForDataset\n");
+  size_t g_work_size[1] = {fst_mem_struct->buffer_entries};
+
+  /* Kernel's fst data_array set to be the given fst memory buffer */
+  cl_int ret = clSetKernelArg(
+    task->kernel,       // Kernel concerned
+    0,                 // Index of argument to specify
+    sizeof(cl_mem),    // Size of argument value
+    &fst_mem_struct->buffer // Argument value
+  );
+  if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+
+  /* Kernel's snd data_array set to be the given snd memory buffer */
+  ret = clSetKernelArg(
+    task->kernel,       // Kernel concerned
+    1,                 // Index of argument to specify
+    sizeof(cl_mem),    // Size of argument value
+    &snd_mem_struct->buffer // Argument value
+  );
+  if (ret != CL_SUCCESS) printf("clSetKernelArg %s\n", oclErrorString(ret));
+
+  /* Output buffer created to be an int flag for each element in input dataset. */
+  presence->buffer_entries = fst_mem_struct->buffer_entries;
+  presence->buffer = createMemoryBuffer(
+    env,                                      // Environment struct
+    (presence->buffer_entries * sizeof(int)), // Size of buffer to create
+    CL_MEM_HOST_READ_ONLY                     // Buffer flags set
+  );
+  presence->type = INTEGER_BUFFER;
+
+  /* Kernel's global presence_array set to be the newly created presence buffer */
+  ret = clSetKernelArg(
+    task->kernel,      // Kernel concerned
+    2,                // Index of argument to specify
+    sizeof(cl_mem),   // Size of argument value
+    &presence->buffer // Argument value
+  );
+  if (ret != CL_SUCCESS) printf("clSetKernelArg PA %s\n", oclErrorString(ret));
+
+  /* Kernel enqueued to be executed on the environment's command queue */
+  ret = clEnqueueNDRangeKernel(
+    env->queue,   // Device's command queue
+    task->kernel, // Kernel to enqueue
+    1,           // Dimensionality of work
+    0,           // Global offset of work index
+    g_work_size, // Array of work size in each dimension
+    NULL,        // Local work size, omitted so will be deduced by OpenCL platform
+    0,           // Number of preceding events
+    NULL,        // Preceding events list
+    NULL         // Event object destination
+  );
+  if (ret != CL_SUCCESS) printf("clEnqueueNDRangeKernel %s\n", oclErrorString(ret));
+}
+
 void exclusivePrefixSum(
   const HadopeEnvironment* env,
   const HadopeMemoryBuffer* input,

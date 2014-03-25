@@ -1,5 +1,10 @@
 class Hadope::LambdaBytecodeParser < Struct.new(:function)
+  class Branch < Struct.new(:symbol)
+  end
+
   LOOKUP_TABLE = {
+    branchif: Branch.new('||'),
+    branchunless: Branch.new('&&'),
     opt_plus: '+',
     opt_minus: '-',
     opt_mult: '*',
@@ -30,6 +35,7 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
     stack = []
     while tokens.length > 0
       case token = tokens.shift
+      when Branch then stack.push (stack.pop << " " << token.symbol << " ")
       when Fixnum, Float then stack.push token
       when Symbol then stack.push method_send(stack.pop, token)
       when String
@@ -41,7 +47,7 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
       end
     end
 
-    stack
+    stack.join
   end
 
   private
@@ -80,6 +86,9 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
     # Method Sending
     when /opt_send_simple/                          then /mid:(?<method>.*?),/.match(operation)[:method].to_sym
 
+    # Conditionals
+    when /branch/                                   then LOOKUP_TABLE.fetch operation[/branch\w+/].to_sym
+
     # Built-in Operator
     when /opt_/                                     then LOOKUP_TABLE.fetch operation[/opt_\w+/].to_sym
     else raise "Could not parse: #{operation} in #{bytecode}"
@@ -114,7 +123,7 @@ class Hadope::LambdaBytecodeParser < Struct.new(:function)
   end
 
   def operations
-    bytecode.scan(/(?:\d*\s*(?:(getlocal.*|putobject.*|opt_.*).?))/).flatten
+    bytecode.scan(/(?:\d*\s*(?:(getlocal.*|putobject.*|opt_.*|branch.*).?))/).flatten
   end
 
 end

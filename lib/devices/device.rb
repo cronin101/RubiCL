@@ -96,27 +96,27 @@ module Hadope
 
     chainable def braid(&block)
       raise "Braid function has incorrect arity." unless block.arity == 2
-      expression = LambdaBytecodeParser.new(block).to_infix.first
+      expression = LambdaBytecodeParser.new(block).to_infix
       @task_queue.push Braid.new(:int, :x, :y, expression)
       @buffer.type = :int
     end
 
     chainable cache_invalidator def map(fst:->(x, y){ x }, snd:->(x, y){ y }, &block)
       if @buffer.unary_type?
-        expression = LambdaBytecodeParser.new(block).to_infix.first
+        expression = LambdaBytecodeParser.new(block).to_infix
         @task_queue.push Map.new(@buffer.type, :x, ["x = #{expression}"])
       else
-        fst_exp, snd_exp = [fst, snd].map { |ex| LambdaBytecodeParser.new(ex).to_infix.first }
+        fst_exp, snd_exp = [fst, snd].map { |ex| LambdaBytecodeParser.new(ex).to_infix}
         @task_queue.push TupMap.new(:int, [:x, :y], ["x = #{fst_exp}", "y = #{snd_exp}"])
       end
     end
 
     chainable cache_invalidator def filter(&block)
+      predicate = LambdaBytecodeParser.new(block).to_infix
       if @buffer.unary_type?
-        predicate = LambdaBytecodeParser.new(block).to_infix.first
         @task_queue.push Filter.new(@buffer.type, :x, predicate)
       else
-        raise "#filter not implemented for non-unary types"
+        @task_queue.push TupFilter.new(:int, [:x, :y], predicate)
       end
     end
 
@@ -186,7 +186,7 @@ module Hadope
       run_map_task(kernel, task.name, snd)
     end
 
-    def run_filter(task)
+    alias_method :run_mappingfilter, def run_filter(task)
       type = task.type
       kernel = task.to_kernel
       Logger.log "Executing filter kernel:\n #{kernel}"
@@ -206,6 +206,13 @@ module Hadope
       run_tupmap_task(kernel, task.name, *@buffer.zip_retrieve)
     end
 
+    def run_tupfilter(task)
+      kernel = task.to_kernel
+      Logger.log "Executing tupfilter kernel:\n #{kernel}"
+      scan_kernel = Scan.new(type: :int, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
+      run_tupfilter_task(kernel, task.name, scan_kernel, *@buffer.zip_retrieve)
+    end
+
     def run_scan(task)
       scan_kernel = task.to_kernel
       type = task.type
@@ -223,14 +230,11 @@ module Hadope
     end
 
     def run_task(task)
-      case task
-      when SMap   then run_smap   task
-      when Map    then run_map    task
-      when TupMap then run_tupmap task
-      when Filter then run_filter task
-      when Braid  then run_braid  task
-      when Scan   then run_scan   task
-      else raise "Unknown task: #{task.inspect}"
+      begin
+        task_type = task.class.to_s.split('::').last.downcase
+        send "run_#{task_type}", task
+      rescue NoMethodError
+        raise "Unknown task: #{task.inspect}"
       end
 
       Logger.timing_info "Enqueued #{task.descriptor.yellow} in #{last_computation_duration.round(3).to_s.green} ms"

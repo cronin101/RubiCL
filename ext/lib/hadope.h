@@ -117,6 +117,14 @@ void computePresenceArrayForDataset(
   HadopeMemoryBuffer* presence
 );
 
+void computePresenceArrayForTupDataset(
+    const HadopeEnvironment* env,
+    const HadopeMemoryBuffer* fst_mem_struct,
+    const HadopeMemoryBuffer* snd_mem_struct,
+    const HadopeTask* task,
+  HadopeMemoryBuffer* presence
+);
+
 void exclusivePrefixSum(
     const HadopeEnvironment* env,
     const HadopeMemoryBuffer* presence,
