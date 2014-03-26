@@ -26,11 +26,25 @@ module Hadope
 
       requires_type :int, (sets_type :int_tuple, def zip_load(fst: @buffer, snd: nil)
         raise "Snd missing" unless snd
-        raise "Datasets must be the same length" unless buffer_length(fst) == snd.size
-
-        @double_buffer = [fst, (create_buffer_from_dataset :pinned_integer_buffer, snd.to_a)]
+        case snd
+        when File
+          snd_buffer = create_buffer_from_dataset :pinned_intfile_buffer, snd.path
+        else
+          raise "Datasets must be the same length" unless buffer_length(fst) == snd.size
+          snd_buffer = create_buffer_from_dataset :pinned_integer_buffer, snd.to_a
+        end
+          @double_buffer = [fst, snd_buffer]
         invalidate_cache
       end)
+
+      def size
+        case loaded_type
+        when :int_tuple
+          buffer_length(@double_buffer.first)
+        else
+          buffer_length(@buffer)
+        end
+      end
 
       requires_type :int_tuple, (sets_type :int, def zipped_choose(which)
         case which

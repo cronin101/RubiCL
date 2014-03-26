@@ -74,10 +74,10 @@ module Hadope
       end
     end
 
-    chainable cache_invalidator def zip(array)
+    chainable cache_invalidator def zip(object)
       @task_queue.push Map.new(*FIX2INT) unless @converted
       run_tasks(do_conversions: false)
-      @buffer.zip_load(snd: array)
+      @buffer.zip_load(snd: object)
       @task_queue.push SMap.new(*FIX2INT)
       @converted = true
     end
@@ -144,7 +144,7 @@ module Hadope
     def sum
       case @buffer.type
       when :int
-        @task_queue.unshift Map.new(*FIX2INT)
+        @task_queue.unshift Map.new(*FIX2INT) unless @converted
         run_tasks(do_conversions: false)
         scan_kernel = Scan.new(type: @buffer.type, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
         sum_integer_buffer scan_kernel, @buffer.access(type: :int)
@@ -153,17 +153,22 @@ module Hadope
       end
     end
 
-    def count(needle)
-      @task_queue.unshift Map.new(*FIX2INT) if @buffer.type == :int
-      run_tasks(do_conversions: false)
-
-      if @buffer.unary_type?
-        task = Filter.new(@buffer.type, :x, "x == #{needle}")
-        kernel = task.to_kernel
-        scan_kernel = Scan.new(type: @buffer.type, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
-        count_post_filter(kernel, task.name, scan_kernel, @buffer.access(type: @buffer.type))
+    def count(needle=nil)
+      if needle.nil?
+        run_tasks
+        @buffer.size
       else
-        raise "#count not implemented for non-unary types"
+        @task_queue.unshift Map.new(*FIX2INT) if @buffer.type == :int
+        run_tasks(do_conversions: false)
+
+        if @buffer.unary_type?
+          task = Filter.new(@buffer.type, :x, "x == #{needle}")
+          kernel = task.to_kernel
+          scan_kernel = Scan.new(type: @buffer.type, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
+          count_post_filter(kernel, task.name, scan_kernel, @buffer.access(type: @buffer.type))
+        else
+          raise "#count not implemented for non-unary types"
+        end
       end
     end
 
