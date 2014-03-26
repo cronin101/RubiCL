@@ -153,7 +153,9 @@ module Hadope
       end
     end
 
-    def count(needle=nil)
+    def count(needle=nil, &block)
+      return select(&block).count unless block.nil?
+
       if needle.nil?
         run_tasks
         @buffer.size
