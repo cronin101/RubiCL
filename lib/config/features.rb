@@ -3,7 +3,9 @@ module Hadope
 
     class FeatureSwitcher
       attr_accessor :task_fusion,
-        :use_host_mem
+        :use_host_mem,
+        :avoid_bank_conflicts
+
 
       def initialize
         set_defaults
@@ -14,6 +16,7 @@ module Hadope
       def set_defaults
         @task_fusion  = true
         @use_host_mem = true
+        @avoid_bank_conflicts = true
       end
 
     end

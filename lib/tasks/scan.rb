@@ -6,7 +6,7 @@ class Hadope::Scan
     @type = type
     @op = operator
     @banks = banks
-    @elim_conflicts = elim_conflicts
+    @elim_conflicts = elim_conflicts && Hadope::Config::Features.avoid_bank_conflicts
     super()
   end
 
