@@ -1,5 +1,5 @@
 require 'asymptotic'
-require './hadope'
+require './rubicl'
 
 seeds = (1..5).map { |x| x * 10000 }
 

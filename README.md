@@ -19,7 +19,7 @@ ruby = Benchmark.realtime {
 
 ####This takes 0.26s:
 ```ruby
-require './hadope'
+require './rubicl'
 Hadope::set_device Hadope::CPU
 
 opencl = Benchmark.realtime {

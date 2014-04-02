@@ -1,5 +1,5 @@
 require 'asymptotic'
-require './hadope'
+require './rubicl'
 
 seeds = (8..22)
 

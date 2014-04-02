@@ -1,5 +1,5 @@
 require 'asymptotic'
-require './hadope'
+require './rubicl'
 
 <<<<<<< Updated upstream
 seeds = (8..20)

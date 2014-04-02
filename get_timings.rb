@@ -1,5 +1,5 @@
 require 'benchmark'
-require './hadope'
+require './rubicl'
 
 sizes = (1_000_000..15_000_000).step(2_000_000)
 
