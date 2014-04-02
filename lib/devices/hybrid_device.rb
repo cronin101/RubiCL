@@ -1,4 +1,4 @@
-module Hadope
+module RubiCL
 
   class HybridDevice < Device
     require 'benchmark'
@@ -29,7 +29,7 @@ module Hadope
     end
 
     def [](type)
-      send type.hadope_conversion
+      send type.rubicl_conversion
     end
 
     private
@@ -76,7 +76,7 @@ module Hadope
     end
 
     def individual_devices
-      return Hadope::CPU.get, Hadope::GPU.get
+      return RubiCL::CPU.get, RubiCL::GPU.get
     end
 
     def slice_sizes(length, action)

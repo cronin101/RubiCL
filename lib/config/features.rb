@@ -1,4 +1,4 @@
-module Hadope
+module RubiCL
   module Config
 
     class FeatureSwitcher

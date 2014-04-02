@@ -13,16 +13,16 @@ ruby_input = {
 }
 Asymptotic::Graph.plot(3, "Squaring Integers and Filtering Evens",
   "RubiCL library [CPU: Intel i7 dual-core (MBA)]" => {
-    function: ->(array){ Hadope.opencl_device = Hadope::CPU; array[Int].map { |x| x * x }.filter { |x| x % 2 == 0 }[Fixnum] }
+    function: ->(array){ RubiCL.opencl_device = RubiCL::CPU; array[Int].map { |x| x * x }.filter { |x| x % 2 == 0 }[Fixnum] }
   }.merge(ruby_input),
 
   "RubiCL library [GPU: Intel HD5000 (MBA)]" => {
-    function: ->(array){ Hadope.opencl_device = Hadope::GPU; array[Int].map { |x| x * x }.filter{|x| x % 2 == 0 }[Fixnum] }
+    function: ->(array){ RubiCL.opencl_device = RubiCL::GPU; array[Int].map { |x| x * x }.filter{|x| x % 2 == 0 }[Fixnum] }
   }.merge(ruby_input),
 
 =begin
   "RubiCL library [Task Split Across CPU and GPU]" => {
-    function: ->(array){ Hadope.opencl_device = Hadope::HybridDevice; array[Int].map { |x| x * x }.filter { |x| x % 2 == 0 }[Fixnum] }
+    function: ->(array){ RubiCL.opencl_device = RubiCL::HybridDevice; array[Int].map { |x| x * x }.filter { |x| x % 2 == 0 }[Fixnum] }
   }.merge(ruby_input),
 =end
 

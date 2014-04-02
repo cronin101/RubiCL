@@ -1,4 +1,4 @@
-module Hadope::CastAccess
+module RubiCL::CastAccess
   def self.included(base)
 
     begin
@@ -11,9 +11,9 @@ module Hadope::CastAccess
       define_method :[] do |index|
         case index
         when Class
-          raise 'Must specify OpenCL device with Hadope.set_device' unless Hadope.opencl_device
-          raise "#{index.inspect} is not defined as convertible." unless index.respond_to? :hadope_conversion
-          Hadope.opencl_device.send(*index.hadope_conversion, self)
+          raise 'Must specify OpenCL device with RubiCL.set_device' unless RubiCL.opencl_device
+          raise "#{index.inspect} is not defined as convertible." unless index.respond_to? :rubicl_conversion
+          RubiCL.opencl_device.send(*index.rubicl_conversion, self)
         else
           if old_behavior
             old_behavior.bind(self).(index)

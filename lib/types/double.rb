@@ -1,5 +1,5 @@
 class Double
-  def self.hadope_conversion
+  def self.rubicl_conversion
     [:load_object, :double]
   end
 end

@@ -1,5 +1,5 @@
 class Fixnum
-  def self.hadope_conversion
+  def self.rubicl_conversion
     :retrieve_integers
   end
 end

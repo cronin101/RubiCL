@@ -1,9 +1,9 @@
-module Hadope
+module RubiCL
   module DeviceService
 
     class BufferManager
 
-      include HadopeBufferBackend
+      include RubiCLBufferBackend
       include RequireType
 
       Cache = Struct.new(:dataset)
@@ -112,14 +112,14 @@ module Hadope
         case object
         when Array, Range
           array = Array(object)
-          result = if Hadope::Config::Features.use_host_mem
+          result = if RubiCL::Config::Features.use_host_mem
             create_buffer_from_dataset :pinned_integer_buffer, array
           else
             create_memory_buffer(array.length, 'int').tap do |buffer|
               transfer_integer_dataset_to_buffer array, buffer
             end
           end
-          technique = Hadope::Config::Features.use_host_mem ? 'Pinned' : 'Loaded'
+          technique = RubiCL::Config::Features.use_host_mem ? 'Pinned' : 'Loaded'
           Logger.timing_info "#{technique} #{("Integer " << object.class.to_s).yellow} in #{last_memory_duration.round(3).to_s.green} ms"
           result
 
@@ -135,7 +135,7 @@ module Hadope
       end
 
       requires_type :int, def retrieve_integers
-        result = if Hadope::Config::Features.use_host_mem
+        result = if RubiCL::Config::Features.use_host_mem
           retrieve_from_device :pinned_integer_dataset
         else
           retrieve_from_device :integer_dataset

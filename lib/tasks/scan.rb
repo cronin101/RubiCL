@@ -1,4 +1,4 @@
-class Hadope::Scan
+class RubiCL::Scan
   attr_accessor :type, :style
 
   def initialize(style: :exclusive, type: :int, banks:32, elim_conflicts:false, operator: :+)
@@ -6,7 +6,7 @@ class Hadope::Scan
     @type = type
     @op = operator
     @banks = banks
-    @elim_conflicts = elim_conflicts && Hadope::Config::Features.avoid_bank_conflicts
+    @elim_conflicts = elim_conflicts && RubiCL::Config::Features.avoid_bank_conflicts
     super()
   end
 

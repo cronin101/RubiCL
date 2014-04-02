@@ -1,4 +1,4 @@
-#include "./hadope.h"
+#include "./rubicl.h"
 #include "prefix_sum/prescan.h"
 #include "oclerrorexplain.h"
 
@@ -20,7 +20,7 @@ void releaseMemoryCallback(
 }
 
 void setGroupSize(
-  const HadopeEnvironment* env
+  const RubiCLEnvironment* env
 ) {
     if (DEBUG) printf("setGroupSize\n");
     size_t max_workgroup_size = 0;
@@ -165,11 +165,11 @@ cl_device_id selectDefaultClDeviceOfType(cl_device_type device_type, cl_platform
 
 /* ~~ Init Methods ~~ */
 
-/* Selects target device then creates context and command queue, packages in HadopeEnvironment and returns.
+/* Selects target device then creates context and command queue, packages in RubiCLEnvironment and returns.
  *
  * @device_type: CL_DEVICE_TYPE_GPU / CL_DEVICE_TYPE_CPU */
-void createHadopeEnvironment(const cl_device_type device_type, HadopeEnvironment* env) {
-    if (DEBUG) printf("createHadopeEnvironment\n");
+void createRubiCLEnvironment(const cl_device_type device_type, RubiCLEnvironment* env) {
+    if (DEBUG) printf("createRubiCLEnvironment\n");
 
     cl_int ret;
 
@@ -203,11 +203,11 @@ void createHadopeEnvironment(const cl_device_type device_type, HadopeEnvironment
     setGroupSize(env);
 
     /* Init timings struct */
-    env->timings = (HadopeTimings) { 0, 0 };
+    env->timings = (RubiCLTimings) { 0, 0 };
 }
 
-void createHadopeHybridEnvironment(HadopeHybridEnvironment* env) {
-    if (DEBUG) printf("createHadopeHybridEnvironment\n");
+void createRubiCLHybridEnvironment(RubiCLHybridEnvironment* env) {
+    if (DEBUG) printf("createRubiCLHybridEnvironment\n");
 
     cl_int ret;
 
@@ -258,7 +258,7 @@ void createHadopeHybridEnvironment(HadopeHybridEnvironment* env) {
  * @req_memory: The size of the memory buffer to create.
  * @fs: Flags to set on memory buffer... CL_MEM_READ_WRITE/CL_MEM_READ. */
 cl_mem createMemoryBuffer(
-  const HadopeEnvironment* env,
+  const RubiCLEnvironment* env,
   const size_t req_memory,
   const cl_mem_flags flags
 ) {
@@ -282,8 +282,8 @@ cl_mem createMemoryBuffer(
  * @mem_struct: Struct containing cl_mem buffer and the number of entries it can hold.
  * @dataset: Pointer to an integer array of data to be read, same length as buffer. */
 void loadIntArrayIntoDevice(
-  const HadopeEnvironment env,
-  const HadopeMemoryBuffer mem_struct,
+  const RubiCLEnvironment env,
+  const RubiCLMemoryBuffer mem_struct,
   int* dataset
 ) {
     if (DEBUG) printf("loadIntArrayIntoDevice\n");
@@ -323,7 +323,7 @@ void pinArrayForDevice(
     void* dataset,
     int dataset_length,
     size_t dataset_size,
-    HadopeMemoryBuffer* result,
+    RubiCLMemoryBuffer* result,
     buffer_contents_type type
 ) {
 
@@ -347,8 +347,8 @@ void pinArrayForDevice(
  * @mem_struct: Struct containing cl_mem buffer and the number of entries it can hold.
  * @dataset: Pointer to an integer array of data to be written, same length as buffer */
 void getIntArrayFromDevice(
-  const HadopeEnvironment env,
-  const HadopeMemoryBuffer mem_struct,
+  const RubiCLEnvironment env,
+  const RubiCLMemoryBuffer mem_struct,
   int* dataset
 ) {
     if (DEBUG) printf("getIntArrayFromDevice\n");
@@ -375,9 +375,9 @@ void getIntArrayFromDevice(
  *  @mem_struct Struct containing cl_mem buffer referencing dataset. */
 void* getPinnedArrayFromDevice(
     cl_command_queue* queue,
-    const HadopeMemoryBuffer* mem_struct,
+    const RubiCLMemoryBuffer* mem_struct,
     const size_t unit_size,
-    HadopeTimings* bm
+    RubiCLTimings* bm
 ){
     if (DEBUG) printf("getPinnedArrayFromDevice\n");
 
@@ -404,8 +404,8 @@ void* getPinnedArrayFromDevice(
 }
 
 void releaseTemporaryFilterBuffers(
-  HadopeMemoryBuffer* presence,
-  HadopeMemoryBuffer* index_scan
+  RubiCLMemoryBuffer* presence,
+  RubiCLMemoryBuffer* index_scan
 ) {
     if (DEBUG) printf("releaseTemporaryFilterBuffers\n");
   clReleaseMemObject(presence->buffer);
@@ -413,7 +413,7 @@ void releaseTemporaryFilterBuffers(
 }
 
 void releaseDeviceDataset(
-  HadopeMemoryBuffer* dataset
+  RubiCLMemoryBuffer* dataset
 ) {
     if (DEBUG) printf("releaseDeviceDataset\n");
     clReleaseMemObject(dataset->buffer);
@@ -423,21 +423,21 @@ void releaseDeviceDataset(
 /* ~~ Task Compilation Methods ~~ */
 
 /* Takes the source code for a kernel and the name of the task to build and creates a
- * HadopeTask Struct containing the components needed to dispatch this task later.
+ * RubiCLTask Struct containing the components needed to dispatch this task later.
  *
  * @env: Struct containing device/context/queue variables.
  * @kernel_source: String containing the .cl Kernel source.
  * @source_size: The size of the source.
  * @name: The name of the task within the source to build. */
 void buildTaskFromSource(
-  const HadopeEnvironment* env,
+  const RubiCLEnvironment* env,
   const char* kernel_source,
   const char* name,
-  HadopeTask* result
+  RubiCLTask* result
 ) {
     if (DEBUG) printf("buildTaskFromSource\n");
 
-  /* Create cl_program from given task/name and store inside HadopeTask struct. */
+  /* Create cl_program from given task/name and store inside RubiCLTask struct. */
   cl_int ret;
   result->name = (char *) name;
   result->program = clCreateProgramWithSource(
@@ -480,9 +480,9 @@ void buildTaskFromSource(
  * @mem_struct: Struct containing cl_mem buffer / target dataset.
  * @task: Struct containing the kernel to execute and the task name. */
 void runTaskOnDataset(
-  const HadopeEnvironment* env,
-  const HadopeMemoryBuffer* mem_struct,
-  const HadopeTask* task
+  const RubiCLEnvironment* env,
+  const RubiCLMemoryBuffer* mem_struct,
+  const RubiCLTask* task
 ) {
     if (DEBUG) printf("runTaskOnDataset\n");
   size_t g_work_size[1] = {mem_struct->buffer_entries};
@@ -515,13 +515,13 @@ void runTaskOnDataset(
  *
  * @env: Struct containing device/context/queue variables.
  * @mem_struct: Struct containing the dataset/size of data to filter.
- * @task: HadopeTask containing the kernel to set flags if the predicate is satisfied.
- * @presence: Pointer to HadopeMemoryBuffer struct, to be assigned the presence_array */
+ * @task: RubiCLTask containing the kernel to set flags if the predicate is satisfied.
+ * @presence: Pointer to RubiCLMemoryBuffer struct, to be assigned the presence_array */
 void computePresenceArrayForDataset(
-  const HadopeEnvironment* env,
-  const HadopeMemoryBuffer* mem_struct,
-  const HadopeTask* task,
-  HadopeMemoryBuffer *presence
+  const RubiCLEnvironment* env,
+  const RubiCLMemoryBuffer* mem_struct,
+  const RubiCLTask* task,
+  RubiCLMemoryBuffer *presence
 ) {
     if (DEBUG) printf("computePresenceArrayForDataset\n");
   size_t g_work_size[1] = {mem_struct->buffer_entries};
@@ -569,11 +569,11 @@ void computePresenceArrayForDataset(
 }
 
 void computePresenceArrayForTupDataset(
-  const HadopeEnvironment* env,
-  const HadopeMemoryBuffer* fst_mem_struct,
-  const HadopeMemoryBuffer* snd_mem_struct,
-  const HadopeTask* task,
-  HadopeMemoryBuffer *presence
+  const RubiCLEnvironment* env,
+  const RubiCLMemoryBuffer* fst_mem_struct,
+  const RubiCLMemoryBuffer* snd_mem_struct,
+  const RubiCLTask* task,
+  RubiCLMemoryBuffer *presence
 ) {
     if (DEBUG) printf("computePresenceArrayForDataset\n");
   size_t g_work_size[1] = {fst_mem_struct->buffer_entries};
@@ -630,10 +630,10 @@ void computePresenceArrayForTupDataset(
 }
 
 void exclusivePrefixSum(
-  const HadopeEnvironment* env,
-  const HadopeMemoryBuffer* input,
+  const RubiCLEnvironment* env,
+  const RubiCLMemoryBuffer* input,
   char* source,
-  HadopeMemoryBuffer* result
+  RubiCLMemoryBuffer* result
 ) {
     if (DEBUG) printf("exclusivePrefixSum\n");
 
@@ -714,9 +714,9 @@ void exclusivePrefixSum(
 }
 
 void integerBitonicSort(
-    const HadopeEnvironment* env,
-    HadopeMemoryBuffer* input_dataset,
-    HadopeTask* task
+    const RubiCLEnvironment* env,
+    RubiCLMemoryBuffer* input_dataset,
+    RubiCLTask* task
 ) {
     /* num_stages = log_2(buffer_entries) */
     unsigned int temp = input_dataset->buffer_entries, num_stages = 0;
@@ -788,13 +788,13 @@ void integerBitonicSort(
  * @env: Struct containing device/context/queue variables.
  * @input_dataset: Struct containing cl_mem buffer / target dataset. */
 int sumIntegerDataset(
-    const HadopeEnvironment* env,
-    HadopeMemoryBuffer* input_dataset,
+    const RubiCLEnvironment* env,
+    RubiCLMemoryBuffer* input_dataset,
     char* source
 ) {
     if (DEBUG) printf("sumIntegerDataset\n");
 
-    HadopeMemoryBuffer prefixed;
+    RubiCLMemoryBuffer prefixed;
     exclusivePrefixSum(env, input_dataset, source, &prefixed);
 
     /* Sum is last element of input dataset added to last element of
@@ -837,13 +837,13 @@ int sumIntegerDataset(
 /* Returns the number of elements that would be kept after a presence array calculation
  * has been completed.
  *
- * @env: HadopeEnvironment struct
+ * @env: RubiCLEnvironment struct
  * @presence: presence array post filter calculation.
  * @index_scan: result of exclusive prefix sum on presence array. */
 int filteredBufferLength(
-    const HadopeEnvironment* env,
-    HadopeMemoryBuffer* presence,
-    HadopeMemoryBuffer* index_scan
+    const RubiCLEnvironment* env,
+    RubiCLMemoryBuffer* presence,
+    RubiCLMemoryBuffer* index_scan
 ) {
     if (DEBUG) printf("filteredBufferLength\n");
 
@@ -880,14 +880,14 @@ int filteredBufferLength(
 }
 
 void filterByScatteredWrites(
-  const HadopeEnvironment* env,
-  HadopeMemoryBuffer* input_dataset,
-  HadopeMemoryBuffer* presence,
-  HadopeMemoryBuffer* index_scan
+  const RubiCLEnvironment* env,
+  RubiCLMemoryBuffer* input_dataset,
+  RubiCLMemoryBuffer* presence,
+  RubiCLMemoryBuffer* index_scan
 ) {
     if (DEBUG) printf("filterByScatteredWrites\n");
 
-  HadopeMemoryBuffer filtered_dataset;
+  RubiCLMemoryBuffer filtered_dataset;
   int index_reduce, last_element_presence;
   cl_int ret = clEnqueueReadBuffer(
     env->queue,                                     // Device's command queue
@@ -931,7 +931,7 @@ void filterByScatteredWrites(
   char *source = LoadProgramSourceFromFile(scatter_filename);
   if (!source) printf("Error loading '%s' source.\n", scatter_filename);
 
-  HadopeTask scatter_task;
+  RubiCLTask scatter_task;
   buildTaskFromSource(
     env,
     source,
@@ -1017,10 +1017,10 @@ void filterByScatteredWrites(
 }
 
 void runTaskOnTupDataset(
-    const HadopeEnvironment* env,
-    const HadopeTask* task,
-    HadopeMemoryBuffer* fsts,
-    HadopeMemoryBuffer* snds
+    const RubiCLEnvironment* env,
+    const RubiCLTask* task,
+    RubiCLMemoryBuffer* fsts,
+    RubiCLMemoryBuffer* snds
 ) {
     if (DEBUG) printf("runTaskOnTupDataset\n");
 

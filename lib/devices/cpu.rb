@@ -1,6 +1,6 @@
 require_relative './device'
 
-module Hadope
+module RubiCL
   class CPU < Device
 
     def initialize

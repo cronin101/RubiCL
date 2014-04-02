@@ -1,5 +1,5 @@
 class Float
-  def self.hadope_conversion
+  def self.rubicl_conversion
     :retrieve_doubles
   end
 end

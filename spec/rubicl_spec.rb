@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-describe Hadope do
+describe RubiCL do
   context 'Showcasing features' do
     it 'can complete an Integer pipeline computation' do
-      Hadope.opencl_device = Hadope::CPU
+      RubiCL.opencl_device = RubiCL::CPU
       expect do
         [1, 2, 3][Int]
           .map { |i| i + 1 }
@@ -12,7 +12,7 @@ describe Hadope do
     end
 
     it 'can complete a Double pipeline computation' do
-      Hadope.opencl_device = Hadope::CPU
+      RubiCL.opencl_device = RubiCL::CPU
       expect do
         [1.0, 2.0, 3.0][Double]
           .map { |j| j + 1.0 }
@@ -57,31 +57,31 @@ describe Hadope do
 
   context 'Top level namespace' do
     it 'is defined' do
-      expect { Hadope }.to_not raise_error
+      expect { RubiCL }.to_not raise_error
     end
   end
 
   context 'Devices' do
     it 'defines a Device superclass' do
-      expect { Hadope::Device }.to_not raise_error
+      expect { RubiCL::Device }.to_not raise_error
     end
 
     it 'defines a CPU device' do
-      expect { Hadope::CPU }.to_not raise_error
+      expect { RubiCL::CPU }.to_not raise_error
     end
   end
 
   context 'Tasks' do
     it 'defines a TaskQueue' do
-      expect { Hadope::TaskQueue }.to_not raise_error
+      expect { RubiCL::TaskQueue }.to_not raise_error
     end
 
     it 'defines a Task superclass' do
-      expect { Hadope::Task }.to_not raise_error
+      expect { RubiCL::Task }.to_not raise_error
     end
 
     it 'defines a Map task' do
-      expect { Hadope::Map }.to_not raise_error
+      expect { RubiCL::Map }.to_not raise_error
     end
   end
 end

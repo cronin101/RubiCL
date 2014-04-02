@@ -9,19 +9,19 @@ ruby_input = {
 }
 Asymptotic::Graph.plot(3, "Sorting Integers",
   "RubiCL library [CPU: Intel i7 dual-core (MBA)] host_mem = t" => {
-    function: ->(array){ Hadope::Config::Features.use_host_mem = true; Hadope.opencl_device = Hadope::CPU; array[Int].sort[Fixnum] }
+    function: ->(array){ RubiCL::Config::Features.use_host_mem = true; RubiCL.opencl_device = RubiCL::CPU; array[Int].sort[Fixnum] }
   }.merge(ruby_input),
 
   "RubiCL library [CPU: Intel i7 dual-core (MBA)] host_mem = f" => {
-    function: ->(array){ Hadope::Config::Features.use_host_mem = false; Hadope.opencl_device = Hadope::CPU; array[Int].sort[Fixnum] }
+    function: ->(array){ RubiCL::Config::Features.use_host_mem = false; RubiCL.opencl_device = RubiCL::CPU; array[Int].sort[Fixnum] }
   }.merge(ruby_input),
 
   "RubiCL library [GPU: Intel HD5000 (MBA)] host_mem = t" => {
-    function: ->(array){ Hadope::Config::Features.use_host_mem = true; Hadope.opencl_device = Hadope::GPU; array[Int].sort[Fixnum] }
+    function: ->(array){ RubiCL::Config::Features.use_host_mem = true; RubiCL.opencl_device = RubiCL::GPU; array[Int].sort[Fixnum] }
   }.merge(ruby_input),
 
   "RubiCL library [GPU: Intel HD5000 (MBA)] host_mem = f" => {
-    function: ->(array){ Hadope::Config::Features.use_host_mem = false; Hadope.opencl_device = Hadope::GPU; array[Int].sort[Fixnum] }
+    function: ->(array){ RubiCL::Config::Features.use_host_mem = false; RubiCL.opencl_device = RubiCL::GPU; array[Int].sort[Fixnum] }
   }.merge(ruby_input),
 
 

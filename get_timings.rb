@@ -16,8 +16,8 @@ sizes.each do |size|
   file.puts "vanilla_ruby #{size} #{time.round(3)}"
 end
 
-[[Hadope::CPU, 'rubicl_cpu'], [Hadope::GPU, 'rubicl_gpu']].each do |device, description|
-  Hadope.opencl_device = device
+[[RubiCL::CPU, 'rubicl_cpu'], [RubiCL::GPU, 'rubicl_gpu']].each do |device, description|
+  RubiCL.opencl_device = device
   (1..100)[Int].map { |x| x + 1 }[Fixnum]
   sizes.each do |size|
     time = (1..8).map do

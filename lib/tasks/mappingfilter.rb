@@ -1,4 +1,4 @@
-module Hadope
+module RubiCL
   class MappingFilter < Filter
     attr_reader :before_filter, :filter
 

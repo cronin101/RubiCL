@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-FILTER = Hadope::Filter
+FILTER = RubiCL::Filter
 
 describe FILTER do
   it 'cannot be created with no predicate' do

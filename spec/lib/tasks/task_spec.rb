@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-TASK = Hadope::Task
+TASK = RubiCL::Task
 
 describe TASK do
   it 'is abstract' do

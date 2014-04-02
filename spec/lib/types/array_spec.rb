@@ -2,8 +2,8 @@ require 'spec_helper'
 
 describe Array do
   it 'has monkey-patched index-access syntax to shortcut device loading' do
-    Hadope.opencl_device = Hadope::CPU
-    cpu = Hadope::CPU.get
+    RubiCL.opencl_device = RubiCL::CPU
+    cpu = RubiCL::CPU.get
 
     [1, 2, 3][Int].class.should == cpu.class
     cpu.retrieve_integers.should == [1, 2, 3]

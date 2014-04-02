@@ -1,4 +1,4 @@
-module Hadope
+module RubiCL
   class LoggerSingleton
 
     attr_writer :show_timing_info
@@ -16,7 +16,7 @@ module Hadope
     end
 
     def initialize
-      @log_path = File.expand_path './.hadopelog'
+      @log_path = File.expand_path './.rubicllog'
       @verbose_mode = VERBOSE_MODE_DEFAULT
       @log_to_file = LOG_TO_FILE_DEFAULT
       @show_timing_info = TIMING_INFO_DEFAULT

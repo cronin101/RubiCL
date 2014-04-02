@@ -1,4 +1,4 @@
-class Hadope::TaskKernelGenerator < Struct.new(:task)
+class RubiCL::TaskKernelGenerator < Struct.new(:task)
 
   def create_kernel
     task_type = task.class.to_s.split('::').last.downcase

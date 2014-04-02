@@ -1,9 +1,9 @@
-module Hadope
+module RubiCL
   class Device
     require 'colored'
 
-    include HadopeDeviceBackend
-    include HadopeTaskBackend
+    include RubiCLDeviceBackend
+    include RubiCLTaskBackend
 
     include ChainableDecorator
 
@@ -53,11 +53,11 @@ module Hadope
     def initialize
       raise 'Must be a subclass!' if self.class == Device
       initialize_task_queue
-      @buffer = Hadope::DeviceService::BufferManager.new(@environment)
+      @buffer = RubiCL::DeviceService::BufferManager.new(@environment)
     end
 
     def [](type)
-      send type.hadope_conversion
+      send type.rubicl_conversion
     end
 
     chainable pipeline_start def load_object(type, object)
@@ -253,7 +253,7 @@ module Hadope
         @task_queue.push Map.new(*INT2FIX)
       else
       end
-      @task_queue.simplify! if Hadope::Config::Features.task_fusion
+      @task_queue.simplify! if RubiCL::Config::Features.task_fusion
       run_task @task_queue.shift until @task_queue.empty?
     end
 

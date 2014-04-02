@@ -9,15 +9,15 @@ ruby_input = {
 }
 Asymptotic::Graph.plot(3, "Squaring Integers and Filtering Evens",
   "RubiCL library [CPU: Intel i7 dual-core (MBA)] doing the task" => {
-    function: ->(array){ Hadope.opencl_device = Hadope::CPU; array[Int].map { |x| x * x }.filter { |x| x % 2 == 0 }[Fixnum] }
+    function: ->(array){ RubiCL.opencl_device = RubiCL::CPU; array[Int].map { |x| x * x }.filter { |x| x % 2 == 0 }[Fixnum] }
   }.merge(ruby_input),
 
   "RubiCL library [CPU: Intel i7 dual-core (MBA)] mapping only" => {
-    function: ->(array){ Hadope.opencl_device = Hadope::CPU; array[Int].map { |x| x * x }[Fixnum] }
+    function: ->(array){ RubiCL.opencl_device = RubiCL::CPU; array[Int].map { |x| x * x }[Fixnum] }
   }.merge(ruby_input),
 
   "RubiCL library [CPU: Intel i7 dual-core (MBA)] filtering only" => {
-    function: ->(array){ Hadope.opencl_device = Hadope::CPU; array[Int].filter { |x| x % 2 == 0 }[Fixnum] }
+    function: ->(array){ RubiCL.opencl_device = RubiCL::CPU; array[Int].filter { |x| x % 2 == 0 }[Fixnum] }
   }.merge(ruby_input),
 
   "Ruby doing the task" => {

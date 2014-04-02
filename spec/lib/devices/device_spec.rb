@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-DEVICE = Hadope::Device
+DEVICE = RubiCL::Device
 
 describe DEVICE do
   it 'is abstract' do
@@ -49,24 +49,24 @@ describe DEVICE do
   end
 
   it 'caches the loaded dataset when no mutating changes are made' do
-    Hadope::CPU.get.should_receive(:retrieve_pinned_integer_dataset_from_buffer).never
-    Hadope::CPU.get.load_object(:int, [1, 2, 3])[Fixnum].should == [1, 2, 3]
+    RubiCL::CPU.get.should_receive(:retrieve_pinned_integer_dataset_from_buffer).never
+    RubiCL::CPU.get.load_object(:int, [1, 2, 3])[Fixnum].should == [1, 2, 3]
   end
 
   it 'caches the retrieved dataset when no mutating changes are made' do
-    Hadope::CPU.get.instance_eval { @buffer }.should_receive(:retrieve_pinned_integer_dataset_from_buffer).once.and_return([2, 3, 4])
-    cpu = Hadope::CPU.get.load_object(:int, [1, 2, 3]).map { |x| x + 1 }
+    RubiCL::CPU.get.instance_eval { @buffer }.should_receive(:retrieve_pinned_integer_dataset_from_buffer).once.and_return([2, 3, 4])
+    cpu = RubiCL::CPU.get.load_object(:int, [1, 2, 3]).map { |x| x + 1 }
     2.times { cpu.retrieve_integers.should == [2, 3, 4] }
   end
 
   it 'can compute the summation of an integer buffer' do
-    Hadope::CPU.get.load_object :int, [1, 2, 3, 4]
-    Hadope::CPU.get.sum.should == 10
+    RubiCL::CPU.get.load_object :int, [1, 2, 3, 4]
+    RubiCL::CPU.get.sum.should == 10
   end
 
   it 'can count the number of occurrences of a number in an integer buffer' do
-    Hadope::CPU.get.load_object :int, [1, 1, 2, 2, 2]
-    Hadope::CPU.get.count(2).should == 3
+    RubiCL::CPU.get.load_object :int, [1, 1, 2, 2, 2]
+    RubiCL::CPU.get.count(2).should == 3
   end
 
 end

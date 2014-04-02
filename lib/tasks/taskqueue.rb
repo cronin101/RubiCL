@@ -1,7 +1,7 @@
-module Hadope
+module RubiCL
   class TaskQueue
     extend Forwardable
-    include Hadope::ChainableDecorator
+    include RubiCL::ChainableDecorator
 
     attr_accessor :tasks
 
@@ -18,22 +18,22 @@ module Hadope
         else
           *fixed_queue, previous = queue
           case [previous.class, task.class]
-          when ([Hadope::Map] * 2), ([Hadope::Filter] * 2)
+          when ([RubiCL::Map] * 2), ([RubiCL::Filter] * 2)
             fixed_queue << previous.fuse!(task)
 
-          when [Hadope::Map, Hadope::Filter]
-            fixed_queue << Hadope::MappingFilter.new(pre_map: previous, filter: task)
+          when [RubiCL::Map, RubiCL::Filter]
+            fixed_queue << RubiCL::MappingFilter.new(pre_map: previous, filter: task)
 
-          when [Hadope::Filter, Hadope::Map]
-            fixed_queue << Hadope::MappingFilter.new(filter: previous, post_map: task)
+          when [RubiCL::Filter, RubiCL::Map]
+            fixed_queue << RubiCL::MappingFilter.new(filter: previous, post_map: task)
 
-          when [Hadope::Map, Hadope::MappingFilter]
+          when [RubiCL::Map, RubiCL::MappingFilter]
             fixed_queue << task.pre_fuse!(previous)
 
-          when [Hadope::MappingFilter, Hadope::Map]
+          when [RubiCL::MappingFilter, RubiCL::Map]
             fixed_queue << previous.post_fuse!(task)
 
-          when [Hadope::MappingFilter, Hadope::Filter]
+          when [RubiCL::MappingFilter, RubiCL::Filter]
             if previous.has_post_map?
               fixed_queue << previous << task
             else

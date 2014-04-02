@@ -19,14 +19,14 @@ typedef struct {
     clock_t memory_total;
     clock_t computation_start;
     clock_t computation_total;
-} HadopeTimings;
+} RubiCLTimings;
 
 typedef struct {
     cl_device_id device_id;
     cl_context context;
     cl_command_queue queue;
-    HadopeTimings timings;
-} HadopeEnvironment;
+    RubiCLTimings timings;
+} RubiCLEnvironment;
 
 typedef struct {
     cl_device_id cpu_device_id;
@@ -34,14 +34,14 @@ typedef struct {
     cl_context context;
     cl_command_queue cpu_queue;
     cl_command_queue gpu_queue;
-    HadopeTimings timings;
-} HadopeHybridEnvironment;
+    RubiCLTimings timings;
+} RubiCLHybridEnvironment;
 
 typedef struct {
     cl_kernel kernel;
     cl_program program;
     char* name;
-} HadopeTask;
+} RubiCLTask;
 
 typedef enum {
     INTEGER_BUFFER,
@@ -52,19 +52,19 @@ typedef struct {
     int buffer_entries;
     cl_mem buffer;
     buffer_contents_type type;
-} HadopeMemoryBuffer;
+} RubiCLMemoryBuffer;
 
-void createHadopeEnvironment(
+void createRubiCLEnvironment(
     const cl_device_type device_type,
-    HadopeEnvironment* env
+    RubiCLEnvironment* env
 );
 
-void createHadopeHybridEnvironment(
-    HadopeHybridEnvironment* env
+void createRubiCLHybridEnvironment(
+    RubiCLHybridEnvironment* env
 );
 
 cl_mem createMemoryBuffer(
-    const HadopeEnvironment* env,
+    const RubiCLEnvironment* env,
     const size_t required_memory,
     const cl_mem_flags type
 );
@@ -74,102 +74,102 @@ void pinArrayForDevice(
     void* dataset,
     int dataset_length,
     size_t dataset_size,
-    HadopeMemoryBuffer* result,
+    RubiCLMemoryBuffer* result,
     buffer_contents_type type
 );
 
 void buildTaskFromSource(
-    const HadopeEnvironment* env,
+    const RubiCLEnvironment* env,
     const char* kernel_source,
     const char* name,
-    HadopeTask* result
+    RubiCLTask* result
 );
 
 void loadIntArrayIntoDevice(
-    const HadopeEnvironment env,
-    const HadopeMemoryBuffer mem_struct,
+    const RubiCLEnvironment env,
+    const RubiCLMemoryBuffer mem_struct,
     int *dataset
 );
 
 void getIntArrayFromDevice(
-    const HadopeEnvironment env,
-    const HadopeMemoryBuffer mem_struct,
+    const RubiCLEnvironment env,
+    const RubiCLMemoryBuffer mem_struct,
     int *dataset
 );
 
 void* getPinnedArrayFromDevice(
     cl_command_queue* queue,
-    const HadopeMemoryBuffer* mem_struct,
+    const RubiCLMemoryBuffer* mem_struct,
     const size_t unit_size,
-    HadopeTimings* bm
+    RubiCLTimings* bm
 );
 
 void runTaskOnDataset(
-    const HadopeEnvironment* env,
-    const HadopeMemoryBuffer* mem_struct,
-    const HadopeTask* task
+    const RubiCLEnvironment* env,
+    const RubiCLMemoryBuffer* mem_struct,
+    const RubiCLTask* task
 );
 
 void computePresenceArrayForDataset(
-    const HadopeEnvironment* env,
-    const HadopeMemoryBuffer* mem_struct,
-    const HadopeTask* task,
-  HadopeMemoryBuffer* presence
+    const RubiCLEnvironment* env,
+    const RubiCLMemoryBuffer* mem_struct,
+    const RubiCLTask* task,
+  RubiCLMemoryBuffer* presence
 );
 
 void computePresenceArrayForTupDataset(
-    const HadopeEnvironment* env,
-    const HadopeMemoryBuffer* fst_mem_struct,
-    const HadopeMemoryBuffer* snd_mem_struct,
-    const HadopeTask* task,
-  HadopeMemoryBuffer* presence
+    const RubiCLEnvironment* env,
+    const RubiCLMemoryBuffer* fst_mem_struct,
+    const RubiCLMemoryBuffer* snd_mem_struct,
+    const RubiCLTask* task,
+  RubiCLMemoryBuffer* presence
 );
 
 void exclusivePrefixSum(
-    const HadopeEnvironment* env,
-    const HadopeMemoryBuffer* presence,
+    const RubiCLEnvironment* env,
+    const RubiCLMemoryBuffer* presence,
     char* source,
-    HadopeMemoryBuffer* result
+    RubiCLMemoryBuffer* result
 );
 
 void integerBitonicSort(
-    const HadopeEnvironment* env,
-    HadopeMemoryBuffer* input_dataset,
-    HadopeTask* task
+    const RubiCLEnvironment* env,
+    RubiCLMemoryBuffer* input_dataset,
+    RubiCLTask* task
 );
 
 int sumIntegerDataset(
-    const HadopeEnvironment* env,
-    HadopeMemoryBuffer* input_dataset,
+    const RubiCLEnvironment* env,
+    RubiCLMemoryBuffer* input_dataset,
     char* source
 );
 
 void runTaskOnTupDataset(
-    const HadopeEnvironment* env,
-    const HadopeTask* task,
-    HadopeMemoryBuffer* fsts,
-    HadopeMemoryBuffer* snds
+    const RubiCLEnvironment* env,
+    const RubiCLTask* task,
+    RubiCLMemoryBuffer* fsts,
+    RubiCLMemoryBuffer* snds
 );
 
 int filteredBufferLength(
-    const HadopeEnvironment* env,
-    HadopeMemoryBuffer* presence,
-    HadopeMemoryBuffer* input_dataset
+    const RubiCLEnvironment* env,
+    RubiCLMemoryBuffer* presence,
+    RubiCLMemoryBuffer* input_dataset
 );
 
 void filterByScatteredWrites(
-    const HadopeEnvironment* env,
-    HadopeMemoryBuffer* input_dataset,
-    HadopeMemoryBuffer* presence,
-    HadopeMemoryBuffer* index_scan
+    const RubiCLEnvironment* env,
+    RubiCLMemoryBuffer* input_dataset,
+    RubiCLMemoryBuffer* presence,
+    RubiCLMemoryBuffer* index_scan
 );
 
 void releaseTemporaryFilterBuffers(
-    HadopeMemoryBuffer* presence,
-    HadopeMemoryBuffer* index_scan
+    RubiCLMemoryBuffer* presence,
+    RubiCLMemoryBuffer* index_scan
 );
 
 void releaseDeviceDataset(
-    HadopeMemoryBuffer* dataset
+    RubiCLMemoryBuffer* dataset
 );
 #endif

@@ -1,6 +1,6 @@
 require_relative './task'
 
-module Hadope
+module RubiCL
 
   class TupFilter < Task
 

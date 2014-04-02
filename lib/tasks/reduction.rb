@@ -1,4 +1,4 @@
-module Hadope
+module RubiCL
   class Reduction
     def initialize(type)
       @type = type

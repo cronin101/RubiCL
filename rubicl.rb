@@ -1,8 +1,8 @@
-require './ext/hadope_backend'
+require './ext/rubicl_backend'
 
 require 'forwardable'
 
-module Hadope
+module RubiCL
   class << self
     attr_writer :opencl_device
   end
@@ -49,6 +49,6 @@ module Hadope
 end
 
 # Sensible default for now
-Hadope.opencl_device = Hadope::CPU
+RubiCL.opencl_device = RubiCL::CPU
 
-#Hadope::Logger.get.loud_mode
+#RubiCL::Logger.get.loud_mode

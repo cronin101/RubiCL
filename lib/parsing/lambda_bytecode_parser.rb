@@ -1,4 +1,4 @@
-class Hadope::LambdaBytecodeParser < Struct.new(:function)
+class RubiCL::LambdaBytecodeParser < Struct.new(:function)
   class Branch < Struct.new(:symbol)
   end
 

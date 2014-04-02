@@ -1,6 +1,6 @@
 require 'simplecov'
 SimpleCov.start
 
-require_relative '../hadope.rb'
+require_relative '../rubicl.rb'
 
-Hadope::Logger.quiet_mode
+RubiCL::Logger.quiet_mode

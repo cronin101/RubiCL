@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-MAP = Hadope::Map
+MAP = RubiCL::Map
 
 describe MAP do
   it 'can be created with no statements' do

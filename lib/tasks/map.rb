@@ -1,6 +1,6 @@
 require_relative './task'
 
-module Hadope
+module RubiCL
   class Map < Task
 
     attr_reader :input_variable, :output_variable, :type

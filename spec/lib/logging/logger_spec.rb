@@ -1,10 +1,10 @@
 require 'spec_helper'
 
-LOGGER = Hadope::Logger
+LOGGER = RubiCL::Logger
 
 describe LOGGER do
   it 'is a singleton if accessed using constant' do
-    Hadope::LoggerSingleton.get.object_id.should == LOGGER.object_id
+    RubiCL::LoggerSingleton.get.object_id.should == LOGGER.object_id
   end
 
   it 'can be set to loud mode' do

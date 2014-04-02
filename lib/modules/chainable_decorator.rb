@@ -1,4 +1,4 @@
-module Hadope::ChainableDecorator
+module RubiCL::ChainableDecorator
 
   # This decorator makes a function return self on exit, so that chainable calls will
   # all get sent to the same object, allowing the ( map -> filter -> map ) work-flow.

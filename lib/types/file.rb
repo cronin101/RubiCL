@@ -1,1 +1,1 @@
-File.class_eval { include Hadope::CastAccess }
+File.class_eval { include RubiCL::CastAccess }

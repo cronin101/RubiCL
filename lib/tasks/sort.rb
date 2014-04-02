@@ -1,4 +1,4 @@
-module Hadope
+module RubiCL
   class Sort
     attr_accessor :type
 

@@ -1,5 +1,5 @@
 class Int
-  def self.hadope_conversion
+  def self.rubicl_conversion
     [:load_object, :int]
   end
 end

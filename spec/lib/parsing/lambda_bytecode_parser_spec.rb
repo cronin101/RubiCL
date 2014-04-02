@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-LAMBDA_BYTECODE_PARSER = Hadope::LambdaBytecodeParser
+LAMBDA_BYTECODE_PARSER = RubiCL::LambdaBytecodeParser
 
 describe LAMBDA_BYTECODE_PARSER do
   it 'disassembles an anonymous function by inspecting RubyVM bytecode' do

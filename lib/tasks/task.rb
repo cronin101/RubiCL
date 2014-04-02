@@ -1,13 +1,13 @@
-module Hadope
+module RubiCL
   class Task
-    include Hadope::ChainableDecorator
+    include RubiCL::ChainableDecorator
 
     @@count = 0
 
     attr_reader :statements
 
     def initialize
-      raise 'Must be a subclass!' if self.class == Hadope::Task
+      raise 'Must be a subclass!' if self.class == RubiCL::Task
       @@count += 1
       @statements = []
       @required_variables = []

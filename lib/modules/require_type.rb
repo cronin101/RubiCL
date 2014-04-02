@@ -1,4 +1,4 @@
-module Hadope::RequireType
+module RubiCL::RequireType
 
   module ClassMethods
     # Experimental method-decorators. Handle with care!

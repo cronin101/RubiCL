@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-SCAN = Hadope::Scan
+SCAN = RubiCL::Scan
 
 describe SCAN do
   it 'can be created with no arguments and will default to exclusive prefix-sum' do
