@@ -1,29 +1,34 @@
 require 'asymptotic'
 require './hadope'
 
-seeds = (25..27)
+seeds = (10..19)
 
 ruby_input = {
   input_seeds: seeds,
-  input_function: ->(pow){ (1..2**pow).to_a }
+  input_function: ->(x){ sleep 0.2 and (1..x*6000).to_a }
 }
-Asymptotic::Graph.plot(1, "Mapping on Integers",
-  "RubiCL library [CPU: Intel i7 dual-core (MBA)]" => {
-    function: ->(array){ Hadope.opencl_device = Hadope::CPU; array[Int].map { |x| x * x }[Fixnum] }
-  }.merge(ruby_input),
 
-  "RubiCL library [GPU: Intel HD5000 (MBA)]" => {
-    function: ->(array){ Hadope.opencl_device = Hadope::GPU; array[Int].map { |x| x * x }[Fixnum] }
-  }.merge(ruby_input),
+Hadope.opencl_device = Hadope::CPU
+(1..100)[Int].map { |x| x + 1 }[Fixnum]
+Hadope.opencl_device = Hadope::GPU
+(1..100)[Int].map { |x| x + 1 }[Fixnum]
 
-  "RubiCL library [Task Split Across CPU and GPU]" => {
-    function: ->(array){ Hadope.opencl_device = Hadope::HybridDevice; array[Int].map { |x| x * x }[Fixnum] }
-  }.merge(ruby_input),
-
+Asymptotic::Graph.plot(1, "Sparse Filtering on Floating-point Numbers",
 =begin
-  "Ruby doing the task" => {
-    function: ->(array){ array.map { |x| x + 1 } },
+  "RubiCL library [GPU: Intel HD5000 (MBA)]" => {
+    function: ->(array){ Hadope.opencl_device = Hadope::GPU; array[Double].map { |x| x + 1.0 }[Float] }
   }.merge(ruby_input),
 =end
+  "RubiCL library [Hybrid]" => {
+    function: ->(array){ Hadope.opencl_device = Hadope::HybridDevice; array[Int].select { |x| x.even? }[Fixnum] }
+  }.merge(ruby_input),
+
+  "RubiCL library [CPU: Intel i7 dual-core (MBA)]" => {
+    function: ->(array){ Hadope.opencl_device = Hadope::CPU; array[Int].select { |x| x.even? }[Fixnum] }
+  }.merge(ruby_input),
+
+  "Ruby doing the task" => {
+    function: ->(array){ array.select { |x| x.even? } }
+  }.merge(ruby_input),
 )
 

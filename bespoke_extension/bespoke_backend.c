@@ -22,7 +22,9 @@ VALUE mFilterEven(VALUE self, VALUE input) {
     for (int i = 0; i < elements; ++i) {
         VALUE entry = rb_ary_entry(input, i);
         if (FIX2INT(entry) % 2 == 0) {
-            if (++kept > size) out = realloc(out, (size *= 2) * sizeof(VALUE));
+            if (++kept > size) {
+                out = realloc(out, (size *= 2) * sizeof(VALUE));
+            }
             out[kept - 1] = entry;
         }
     }
@@ -44,7 +46,9 @@ VALUE mFilterModTwen(VALUE self, VALUE input) {
     for (int i = 0; i < elements; ++i) {
         VALUE entry = rb_ary_entry(input, i);
         if (FIX2INT(entry) % 20 == 0) {
-            if (++kept > size) out = realloc(out, (size *= 2) * sizeof(VALUE));
+            if (++kept > size) {
+                out = realloc(out, (size *= 2) * sizeof(VALUE));
+            }
             out[kept - 1] = entry;
         }
     }
@@ -67,7 +71,9 @@ VALUE mMapAddHalfFilterEven(VALUE self, VALUE input) {
         int entry = FIX2INT(rb_ary_entry(input, i));
         entry += entry / 2;
         if (entry % 2 == 0) {
-            if (++kept > size) out = realloc(out, (size *= 2) * sizeof(int));
+            if (++kept > size) {
+                out = realloc(out, (size *= 2) * sizeof(int));
+            }
             out[kept - 1] = entry;
         }
     }
@@ -80,8 +86,12 @@ VALUE mMapAddHalfFilterEven(VALUE self, VALUE input) {
 }
 void Init_bespoke_backend() {
     VALUE BespokeBackend = rb_define_module("BespokeBackend");
-    rb_define_singleton_method(BespokeBackend, "map_add_one", mMapAddOne, 1);
-    rb_define_singleton_method(BespokeBackend, "filter_even", mFilterEven, 1);
-    rb_define_singleton_method(BespokeBackend, "filter_modtwen", mFilterModTwen, 1);
-    rb_define_singleton_method(BespokeBackend, "map_add_half_filter_even", mMapAddHalfFilterEven, 1);
+    rb_define_singleton_method(BespokeBackend, "map_add_one",
+            mMapAddOne, 1);
+    rb_define_singleton_method(BespokeBackend, "filter_even",
+            mFilterEven, 1);
+    rb_define_singleton_method(BespokeBackend, "filter_modtwen",
+            mFilterModTwen, 1);
+    rb_define_singleton_method(BespokeBackend, "map_add_half_filter_even",
+            mMapAddHalfFilterEven, 1);
 }

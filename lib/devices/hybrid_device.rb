@@ -23,7 +23,7 @@ module Hadope
 
     def initialize
       @ratio = {}
-      BENCHMARKS.each { |task, test| @ratio[task] = send test }
+#      BENCHMARKS.each { |task, test| @ratio[task] = send test }
       @environment = initialize_hybrid_environment
       super
     end
@@ -80,7 +80,8 @@ module Hadope
     end
 
     def slice_sizes(length, action)
-      ratio = @ratio[action]
+      #ratio = @ratio[action]
+      ratio = Rational(2, 1)
       parts = ratio.numerator + ratio.denominator
       num_cpu = ((length / parts.to_f) * ratio.denominator).round
       num_gpu = length - num_cpu

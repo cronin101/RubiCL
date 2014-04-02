@@ -1,7 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    asymptotic (0.0.7)
+    asymptotic (0.0.9)
       colored
       gnuplot
       peach
