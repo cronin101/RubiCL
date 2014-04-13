@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 require 'mkmf'
 
-$objs = %w{lib/oclerrorexplain.o lib/prefix_sum/prescan.o lib/rubicl.o rubicl_backend.o}
+$objs = %w(lib/oclerrorexplain.o lib/prefix_sum/prescan.o lib/rubicl.o rubicl_backend.o)
 
 extension_name = 'rubicl_backend'
 

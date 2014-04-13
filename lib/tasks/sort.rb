@@ -7,7 +7,7 @@ module RubiCL
     end
 
     def to_kernel
-<<KERNEL
+      <<KERNEL
     /* ============================================================
 
     Copyright (c) 2009-2010 Advanced Micro Devices, Inc.  All rights reserved.
@@ -163,6 +163,5 @@ module RubiCL
     }
 KERNEL
     end
-
   end
 end

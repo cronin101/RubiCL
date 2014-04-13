@@ -31,7 +31,7 @@ module RubiCL
     end
 
     def statements
-      (@before + @filter.map { |f| "?{#{f}}?"} + @after).flatten
+      (@before + @filter.map { |f| "?{#{f}}?" } + @after).flatten
     end
 
     def has_post_map?
@@ -76,15 +76,14 @@ module RubiCL
       @before.join(";\n ") << ";\n" << @filter[0..-2].join(";\n") << ";\n" <<
           "int flag = #{@filter.last} ? 1 : 0;\n" << "if (flag) { \n" <<
           @after.join(";\n ") << ";\n" <<
-          "}"
+          '}'
     end
 
     def return_statements
-<<CL
+      <<CL
     presence_array[global_id] = flag;
-    data_array[global_id] = #@output_variable;
+    data_array[global_id] = #{@output_variable};
 CL
     end
-
   end
 end

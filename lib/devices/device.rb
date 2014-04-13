@@ -23,35 +23,35 @@ module RubiCL
     INT2FIX = [:int, :x, ['x = (x << 1) | 0x01']]
 
     # Decorators for start/during/end of computation callbacks
-    def self.pipeline_start method
+    def self.pipeline_start(method)
       method_body = instance_method method
       define_method method do |*arg, &block|
         @converted = false
-        Logger.timing_info "Pipeline Started".red
-        method_body.bind(self).(*arg, &block)
+        Logger.timing_info 'Pipeline Started'.red
+        method_body.bind(self).call(*arg, &block)
       end
     end
 
-    def self.cache_invalidator method
+    def self.cache_invalidator(method)
       method_body = instance_method method
       define_method method do |*arg, &block|
         @buffer.invalidate_cache
-        method_body.bind(self).(*arg, &block)
+        method_body.bind(self).call(*arg, &block)
       end
     end
 
-    def self.pipeline_stop method
+    def self.pipeline_stop(method)
       method_body = instance_method method
       define_method method do |*arg, &block|
         run_tasks
-        result = method_body.bind(self).(*arg, &block)
-        Logger.timing_info "Pipeline Complete".green + " in #{last_pipeline_duration.round(3).to_s.green} ms"
+        result = method_body.bind(self).call(*arg, &block)
+        Logger.timing_info 'Pipeline Complete'.green + " in #{last_pipeline_duration.round(3).to_s.green} ms"
         result
       end
     end
 
     def initialize
-      raise 'Must be a subclass!' if self.class == Device
+      fail 'Must be a subclass!' if self.class == Device
       initialize_task_queue
       @buffer = RubiCL::DeviceService::BufferManager.new(@environment)
     end
@@ -61,84 +61,84 @@ module RubiCL
     end
 
     chainable pipeline_start def load_object(type, object)
-      @buffer.load(type: type, object: object)
+                               @buffer.load(type: type, object: object)
     end
 
     chainable cache_invalidator def sort
-      type = @buffer.type
-      task = Sort.new(type: type)
-      case type
-      when :int then sort_integer_buffer task.to_kernel, @buffer.access(type: :int)
-      else
-        raise "Not sure how to sort the type: #{loaded_type.inspect}"
-      end
+                                  type = @buffer.type
+                                  task = Sort.new(type: type)
+                                  case type
+                                  when :int then sort_integer_buffer task.to_kernel, @buffer.access(type: :int)
+                                  else
+                                    fail "Not sure how to sort the type: #{loaded_type.inspect}"
+                                  end
     end
 
     chainable cache_invalidator def zip(object)
-      @task_queue.push Map.new(*FIX2INT) unless @converted
-      run_tasks(do_conversions: false)
-      @buffer.zip_load(snd: object)
-      @task_queue.push SMap.new(*FIX2INT)
-      @converted = true
+                                  @task_queue.push Map.new(*FIX2INT) unless @converted
+                                  run_tasks(do_conversions: false)
+                                  @buffer.zip_load(snd: object)
+                                  @task_queue.push SMap.new(*FIX2INT)
+                                  @converted = true
     end
 
     chainable cache_invalidator def fsts
-      run_tasks(do_conversions: false)
-      @buffer.zipped_choose :fst
-      @converted = true
+                                  run_tasks(do_conversions: false)
+                                  @buffer.zipped_choose :fst
+                                  @converted = true
     end
 
     chainable cache_invalidator def snds
-      run_tasks(do_conversions: false)
-      @buffer.zipped_choose :snd
-      @converted = true
+                                  run_tasks(do_conversions: false)
+                                  @buffer.zipped_choose :snd
+                                  @converted = true
     end
 
     chainable def braid(&block)
-      raise "Braid function has incorrect arity." unless block.arity == 2
-      expression = LambdaBytecodeParser.new(block).to_infix
-      @task_queue.push Braid.new(:int, :x, :y, expression)
-      @buffer.type = :int
+                fail 'Braid function has incorrect arity.' unless block.arity == 2
+                expression = LambdaBytecodeParser.new(block).to_infix
+                @task_queue.push Braid.new(:int, :x, :y, expression)
+                @buffer.type = :int
     end
 
-    chainable cache_invalidator def map(fst:->(x, y){ x }, snd:->(x, y){ y }, &block)
-      if @buffer.unary_type?
-        expression = LambdaBytecodeParser.new(block).to_infix
-        @task_queue.push Map.new(@buffer.type, :x, ["x = #{expression}"])
-      else
-        fst_exp, snd_exp = [fst, snd].map { |ex| LambdaBytecodeParser.new(ex).to_infix}
-        @task_queue.push TupMap.new(:int, [:x, :y], ["x = #{fst_exp}", "y = #{snd_exp}"])
-      end
+    chainable cache_invalidator def map(fst:->(x, y) { x }, snd:->(x, y) { y }, &block)
+                                  if @buffer.unary_type?
+                                    expression = LambdaBytecodeParser.new(block).to_infix
+                                    @task_queue.push Map.new(@buffer.type, :x, ["x = #{expression}"])
+                                  else
+                                    fst_exp, snd_exp = [fst, snd].map { |ex| LambdaBytecodeParser.new(ex).to_infix }
+                                    @task_queue.push TupMap.new(:int, [:x, :y], ["x = #{fst_exp}", "y = #{snd_exp}"])
+                                  end
     end
 
     chainable cache_invalidator def filter(&block)
-      predicate = LambdaBytecodeParser.new(block).to_infix
-      if @buffer.unary_type?
-        @task_queue.push Filter.new(@buffer.type, :x, predicate)
-      else
-        @task_queue.push TupFilter.new(:int, [:x, :y], predicate)
-      end
+                                  predicate = LambdaBytecodeParser.new(block).to_infix
+                                  if @buffer.unary_type?
+                                    @task_queue.push Filter.new(@buffer.type, :x, predicate)
+                                  else
+                                    @task_queue.push TupFilter.new(:int, [:x, :y], predicate)
+                                  end
     end
 
     alias_method :collect, :map
     alias_method :select, :filter
 
-    chainable cache_invalidator def scan(style=:inclusive, operator)
-      if @buffer.unary_type?
-        @task_queue.push Scan.new(
-          style: style, type: @buffer.type, operator:operator, elim_conflicts: self.is_a?(GPU)
-        )
-      else
-        raise "#scan not implemented for non-unary types"
-      end
+    chainable cache_invalidator def scan(style = :inclusive, operator)
+                                  if @buffer.unary_type?
+                                    @task_queue.push Scan.new(
+                                      style: style, type: @buffer.type, operator: operator, elim_conflicts: self.is_a?(GPU)
+                                    )
+                                  else
+                                    fail '#scan not implemented for non-unary types'
+                                  end
     end
 
     pipeline_stop def retrieve_integers
-      @buffer.retrieve(type: :int)
+                    @buffer.retrieve(type: :int)
     end
 
     pipeline_stop def retrieve_doubles
-      @buffer.retrieve(type: :double)
+                    @buffer.retrieve(type: :double)
     end
 
     def sum
@@ -149,11 +149,11 @@ module RubiCL
         scan_kernel = Scan.new(type: @buffer.type, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
         sum_integer_buffer scan_kernel, @buffer.access(type: :int)
       else
-        raise "Cannot sum currently loaded type: #{@buffer.type}"
+        fail "Cannot sum currently loaded type: #{@buffer.type}"
       end
     end
 
-    def count(needle=nil, &block)
+    def count(needle = nil, &block)
       return select(&block).count unless block.nil?
 
       if needle.nil?
@@ -169,7 +169,7 @@ module RubiCL
           scan_kernel = Scan.new(type: @buffer.type, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
           count_post_filter(kernel, task.name, scan_kernel, @buffer.access(type: @buffer.type))
         else
-          raise "#count not implemented for non-unary types"
+          fail '#count not implemented for non-unary types'
         end
       end
     end
@@ -194,11 +194,11 @@ module RubiCL
     end
 
     alias_method :run_mappingfilter, def run_filter(task)
-      type = task.type
-      kernel = task.to_kernel
-      Logger.log "Executing filter kernel:\n #{kernel}"
-      scan_kernel = Scan.new(type: :int, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
-      run_filter_task(kernel, task.name, scan_kernel, @buffer.access(type: type))
+                                       type = task.type
+                                       kernel = task.to_kernel
+                                       Logger.log "Executing filter kernel:\n #{kernel}"
+                                       scan_kernel = Scan.new(type: :int, operator: :+, elim_conflicts: self.is_a?(GPU)).to_kernel
+                                       run_filter_task(kernel, task.name, scan_kernel, @buffer.access(type: type))
     end
 
     def run_braid(task)
@@ -232,7 +232,7 @@ module RubiCL
         Logger.log "Executing braid kernel:\n #{braid_task.to_kernel}"
         run_inclusive_scan_task(scan_kernel, braid_task.to_kernel, braid_task.name, @buffer.access(type: type))
       else
-        raise "Don't understand scan type: #{task.style}"
+        fail "Don't understand scan type: #{task.style}"
       end
     end
 
@@ -256,7 +256,5 @@ module RubiCL
       @task_queue.simplify! if RubiCL::Config::Features.task_fusion
       run_task @task_queue.shift until @task_queue.empty?
     end
-
   end
-
 end

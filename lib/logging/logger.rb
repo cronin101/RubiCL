@@ -1,6 +1,5 @@
 module RubiCL
   class LoggerSingleton
-
     attr_writer :show_timing_info
 
     VERBOSE_MODE_DEFAULT = false
@@ -30,7 +29,7 @@ module RubiCL
       @verbose_mode = false
     end
 
-    def timing_info info
+    def timing_info(info)
       puts info if @show_timing_info
     end
 
@@ -39,9 +38,7 @@ module RubiCL
       puts log_line if @verbose_mode
       File.open(@log_path, 'a') { |f| f.puts log_line } if @log_to_file
     end
-
   end
 
   Logger = LoggerSingleton.get
-
 end

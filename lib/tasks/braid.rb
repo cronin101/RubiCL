@@ -2,7 +2,6 @@ require_relative './task'
 
 module RubiCL
   class Braid < Task
-
     attr_reader :input_variable, :output_variable, :type
 
     def initialize(type, fst, snd, braid)
@@ -27,6 +26,5 @@ module RubiCL
     def return_statements
       "fst_array[global_id] = #{@output_variable};"
     end
-
   end
 end

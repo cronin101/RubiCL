@@ -45,10 +45,9 @@ module RubiCL
   def self.opencl_device
     @opencl_device.get
   end
-
 end
 
 # Sensible default for now
 RubiCL.opencl_device = RubiCL::CPU
 
-#RubiCL::Logger.get.loud_mode
+# RubiCL::Logger.get.loud_mode

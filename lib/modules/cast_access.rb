@@ -1,6 +1,5 @@
 module RubiCL::CastAccess
   def self.included(base)
-
     begin
       old_behavior = base.instance_method(:[])
     rescue NameError
@@ -11,14 +10,14 @@ module RubiCL::CastAccess
       define_method :[] do |index|
         case index
         when Class
-          raise 'Must specify OpenCL device with RubiCL.set_device' unless RubiCL.opencl_device
-          raise "#{index.inspect} is not defined as convertible." unless index.respond_to? :rubicl_conversion
+          fail 'Must specify OpenCL device with RubiCL.set_device' unless RubiCL.opencl_device
+          fail "#{index.inspect} is not defined as convertible." unless index.respond_to? :rubicl_conversion
           RubiCL.opencl_device.send(*index.rubicl_conversion, self)
         else
           if old_behavior
-            old_behavior.bind(self).(index)
+            old_behavior.bind(self).call(index)
           else
-            raise NoMethodError
+            fail NoMethodError
           end
         end
       end

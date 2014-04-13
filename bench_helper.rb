@@ -9,5 +9,5 @@ def benchmark(times: 1, input:[], &block)
     GC.start
 
     time_taken
-  end.inject(&:+).to_f / times
+  end.reduce(&:+).to_f / times
 end

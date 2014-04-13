@@ -1,9 +1,7 @@
 require_relative './task'
 
 module RubiCL
-
   class TupFilter < Task
-
     attr_reader :type, :predicate
 
     def initialize(type, input_variables, predicate)
@@ -23,15 +21,13 @@ module RubiCL
     end
 
     def setup_statements
-      "int global_id = get_global_id(0);\n" <<
-        "#@fst_input = fsts[global_id];\n"  <<
-        "#@snd_input = snds[global_id];"
+      "int global_id = get_global_id(0);\n" \
+        "#{@fst_input} = fsts[global_id];\n"  <<
+        "#{@snd_input} = snds[global_id];"
     end
 
     def return_statements
-      "presence_array[global_id] = flag;"
+      'presence_array[global_id] = flag;'
     end
-
   end
-
 end

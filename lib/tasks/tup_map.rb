@@ -1,9 +1,7 @@
 require_relative './task'
 
 module RubiCL
-
   class TupMap < Task
-
     attr_reader :type
 
     def initialize(type, input_variables, statements)
@@ -20,11 +18,11 @@ module RubiCL
     end
 
     def statements
-      [ @statements.first,
-        "tmp = #@fst_input",
-        "#@fst_input = fsts[global_id]",
-        @statements.last,
-        "#@fst_input = tmp"
+      [@statements.first,
+       "tmp = #{@fst_input}",
+       "#{@fst_input} = fsts[global_id]",
+       @statements.last,
+       "#{@fst_input} = tmp"
       ]
     end
 
@@ -33,16 +31,14 @@ module RubiCL
     end
 
     def setup_statements
-      "int global_id = get_global_id(0);\n" <<
-        "#@fst_input = fsts[global_id];\n"  <<
-        "#@snd_input = snds[global_id];"
+      "int global_id = get_global_id(0);\n" \
+        "#{@fst_input} = fsts[global_id];\n"  <<
+        "#{@snd_input} = snds[global_id];"
     end
 
     def return_statements
-      "fsts[global_id] = #@fst_input;\n" <<
-      "snds[global_id] = #@snd_input;"
+      "fsts[global_id] = #{@fst_input};\n" \
+      "snds[global_id] = #{@snd_input};"
     end
-
   end
-
 end

@@ -12,7 +12,7 @@ sizes.each do |size|
     Benchmark.realtime do
       (1..size).map { |x| x * x }.select { |x| x % 2 == 0 }
     end
-  end.inject(&:+) / 8.0
+  end.reduce(&:+) / 8.0
   file.puts "vanilla_ruby #{size} #{time.round(3)}"
 end
 
@@ -25,7 +25,7 @@ end
       Benchmark.realtime do
         (1..size)[Int].map { |x| x * x }.select { |x| x % 2 == 0 }[Fixnum]
       end
-    end.inject(&:+) / 8.0
+    end.reduce(&:+) / 8.0
     file.puts "#{description} #{size} #{time.round(3)}"
   end
 end

@@ -11,19 +11,19 @@ class RubiCL::Scan
   end
 
   def descriptor
-    self.inspect
+    inspect
   end
 
   def statements
-    ["r = r #@op e"]
+    ["r = r #{@op} e"]
   end
 
   def to_kernel
-<<KERNEL
+    <<KERNEL
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define MEMORY_BANK_COUNT      (#{@banks})  // Adjust to your architecture
-#define LOG2_MEMORY_BANK_COUNT (#{Math::log2(@banks).to_i})  // Set to log2(MEMORY_BANK_COUNT)
+#define LOG2_MEMORY_BANK_COUNT (#{Math.log2(@banks).to_i})  // Set to log2(MEMORY_BANK_COUNT)
 #define ELIMINATE_CONFLICTS    (#{@elim_conflicts ? '1' : '0'})  // Enable for slow address calculation, but zero bank conflicts
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -181,7 +181,7 @@ uint BuildPartialSum(__local #{type} *shared_data) {
             local_index_a += MEMORY_BANK_OFFSET(local_index_a);
             local_index_b += MEMORY_BANK_OFFSET(local_index_b);
 
-            shared_data[local_index_b] #@op= shared_data[local_index_a];
+            shared_data[local_index_b] #{@op}= shared_data[local_index_a];
         }
 
         stride *= two;
@@ -212,7 +212,7 @@ void ScanRootToLeaves(__local #{type} *shared_data, uint stride) {
 
             #{type} t = shared_data[local_index_a];
             shared_data[local_index_a] = shared_data[local_index_b];
-            shared_data[local_index_b] #@op= t;
+            shared_data[local_index_b] #{@op}= t;
         }
     }
 }
@@ -335,8 +335,8 @@ __kernel void UniformAddKernel(
 
     uint address = mul24(group_id, (group_size << 1)) + base_index + local_id;
 
-    output_data[address] #@op= shared_data[0];
-    if( (local_id + group_size) < n) output_data[address + group_size] #@op= shared_data[0];
+    output_data[address] #{@op}= shared_data[0];
+    if( (local_id + group_size) < n) output_data[address + group_size] #{@op}= shared_data[0];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

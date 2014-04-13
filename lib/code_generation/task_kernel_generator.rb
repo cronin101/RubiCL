@@ -1,5 +1,4 @@
 class RubiCL::TaskKernelGenerator < Struct.new(:task)
-
   def create_kernel
     task_type = task.class.to_s.split('::').last.downcase
     begin
@@ -12,7 +11,7 @@ class RubiCL::TaskKernelGenerator < Struct.new(:task)
   private
 
   alias_method :smap_kernel, def map_kernel
-    <<KERNEL
+                               <<KERNEL
 __kernel void #{task.name}(__global #{task.type} *data_array) {
   #{task.variable_declarations}
   #{task.setup_statements}
@@ -25,7 +24,7 @@ KERNEL
   end
 
   alias_method :mappingfilter_kernel, def filter_kernel
-    <<KERNEL
+                                        <<KERNEL
 __kernel void #{task.name}(__global #{task.type} *data_array, __global int *presence_array) {
   #{task.variable_declarations}
   #{task.setup_statements}
@@ -39,7 +38,7 @@ KERNEL
 
   def tupmap_kernel
     task.instance_eval do
-<<KERNEL
+      <<KERNEL
 __kernel void #{name}(
   __global #{type} *fsts,
   __global #{type} *snds
@@ -57,7 +56,7 @@ KERNEL
 
   def tupfilter_kernel
     task.instance_eval do
-<<KERNEL
+      <<KERNEL
 __kernel void #{name}(
   __global #{type} *fsts, __global #{type} *snds,
   __global int *presence_array
@@ -88,5 +87,4 @@ __kernel void #{task.name}(
 }
 KERNEL
   end
-
 end

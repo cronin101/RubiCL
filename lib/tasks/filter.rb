@@ -2,7 +2,6 @@ require_relative './task'
 
 module RubiCL
   class Filter < Task
-
     attr_reader :input_variable, :output_variable, :type, :predicate
 
     def initialize(type, input_variable, predicate)
@@ -38,8 +37,7 @@ module RubiCL
     end
 
     def return_statements
-      "presence_array[global_id] = flag;"
+      'presence_array[global_id] = flag;'
     end
-
   end
 end

@@ -2,7 +2,6 @@ require_relative './task'
 
 module RubiCL
   class Map < Task
-
     attr_reader :input_variable, :output_variable, :type
 
     def initialize(type, input_variable, statements)
@@ -35,7 +34,6 @@ module RubiCL
     def return_statements
       "data_array[global_id] = #{@output_variable};"
     end
-
   end
 
   class SMap < Map

@@ -1,12 +1,11 @@
 module RubiCL::RequireType
-
   module ClassMethods
     # Experimental method-decorators. Handle with care!
     def requires_type(type, method)
       method_body = instance_method(method)
       define_method method do |*arg, &block|
         check_buffer_type! type
-        method_body.bind(self).(*arg, &block)
+        method_body.bind(self).call(*arg, &block)
       end
 
       method
@@ -16,20 +15,19 @@ module RubiCL::RequireType
       method_body = instance_method(method)
       define_method method do |*arg, &block|
         @buffer_type = type
-        method_body.bind(self).(*arg, &block)
+        method_body.bind(self).call(*arg, &block)
       end
 
-    method
+      method
     end
-
   end
 
   def self.included(base)
     base.extend(ClassMethods)
   end
 
-  def check_buffer_type! type
-    raise "Type Mismatch! Found #@buffer_type, expected #{type}" unless type == loaded_type
+  def check_buffer_type!(type)
+    fail "Type Mismatch! Found #{@buffer_type}, expected #{type}" unless type == loaded_type
   end
 
   def loaded_type
@@ -41,12 +39,11 @@ module RubiCL::RequireType
     when :int     then 'int4'
     when :double  then 'double4'
     else
-      raise "No vector_type for #{loaded_type.inspect}"
+      fail "No vector_type for #{loaded_type.inspect}"
     end
   end
 
   def unary_types
-    %i{int double}
+    %i(int double)
   end
-
 end

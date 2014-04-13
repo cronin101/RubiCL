@@ -35,11 +35,11 @@ class RubiCL::LambdaBytecodeParser < Struct.new(:function)
     stack = []
     while tokens.length > 0
       case token = tokens.shift
-      when Branch then stack.push (stack.pop << " " << token.symbol << " ")
+      when Branch then stack.push (stack.pop << ' ' << token.symbol << ' ')
       when Fixnum, Float then stack.push token
       when Symbol then stack.push method_send(stack.pop, token)
       when String
-        if ['x', 'y'].include?(token)
+        if %w(x y).include?(token)
           stack.push(token)
         else
           stack.push(combine(token, stack.pop, stack.pop))
@@ -91,11 +91,11 @@ class RubiCL::LambdaBytecodeParser < Struct.new(:function)
 
     # Built-in Operator
     when /opt_/                                     then LOOKUP_TABLE.fetch operation[/opt_\w+/].to_sym
-    else raise "Could not parse: #{operation} in #{bytecode}"
+    else fail "Could not parse: #{operation} in #{bytecode}"
     end
   end
 
-  def beta_reduction variable_name
+  def beta_reduction(variable_name)
     function.binding.local_variable_get variable_name
   end
 
@@ -103,7 +103,7 @@ class RubiCL::LambdaBytecodeParser < Struct.new(:function)
     case method
     when :-@ then '-' << target
     when :even? then "(#{target} % 2 == 0)"
-    else raise "#method_send not implemented for #{method.inspect}"
+    else fail "#method_send not implemented for #{method.inspect}"
     end
   end
 
@@ -113,7 +113,7 @@ class RubiCL::LambdaBytecodeParser < Struct.new(:function)
 
   def is_value?(token)
     case token
-    when Fixnum, Float, *['x', 'y'] then true
+    when Fixnum, Float, *%w(x y) then true
     else false
     end
   end
@@ -125,5 +125,4 @@ class RubiCL::LambdaBytecodeParser < Struct.new(:function)
   def operations
     bytecode.scan(/(?:\d*\s*(?:(getlocal.*|putobject.*|opt_.*|branch.*).?))/).flatten
   end
-
 end

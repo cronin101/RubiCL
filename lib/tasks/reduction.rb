@@ -7,7 +7,7 @@ module RubiCL
 
   class CPUReduction < Reduction
     def kernel
-<<KERNEL
+      <<KERNEL
 _kernel
 void reduce(__global #{@type}* input,
             __const int block,
@@ -31,7 +31,7 @@ KERNEL
 
   class GPUReduction < Reduction
     def kernel
-<<KERNEL
+      <<KERNEL
 _kernel
 void reduce(__global #{type}* input,
             __local #{type} scratch,

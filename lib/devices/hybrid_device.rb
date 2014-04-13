@@ -1,5 +1,4 @@
 module RubiCL
-
   class HybridDevice < Device
     require 'benchmark'
 
@@ -76,7 +75,7 @@ module RubiCL
     end
 
     def individual_devices
-      return RubiCL::CPU.get, RubiCL::GPU.get
+      [RubiCL::CPU.get, RubiCL::GPU.get]
     end
 
     def slice_sizes(length, action)
@@ -84,7 +83,7 @@ module RubiCL
       parts = ratio.numerator + ratio.denominator
       num_cpu = ((length / parts.to_f) * ratio.denominator).round
       num_gpu = length - num_cpu
-      return num_cpu, num_gpu
+      [num_cpu, num_gpu]
     end
 
     def benchmark_action(&block)
@@ -97,7 +96,5 @@ module RubiCL
       end
       Rational(cpu_time, gpu_time).truncate(+1)
     end
-
   end
-
 end

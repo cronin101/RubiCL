@@ -7,7 +7,7 @@ module RubiCL
     attr_reader :statements
 
     def initialize
-      raise 'Must be a subclass!' if self.class == RubiCL::Task
+      fail 'Must be a subclass!' if self.class == RubiCL::Task
       @@count += 1
       @statements = []
       @required_variables = []
@@ -15,7 +15,7 @@ module RubiCL
     end
 
     def descriptor
-      "(#{name} => #{self.statements})"
+      "(#{name} => #{statements})"
     end
 
     def variables
@@ -23,20 +23,20 @@ module RubiCL
     end
 
     chainable def add_variables(*variables)
-      before = @required_variables.dup
-      @required_variables.push(variables).flatten!.uniq!
-      after = @required_variables
-      new_variables = after - before
-      Logger.log "Introduced variable(s): #{new_variables.inspect}." if new_variables.size > 0
+                before = @required_variables.dup
+                @required_variables.push(variables).flatten!.uniq!
+                after = @required_variables
+                new_variables = after - before
+                Logger.log "Introduced variable(s): #{new_variables.inspect}." if new_variables.size > 0
     end
 
     chainable def add_statement(statement)
-      @statements.push statement
+                @statements.push statement
     end
 
     chainable def add_statements(statements)
-      statements.each { |statement| add_statement statement }
-      Logger.log "Added statement(s): #{statements}."
+                statements.each { |statement| add_statement statement }
+                Logger.log "Added statement(s): #{statements}."
     end
 
     def name
@@ -52,9 +52,7 @@ module RubiCL
     end
 
     def statement_code
-      statements.join(";\n") << ";"
+      statements.join(";\n") << ';'
     end
-
   end
-
 end
